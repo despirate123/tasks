@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-[background,box-shadow,transform,color] duration-300 ease-soft outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:pointer-events-none disabled:opacity-45 hover:scale-[1.015] active:scale-[0.98] [&_svg]:shrink-0",
+  "liquid-glass inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-[background,box-shadow,transform,color] duration-300 ease-soft outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:pointer-events-none disabled:opacity-45 hover:scale-[1.015] active:scale-[0.98] [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -13,14 +13,14 @@ const buttonVariants = cva(
         money:
           "bg-[var(--acid)] text-[var(--ink)] shadow-[0_8px_24px_-8px_rgba(247,241,106,0.45)] hover:bg-brand-50",
         secondary:
-          "glass-thin text-content-primary ring-1 ring-inset ring-white/12 hover:bg-white/10",
+          "glass-thin text-content-primary hover:bg-white/10",
         outline:
-          "bg-transparent text-content-primary ring-1 ring-inset ring-white/14 hover:bg-white/6",
+          "bg-transparent text-content-primary hover:bg-white/6",
         ghost: "bg-transparent text-content-secondary hover:bg-surface-raised hover:text-content-primary",
         danger:
-          "bg-hard/14 text-hard ring-1 ring-inset ring-hard/30 hover:bg-hard/22",
+          "bg-hard/14 text-hard hover:bg-hard/22",
         success:
-          "bg-brand-500/14 text-brand-300 ring-1 ring-inset ring-brand-500/30 hover:bg-brand-500/22",
+          "bg-brand-500/14 text-brand-300 hover:bg-brand-500/22",
         support:
           "bg-support text-[#0d1a20] shadow-[0_8px_24px_-8px_rgba(122,212,255,0.45)] hover:bg-[#9ae0ff]",
       },

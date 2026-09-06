@@ -84,7 +84,7 @@ export function NotificationBell({ initialCount }: { initialCount: number }) {
     <Link
       href="/notifications"
       aria-label={count > 0 ? `Уведомления, ${count} непрочитанных` : "Уведомления"}
-      className="relative flex size-10 items-center justify-center rounded-full glass-thin ring-1 ring-inset ring-white/12 transition-[transform,background] duration-300 ease-soft hover:bg-white/6 active:scale-95"
+      className="liquid-glass relative flex size-10 items-center justify-center rounded-full glass-thin transition-[transform,background] duration-300 ease-soft hover:bg-white/6 active:scale-95"
     >
       <Bell className="size-[18px] text-content-secondary" strokeWidth={1.75} />
       {count > 0 ? (

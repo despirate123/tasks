@@ -30,7 +30,7 @@ export function SupportButton({ href }: { href: string }) {
               Вопросы по заданиям и выплатам
             </span>
           </span>
-          <span className="inline-flex h-10 shrink-0 items-center rounded-2xl bg-support px-3.5 text-[13px] font-semibold text-[#0d1a20] transition-transform duration-300 ease-soft group-hover:scale-[1.03] group-active:scale-[0.98]">
+          <span className="liquid-glass inline-flex h-10 shrink-0 items-center rounded-2xl bg-support px-3.5 text-[13px] font-semibold text-[#0d1a20] transition-transform duration-300 ease-soft group-hover:scale-[1.03] group-active:scale-[0.98]">
             Написать
           </span>
         </div>

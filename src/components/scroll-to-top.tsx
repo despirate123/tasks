@@ -50,7 +50,7 @@ export function ScrollToTop() {
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
           className={cn(
-            "pointer-events-auto flex size-12 items-center justify-center rounded-full glass text-[var(--acid)] ring-1 ring-inset ring-[var(--acid)]/35 shadow-[0_10px_28px_rgba(0,0,0,0.35)] transition-[opacity,transform] duration-300 ease-soft",
+            "liquid-glass pointer-events-auto flex size-12 items-center justify-center rounded-full glass text-[var(--acid)] shadow-[0_10px_28px_rgba(0,0,0,0.35)] transition-[opacity,transform] duration-300 ease-soft",
             visible
               ? "scale-100 opacity-100"
               : "pointer-events-none scale-90 opacity-0",
