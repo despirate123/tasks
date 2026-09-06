@@ -17,11 +17,18 @@ export default async function MiniAppLayout({
   const user = await getCurrentUser();
   const unread = user ? await getUnreadCount(user.id) : 0;
   const isStaff = user ? hasRole(user, "MODERATOR") : false;
+  const demoBypass = process.env.DEV_AUTH_BYPASS === "true";
 
   return (
     <>
       <TelegramInit serverUserId={user?.id ?? null} />
       <div className="relative z-10 mx-auto flex min-h-[var(--tg-viewport-stable-height,100dvh)] max-w-[var(--app-max-width)] flex-col">
+        {demoBypass ? (
+          <div className="bg-medium px-3 py-2 text-center text-[12px] font-semibold text-black">
+            Демо-режим: показан Алексей. В .env поставь DEV_AUTH_BYPASS=false и
+            перезапусти npm run start
+          </div>
+        ) : null}
         <header
           className="sticky top-0 z-40 border-b border-border-subtle/70 bg-surface-base/85 backdrop-blur-xl"
           style={{
