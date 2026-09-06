@@ -41,6 +41,11 @@ export default async function SubmissionPage({
   );
 
   const mediaProofs = submission.proofs.filter((p) => p.kind !== "TEXT");
+  // «Взято в работу» — служебная запись для аудита. Участнику она не нужна:
+  // статус черновика и подсказка уже есть в шапке карточки.
+  const timeline = submission.events.filter(
+    (event) => !(event.toStatus === "DRAFT" && event.fromStatus == null),
+  );
 
   return (
     <div className="space-y-4">
@@ -261,51 +266,53 @@ export default async function SubmissionPage({
         </div>
       ) : null}
 
-      <div className="space-y-2.5">
-        <SectionTitle>История</SectionTitle>
-        <Card className="p-4">
-          <ol className="space-y-4">
-            {submission.events.map((event, index) => (
-              <li key={event.id} className="relative flex gap-3">
-                <span className="relative flex flex-col items-center">
-                  <span
-                    className={`mt-1 size-2.5 shrink-0 rounded-full ${
-                      index === 0 ? "bg-brand-400" : "bg-border-strong"
-                    }`}
-                  />
-                  {index < submission.events.length - 1 ? (
-                    <span className="absolute top-4 h-full w-px bg-border-subtle" />
-                  ) : null}
-                </span>
-                <div className="min-w-0 flex-1 pb-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {event.toStatus ? (
-                      <SubmissionStatusBadge status={event.toStatus} />
+      {timeline.length > 0 ? (
+        <div className="space-y-2.5">
+          <SectionTitle>История</SectionTitle>
+          <Card className="p-4">
+            <ol className="space-y-4">
+              {timeline.map((event, index) => (
+                <li key={event.id} className="relative flex gap-3">
+                  <span className="relative flex flex-col items-center">
+                    <span
+                      className={`mt-1 size-2.5 shrink-0 rounded-full ${
+                        index === 0 ? "bg-brand-400" : "bg-border-strong"
+                      }`}
+                    />
+                    {index < timeline.length - 1 ? (
+                      <span className="absolute top-4 h-full w-px bg-border-subtle" />
                     ) : null}
-                    <Badge tone="neutral">
-                      {event.actorType === "USER"
-                        ? "вы"
-                        : event.actorType === "MODERATOR"
-                          ? "модератор"
-                          : event.actorType === "SYSTEM"
-                            ? "система"
-                            : event.actorType.toLowerCase()}
-                    </Badge>
-                  </div>
-                  {event.comment ? (
-                    <p className="mt-1.5 text-[12.5px] leading-relaxed text-content-secondary">
-                      {event.comment}
+                  </span>
+                  <div className="min-w-0 flex-1 pb-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {event.toStatus ? (
+                        <SubmissionStatusBadge status={event.toStatus} />
+                      ) : null}
+                      <Badge tone="neutral">
+                        {event.actorType === "USER"
+                          ? "вы"
+                          : event.actorType === "MODERATOR"
+                            ? "модератор"
+                            : event.actorType === "SYSTEM"
+                              ? "система"
+                              : event.actorType.toLowerCase()}
+                      </Badge>
+                    </div>
+                    {event.comment ? (
+                      <p className="mt-1.5 text-[12.5px] leading-relaxed text-content-secondary">
+                        {event.comment}
+                      </p>
+                    ) : null}
+                    <p className="mt-1 text-[11px] text-content-muted">
+                      {formatDateTime(event.createdAt)}
                     </p>
-                  ) : null}
-                  <p className="mt-1 text-[11px] text-content-muted">
-                    {formatDateTime(event.createdAt)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </Card>
-      </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </Card>
+        </div>
+      ) : null}
 
       <p className="px-1 text-center text-[11.5px] text-content-muted">
         Заявленное время проверки — {formatEta(submission.offer.approvalEtaMinutes)}.
