@@ -50,14 +50,14 @@ export function ChipScroller({
       <div
         aria-hidden
         className={cn(
-          "pointer-events-none absolute inset-y-0 left-0 z-10 w-11 bg-gradient-to-r from-black via-black/75 to-transparent transition-opacity duration-200",
+          "pointer-events-none absolute inset-y-0 left-0 z-10 w-14 bg-gradient-to-r from-black from-15% via-black/70 to-transparent transition-opacity duration-200",
           edge.left ? "opacity-100" : "opacity-0",
         )}
       />
       <div
         aria-hidden
         className={cn(
-          "pointer-events-none absolute inset-y-0 right-0 z-10 w-11 bg-gradient-to-l from-black via-black/75 to-transparent transition-opacity duration-200",
+          "pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-black from-15% via-black/70 to-transparent transition-opacity duration-200",
           edge.right ? "opacity-100" : "opacity-0",
         )}
       />
