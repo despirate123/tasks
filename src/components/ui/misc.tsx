@@ -74,11 +74,6 @@ const STAT_TONE = {
     ring: "ring-brand-500/22",
     glow: "rgb(200 255 0 / 0.12)",
   },
-  info: {
-    value: "text-info",
-    ring: "ring-info/22",
-    glow: "rgb(122 212 255 / 0.16)",
-  },
   warn: {
     value: "text-medium",
     ring: "ring-medium/22",

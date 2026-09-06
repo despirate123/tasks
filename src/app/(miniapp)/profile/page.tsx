@@ -144,7 +144,6 @@ export default async function ProfilePage() {
         <StatTile
           label="Выведено"
           value={formatMoney(wallet.totalWithdrawn)}
-          tone="info"
         />
         <StatTile
           label="Одобрение"
