@@ -6,6 +6,7 @@
  * Демо-пользователи и офферы создаются только когда SEED_DEMO !== "false".
  */
 
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient, Prisma } from "../src/generated/prisma";
 import { writeProofFile } from "./demo-media";
@@ -1420,6 +1421,60 @@ async function seedSubmissions(users: Record<string, string>) {
 }
 
 /**
+ * Восстановление файлов доказательств, если записи в БД есть, а файлов нет.
+ *
+ * Такое расхождение возникает при повторном запуске сидов на уже заполненной
+ * базе и при свежем клоне репозитория: сами файлы в гит не попадают, а строки
+ * в media_assets переживают всё. Без этого шага галерея в модерации отдаёт 404
+ * вместо превью — то есть ломается ровно тот экран, который важнее всех
+ * остальных.
+ *
+ * Генератор детерминирован по seed-строке, а storageKey содержит checksum,
+ * поэтому восстановленный файл байт-в-байт совпадает с исходным.
+ */
+async function ensureProofFiles() {
+  const proofs = await db.submissionProof.findMany({
+    where: { kind: "PHOTO", mediaId: { not: null } },
+    include: { media: true },
+  });
+
+  let restored = 0;
+
+  for (const proof of proofs) {
+    if (!proof.media) continue;
+    if (existsSync(path.join(UPLOAD_DIR, proof.media.storageKey))) continue;
+
+    const written = await writeProofFile(
+      UPLOAD_DIR,
+      proof.submissionId,
+      `${proof.submissionId}:${proof.order - 1}`,
+    );
+
+    // Если генератор когда-нибудь изменится, файл на диске и запись в БД
+    // разойдутся — приводим запись к тому, что реально записано.
+    if (
+      written.storageKey !== proof.media.storageKey ||
+      written.checksum !== proof.media.checksum
+    ) {
+      await db.mediaAsset.update({
+        where: { id: proof.media.id },
+        data: {
+          storageKey: written.storageKey,
+          checksum: written.checksum,
+          sizeBytes: written.sizeBytes,
+        },
+      });
+    }
+
+    restored += 1;
+  }
+
+  if (restored > 0) {
+    console.log(`   восстановлено файлов доказательств: ${restored}`);
+  }
+}
+
+/**
  * Флаги антифрода на рискованных выполнениях.
  *
  * Скор не решает за модератора — он сортирует очередь и объясняет, на что
@@ -1671,6 +1726,7 @@ async function main() {
   await seedOffers();
   const users = await seedUsers();
   await seedSubmissions(users);
+  await ensureProofFiles();
   await seedFraudFlags(users);
   await seedReferralEarnings(users);
   await seedWithdrawal(users);
