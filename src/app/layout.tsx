@@ -25,9 +25,10 @@ export default function RootLayout({
   return (
     <html lang="ru" className={geist.variable}>
       <head>
-        {/* Загружается до гидрации: window.Telegram.WebApp должен
-            существовать к моменту инициализации Mini App. */}
+        {/* SDK с CDN Telegram — телефон качает его напрямую, не через туннель. */}
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+        {/* expand + requestFullscreen до первого кадра, иначе iOS оставляет sheet. */}
+        <Script src="/tg-boot.js" strategy="beforeInteractive" />
       </head>
       <body className="antialiased">{children}</body>
     </html>
