@@ -139,6 +139,51 @@ body::before {
   animation: pb-fade-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes pb-tab-next {
+  from {
+    opacity: 0;
+    transform: translateX(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pb-tab-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pb-tab-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-tab-next {
+  animation: pb-tab-next 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-tab-prev {
+  animation: pb-tab-prev 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-tab-fade {
+  animation: pb-tab-fade 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @keyframes pb-shimmer {
   100% {
     transform: translateX(100%);

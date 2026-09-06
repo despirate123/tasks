@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/server/auth";
 import { BottomNav } from "@/components/bottom-nav";
+import { TabTransition } from "@/components/tab-transition";
 import { TelegramInit } from "@/components/telegram-init";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +35,7 @@ export default async function MiniAppLayout({
             paddingRight: "max(1rem, var(--safe-right))",
           }}
         >
-          {children}
+          <TabTransition>{children}</TabTransition>
         </main>
 
         <BottomNav />

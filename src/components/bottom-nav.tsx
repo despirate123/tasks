@@ -3,38 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Compass, ClipboardCheck, Handshake, UserRound } from "lucide-react";
+import { APP_TABS, appTabIndex } from "@/lib/app-tabs";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/components/telegram-init";
 
-const ITEMS = [
-  {
-    href: "/",
-    label: "Задания",
-    icon: Compass,
-    match: (p: string) => p === "/" || p.startsWith("/tasks"),
-  },
-  {
-    href: "/my-tasks",
-    label: "Мои",
-    icon: ClipboardCheck,
-    match: (p: string) => p.startsWith("/my-tasks") || p.startsWith("/submissions"),
-  },
-  {
-    href: "/referrals",
-    label: "Друзья",
-    icon: Handshake,
-    match: (p: string) => p.startsWith("/referrals"),
-  },
-  {
-    href: "/profile",
-    label: "Профиль",
-    icon: UserRound,
-    match: (p: string) => p.startsWith("/profile"),
-  },
-];
+const ICONS = {
+  "/": Compass,
+  "/my-tasks": ClipboardCheck,
+  "/referrals": Handshake,
+  "/profile": UserRound,
+} as const;
 
 export function BottomNav() {
   const pathname = usePathname();
+  const activeIndex = appTabIndex(pathname);
 
   return (
     <nav
@@ -45,25 +27,31 @@ export function BottomNav() {
         paddingRight: "max(0.75rem, var(--safe-right))",
       }}
     >
-      <div className="pointer-events-auto glass mx-auto flex max-w-[var(--app-max-width)] items-center justify-between rounded-[28px] px-1.5 py-1.5 ring-1 ring-inset ring-white/15">
-        {ITEMS.map((item) => {
-          const active = item.match(pathname);
-          const Icon = item.icon;
+      <div className="pointer-events-auto relative mx-auto grid max-w-[var(--app-max-width)] grid-cols-4 rounded-[28px] px-1.5 py-1.5 glass ring-1 ring-inset ring-white/15">
+        {activeIndex >= 0 ? (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute top-1.5 left-1.5 flex w-[calc((100%-0.75rem)/4)] justify-center transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            style={{ transform: `translateX(${activeIndex * 100}%)` }}
+          >
+            <span className="size-9 rounded-full bg-[var(--acid)] shadow-[0_0_22px_rgba(200,255,0,0.45)]" />
+          </span>
+        ) : null}
+
+        {APP_TABS.map((item, index) => {
+          const active = index === activeIndex;
+          const Icon = ICONS[item.href];
           return (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => haptic(active ? "medium" : "light")}
-              className={cn(
-                "relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-[22px] px-1 py-1.5 transition-transform duration-200 active:scale-95",
-              )}
+              className="relative z-10 flex min-w-0 flex-col items-center gap-0.5 rounded-[22px] px-1 py-1.5 transition-transform duration-200 active:scale-95"
             >
               <span
                 className={cn(
-                  "flex size-9 items-center justify-center rounded-full transition-all duration-300",
-                  active
-                    ? "bg-[var(--acid)] text-black shadow-[0_0_22px_rgba(200,255,0,0.45)]"
-                    : "text-content-muted",
+                  "flex size-9 items-center justify-center rounded-full transition-colors duration-300",
+                  active ? "text-black" : "text-content-muted",
                 )}
               >
                 <Icon
@@ -74,7 +62,7 @@ export function BottomNav() {
               </span>
               <span
                 className={cn(
-                  "text-[10px] font-semibold tracking-wide transition-colors",
+                  "text-[10px] font-semibold tracking-wide transition-colors duration-300",
                   active ? "text-[var(--acid)]" : "text-content-muted",
                 )}
               >
