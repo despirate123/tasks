@@ -151,6 +151,8 @@ npm run bot
 
 1. Создайте бота у [@BotFather](https://t.me/BotFather), получите токен.
 2. Заполните `TELEGRAM_BOT_TOKEN` и `TELEGRAM_BOT_USERNAME` в `.env`.
+   Кнопка «Поддержка» в профиле открывает `SUPPORT_TELEGRAM_USERNAME`
+   (по умолчанию `profibux_support`).
 3. Поднимите публичный HTTPS-адрес (для разработки — `ngrok http 43117`)
    и укажите его в `MINIAPP_URL`.
 4. В BotFather: `/newapp` → выберите бота → задайте URL Mini App.

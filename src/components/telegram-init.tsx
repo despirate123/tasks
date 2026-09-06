@@ -21,6 +21,7 @@ type TelegramWebApp = {
     notificationOccurred: (type: "error" | "success" | "warning") => void;
   };
   disableVerticalSwipes?: () => void;
+  openTelegramLink?: (url: string) => void;
 };
 
 declare global {
@@ -108,4 +109,18 @@ export function haptic(style: "light" | "medium" | "heavy" = "light") {
 
 export function hapticNotify(type: "error" | "success" | "warning") {
   window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred(type);
+}
+
+/** Открывает t.me-ссылку в Telegram, в браузере — в новой вкладке. */
+export function openTelegramLink(url: string) {
+  try {
+    const app = window.Telegram?.WebApp;
+    if (app?.openTelegramLink) {
+      app.openTelegramLink(url);
+      return;
+    }
+  } catch {
+    /* старый WebView или обычный браузер */
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
 }

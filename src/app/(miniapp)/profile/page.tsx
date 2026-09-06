@@ -3,8 +3,8 @@ import {
   ArrowUpRight,
   BellRing,
   CheckCircle2,
+  Handshake,
   History,
-  LifeBuoy,
   ShieldCheck,
   Wallet2,
 } from "lucide-react";
@@ -26,6 +26,8 @@ import {
   WithdrawalStatusBadge,
 } from "@/components/domain";
 import { CancelWithdrawalButton } from "@/components/cancel-withdrawal-button";
+import { SupportButton } from "@/components/support-button";
+import { supportTelegramUrl } from "@/lib/support";
 
 export default async function ProfilePage() {
   const user = await getCurrentUser();
@@ -260,7 +262,7 @@ export default async function ProfilePage() {
         />
         <LinkRow
           href="/referrals"
-          icon={<LifeBuoy />}
+          icon={<Handshake />}
           title="Пригласить друзей"
           subtitle={
             stats?.referralsTotal
@@ -270,9 +272,16 @@ export default async function ProfilePage() {
         />
       </Card>
 
-      <p className="px-1 pb-2 text-center text-[11px] text-content-muted">
-        ID для поддержки: {user.telegramId.toString()}
-      </p>
+      <div className="space-y-2">
+        <SupportButton
+          href={supportTelegramUrl(
+            `Здравствуйте! Мой ID: ${user.telegramId.toString()}`,
+          )}
+        />
+        <p className="px-1 text-center text-[11px] text-content-muted">
+          Назовите ID {user.telegramId.toString()} — так быстрее найдём ваш аккаунт
+        </p>
+      </div>
     </div>
   );
 }
