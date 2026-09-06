@@ -22,7 +22,7 @@ export default async function MiniAppLayout({
         style={{ paddingTop: "var(--safe-top)" }}
       >
         {demoBypass ? (
-          <div className="bg-medium px-3 py-2 text-center text-[12px] font-semibold text-black">
+          <div className="bg-[var(--acid)] px-3 py-2 text-center text-[12px] font-semibold text-[var(--ink)]">
             Демо-режим: показан Алексей. В .env поставь DEV_AUTH_BYPASS=false и
             перезапусти npm run start
           </div>
