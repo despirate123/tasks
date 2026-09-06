@@ -273,12 +273,16 @@ export default async function CatalogPage({
           }
         />
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           <p className="text-[12px] text-content-muted">
             Найдено заданий: <span className="tabular font-semibold">{offers.length}</span>
           </p>
-          {offers.map((offer) => (
-            <div key={offer.id} className="animate-fade-up">
+          {offers.map((offer, index) => (
+            <div
+              key={offer.id}
+              className="animate-fade-up"
+              style={{ animationDelay: `${Math.min(index, 7) * 45}ms` }}
+            >
               <OfferCard offer={offer} mine={mineByOffer.get(offer.id) ?? null} />
             </div>
           ))}
