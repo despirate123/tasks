@@ -21,6 +21,14 @@ const POLL_INTERVAL_MS = 20_000;
 export function NotificationBell({ initialCount }: { initialCount: number }) {
   const [count, setCount] = useState(initialCount);
 
+  // У счётчика два источника: опрос и серверный рендер. После отметки
+  // уведомлений прочитанными роут ревалидируется и в проп приходит свежее
+  // число — без этой синхронизации бейдж продолжал бы висеть до следующего
+  // тика опроса, то есть до 20 секунд после действия пользователя.
+  useEffect(() => {
+    setCount(initialCount);
+  }, [initialCount]);
+
   const refresh = useCallback(async () => {
     try {
       const res = await fetch("/api/notifications/unread-count", {
