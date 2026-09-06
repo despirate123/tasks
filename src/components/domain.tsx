@@ -161,7 +161,7 @@ export function OfferCard({
     <Link href={`/tasks/${offer.slug}`} className="block">
       <article
         className={cn(
-          "offer-card relative overflow-hidden rounded-card p-4 ring-1 ring-inset transition-[transform,box-shadow] duration-150 active:scale-[0.99]",
+          "offer-card relative overflow-hidden rounded-card p-4 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-0.5 active:scale-[0.985]",
           offer.isHot
             ? "ring-hard/28"
             : offer.isFeatured
@@ -274,7 +274,7 @@ export function BalanceCard({
 
   return (
     <div className="relative overflow-hidden rounded-card glass p-5 ring-1 ring-inset ring-[var(--acid)]/25">
-      <div className="absolute -top-16 -right-10 size-44 rounded-full bg-[var(--acid)]/18 blur-2xl" />
+      <div className="glow-breathe absolute -top-16 -right-10 size-44 rounded-full bg-[var(--acid)]/18 blur-2xl" />
       <div className="relative">
         <p className="text-[12px] font-medium tracking-wide text-content-secondary uppercase">
           Доступно к выводу
@@ -356,10 +356,10 @@ export function LinkRow({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-4 py-3.5 transition hover:bg-surface-overlay/50 active:bg-surface-overlay"
+      className="group flex items-center gap-3 px-4 py-3.5 transition-colors duration-300 ease-soft hover:bg-surface-overlay/50 active:bg-surface-overlay"
     >
       {icon ? (
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-overlay text-content-secondary [&_svg]:size-4">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-overlay text-content-secondary transition-transform duration-300 ease-soft group-hover:scale-105 [&_svg]:size-4">
           {icon}
         </span>
       ) : null}
@@ -371,7 +371,9 @@ export function LinkRow({
           </span>
         ) : null}
       </span>
-      {right ?? <ArrowUpRight className="size-4 shrink-0 text-content-muted" />}
+      {right ?? (
+        <ArrowUpRight className="size-4 shrink-0 text-content-muted transition-transform duration-300 ease-soft group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+      )}
     </Link>
   );
 }

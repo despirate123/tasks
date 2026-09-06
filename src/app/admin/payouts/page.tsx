@@ -31,7 +31,7 @@ export default async function AdminPayoutsPage() {
   const totalInFlight = inFlight.reduce((sum, w) => sum + Number(w.amountGross), 0);
 
   return (
-    <div className="space-y-5">
+    <div className="motion-page space-y-5">
       <div>
         <h1 className="text-[24px] leading-tight font-bold">Выплаты</h1>
         <p className="mt-1 text-[13px] leading-relaxed text-content-secondary">

@@ -134,7 +134,7 @@ export default async function CatalogPage({
       {wallet ? (
         <Link
           href="/profile"
-          className="flex items-center gap-3 rounded-card glass-thin p-3.5 ring-1 ring-inset ring-[var(--acid)]/20 transition active:scale-[0.99]"
+          className="flex items-center gap-3 rounded-card glass-thin p-3.5 ring-1 ring-inset ring-[var(--acid)]/20 transition-[transform,box-shadow,background] duration-300 ease-soft hover:-translate-y-px active:scale-[0.99]"
         >
           <span className="flex size-10 items-center justify-center rounded-full bg-[var(--acid)]/12 text-[var(--acid)]">
             <Wallet2 className="size-[18px]" />
@@ -258,15 +258,15 @@ export default async function CatalogPage({
           <p className="text-[12px] text-content-muted">
             Найдено заданий: <span className="tabular font-semibold">{offers.length}</span>
           </p>
-          {offers.map((offer, index) => (
-            <div
-              key={offer.id}
-              className="animate-fade-up"
-              style={{ animationDelay: `${Math.min(index, 7) * 45}ms` }}
-            >
-              <OfferCard offer={offer} mine={mineByOffer.get(offer.id) ?? null} />
-            </div>
-          ))}
+          <div className="motion-list space-y-3">
+            {offers.map((offer) => (
+              <OfferCard
+                key={offer.id}
+                offer={offer}
+                mine={mineByOffer.get(offer.id) ?? null}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

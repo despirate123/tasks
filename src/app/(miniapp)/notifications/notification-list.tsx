@@ -103,7 +103,7 @@ export function NotificationList({
           <p className="px-1 text-[11px] font-semibold tracking-wide text-content-muted uppercase">
             {group.label}
           </p>
-          <div className="overflow-hidden rounded-card bg-surface-raised/70 ring-1 ring-inset ring-border-subtle">
+          <div className="motion-list overflow-hidden rounded-card bg-surface-raised/70 ring-1 ring-inset ring-border-subtle">
             {group.items.map((item, index) => {
               const Icon = ICONS[item.type] ?? Bell;
               const isRead = readIds.includes(item.id);
@@ -113,7 +113,7 @@ export function NotificationList({
                   type="button"
                   onClick={() => open(item)}
                   className={cn(
-                    "flex w-full items-start gap-3 px-4 py-3.5 text-left transition active:bg-surface-overlay",
+                    "flex w-full items-start gap-3 px-4 py-3.5 text-left transition-[background,transform] duration-300 ease-soft active:bg-surface-overlay active:scale-[0.995]",
                     index > 0 && "border-t border-border-subtle",
                     !isRead && "bg-brand-500/[0.055]",
                   )}
@@ -138,7 +138,7 @@ export function NotificationList({
                         {item.title}
                       </span>
                       {!isRead ? (
-                        <span className="size-2 shrink-0 rounded-full bg-brand-400" />
+                        <span className="pulse-dot size-2 shrink-0 rounded-full bg-brand-400" />
                       ) : null}
                     </span>
                     <span className="mt-1 block text-[12.5px] leading-relaxed text-content-secondary">

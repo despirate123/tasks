@@ -39,7 +39,7 @@ export default async function AdminBannersPage() {
   const banners = await listAdminBanners();
 
   return (
-    <div className="space-y-6">
+    <div className="motion-page space-y-6">
       <div>
         <h1 className="text-[24px] leading-tight font-bold">Баннеры</h1>
         <p className="mt-1 text-[13px] leading-relaxed text-content-secondary">

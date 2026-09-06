@@ -47,7 +47,7 @@ export function ChipScroller({
     <div className={cn("relative -mx-4", className)}>
       <div
         ref={scroller}
-        className="flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar"
+        className="motion-chips flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar"
         style={{
           WebkitMaskImage: mask,
           maskImage: mask,

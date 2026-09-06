@@ -36,7 +36,7 @@ export function AdminNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-[12.5px] font-medium transition",
+              "inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-[12.5px] font-medium transition-[background,color,transform] duration-300 ease-soft active:scale-[0.97]",
               active
                 ? "bg-brand-500/14 text-brand-300"
                 : "text-content-secondary hover:bg-surface-raised hover:text-content-primary",

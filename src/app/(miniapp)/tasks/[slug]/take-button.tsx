@@ -47,7 +47,7 @@ export function TakeOfferButton({
         Взять задание · {reward}
       </Button>
       {error ? (
-        <p className="text-center text-[12px] text-hard">{error}</p>
+        <p className="animate-fade-up text-center text-[12px] text-hard">{error}</p>
       ) : null}
     </div>
   );

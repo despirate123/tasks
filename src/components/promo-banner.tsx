@@ -116,10 +116,10 @@ export function PromoBannerRail({ banners }: { banners: PromoBannerSlide[] }) {
             <div
               key={banner.id}
               className={cn(
-                "transition-all duration-500 ease-out",
+                "transition-[opacity,transform] duration-700 ease-soft",
                 active
                   ? "relative z-10 translate-y-0 opacity-100"
-                  : "pointer-events-none absolute inset-x-0 top-0 z-0 translate-y-1 opacity-0",
+                  : "pointer-events-none absolute inset-x-0 top-0 z-0 translate-y-1.5 opacity-0",
               )}
               aria-hidden={!active}
             >
@@ -141,7 +141,7 @@ export function PromoBannerRail({ banners }: { banners: PromoBannerSlide[] }) {
                 setIndex(i);
               }}
               className={cn(
-                "h-1 rounded-full transition-all duration-300",
+                "h-1 rounded-full transition-all duration-300 ease-soft",
                 i === index ? "w-4 bg-white" : "w-1.5 bg-white/35",
               )}
             />

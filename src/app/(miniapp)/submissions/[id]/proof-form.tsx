@@ -214,7 +214,7 @@ export function ProofForm({
                     type="button"
                     onClick={() => remove(proof.id)}
                     aria-label="Удалить доказательство"
-                    className="absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-lg bg-surface-base/85 text-content-secondary backdrop-blur transition active:scale-90"
+                    className="absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-lg bg-surface-base/85 text-content-secondary backdrop-blur transition-transform duration-300 ease-soft hover:scale-105 active:scale-90"
                   >
                     <Trash2 className="size-3.5" />
                   </button>

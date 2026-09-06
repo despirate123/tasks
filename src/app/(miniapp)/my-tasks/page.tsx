@@ -4,7 +4,6 @@ import type { SubmissionStatus } from "@/generated/prisma";
 import { getCurrentUser } from "@/server/auth";
 import { getUserSubmissions } from "@/server/modules/submissions";
 import { formatCountdown, formatMoney, formatRelative } from "@/lib/format";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/misc";
@@ -100,12 +99,12 @@ export default async function MyTasksPage({
           }
         />
       ) : (
-        <div className="space-y-2.5">
+        <div className="motion-list space-y-2.5">
           {submissions.map((submission) => (
             <Link
               key={submission.id}
               href={`/submissions/${submission.id}`}
-              className="block animate-fade-up"
+              className="block"
             >
               <Card interactive className="p-3.5">
                 <div className="flex gap-3">

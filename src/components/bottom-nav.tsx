@@ -33,13 +33,13 @@ export function BottomNav() {
           className="pointer-events-none absolute top-2 right-2 left-2 grid h-9 grid-cols-4"
         >
           <div
-            className="flex justify-center transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            className="flex justify-center transition-transform duration-[420ms] ease-soft"
             style={{
               transform: `translate3d(${Math.max(activeIndex, 0) * 100}%, 0, 0)`,
               opacity: activeIndex >= 0 ? 1 : 0,
             }}
           >
-            <span className="size-9 rounded-full bg-[var(--acid)] shadow-[0_0_22px_rgba(200,255,0,0.45)]" />
+            <span className="acid-pulse size-9 rounded-full bg-[var(--acid)] shadow-[0_0_22px_rgba(200,255,0,0.45)]" />
           </div>
         </div>
 
@@ -51,12 +51,12 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               onClick={() => haptic(active ? "medium" : "light")}
-              className="relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 transition-transform duration-200 active:scale-95"
+              className="relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 transition-transform duration-300 ease-soft active:scale-95"
             >
               <span
                 className={cn(
-                  "flex size-9 items-center justify-center rounded-full transition-colors duration-300",
-                  active ? "text-black" : "text-content-muted",
+                  "flex size-9 items-center justify-center rounded-full transition-[color,transform] duration-300 ease-soft",
+                  active ? "text-black scale-105" : "text-content-muted",
                 )}
               >
                 <Icon
@@ -67,7 +67,7 @@ export function BottomNav() {
               </span>
               <span
                 className={cn(
-                  "pb-0.5 text-[10px] font-semibold tracking-wide transition-colors duration-300",
+                  "pb-0.5 text-[10px] font-semibold tracking-wide transition-colors duration-300 ease-soft",
                   active ? "text-[var(--acid)]" : "text-content-muted",
                 )}
               >

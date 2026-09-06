@@ -20,7 +20,7 @@ export default async function HistoryPage() {
     <div className="space-y-4">
       <Link
         href="/profile"
-        className="inline-flex items-center gap-1.5 text-[13px] text-content-secondary transition hover:text-content-primary"
+        className="back-nav"
       >
         <ArrowLeft className="size-4" />
         Профиль
@@ -40,7 +40,7 @@ export default async function HistoryPage() {
           description="Здесь появятся начисления за задания, реферальные бонусы и выводы."
         />
       ) : (
-        <Card className="divide-y divide-border-subtle overflow-hidden">
+        <Card className="motion-list divide-y divide-border-subtle overflow-hidden">
           {transactions.map((entry) => (
             <div key={entry.id} className="px-4 py-3.5">
               <div className="flex items-start justify-between gap-3">

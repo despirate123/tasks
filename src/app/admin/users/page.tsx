@@ -47,7 +47,7 @@ export default async function AdminUsersPage({
   const canManage = ["FINANCE", "ADMIN", "OWNER"].includes(actor.role);
 
   return (
-    <div className="space-y-5">
+    <div className="motion-page space-y-5">
       <div>
         <h1 className="text-[24px] leading-tight font-bold">Пользователи</h1>
         <p className="mt-1 text-[13px] text-content-secondary">

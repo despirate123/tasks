@@ -37,10 +37,10 @@ export default async function AdminOfferPage({
   });
 
   return (
-    <div className="space-y-5">
+    <div className="motion-page space-y-5">
       <Link
         href="/admin/offers"
-        className="inline-flex items-center gap-1.5 text-[13px] text-content-secondary transition hover:text-content-primary"
+        className="back-nav"
       >
         <ArrowLeft className="size-4" />
         Все офферы

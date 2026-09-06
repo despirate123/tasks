@@ -13,10 +13,10 @@ export function SupportButton({ href }: { href: string }) {
       }}
       className="group w-full text-left"
     >
-      <div className="relative overflow-hidden rounded-card p-4 ring-1 ring-inset ring-info/28 transition-[transform,box-shadow] duration-150 active:scale-[0.99]">
+      <div className="relative overflow-hidden rounded-card p-4 ring-1 ring-inset ring-info/28 transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-px active:scale-[0.985]">
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-16 -right-10 size-40 rounded-full bg-info/22 blur-3xl"
+          className="glow-breathe pointer-events-none absolute -top-16 -right-10 size-40 rounded-full bg-info/22 blur-3xl"
         />
         <div
           aria-hidden
@@ -34,7 +34,7 @@ export function SupportButton({ href }: { href: string }) {
               Вопросы по заданиям и выплатам
             </span>
           </span>
-          <span className="inline-flex h-10 shrink-0 items-center rounded-2xl bg-[#7ad4ff] px-3.5 text-[13px] font-semibold text-[#041018] shadow-[0_8px_22px_-8px_rgba(122,212,255,0.8)] transition-transform group-active:scale-[0.98]">
+          <span className="inline-flex h-10 shrink-0 items-center rounded-2xl bg-[#7ad4ff] px-3.5 text-[13px] font-semibold text-[#041018] shadow-[0_8px_22px_-8px_rgba(122,212,255,0.8)] transition-transform duration-300 ease-soft group-hover:scale-[1.03] group-active:scale-[0.98]">
             Написать
           </span>
         </div>

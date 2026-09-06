@@ -103,11 +103,11 @@ export default async function ModerationDetailPage({
   ].filter(Boolean) as { label: string; met: boolean }[];
 
   return (
-    <div className="space-y-5">
+    <div className="motion-page space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/admin/moderation"
-          className="inline-flex items-center gap-1.5 text-[13px] text-content-secondary transition hover:text-content-primary"
+          className="back-nav"
         >
           <ArrowLeft className="size-4" />
           Очередь ({queue.length})

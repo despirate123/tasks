@@ -79,7 +79,7 @@ export default async function AdminDashboard() {
   );
 
   return (
-    <div className="space-y-5">
+    <div className="motion-page space-y-5">
       <div>
         <h1 className="text-[24px] leading-tight font-bold">Дашборд</h1>
         <p className="mt-1 text-[13px] text-content-secondary">
@@ -89,7 +89,7 @@ export default async function AdminDashboard() {
 
       {overdue > 0 ? (
         <Link href="/admin/moderation?filter=overdue" className="block">
-          <div className="flex items-center gap-3 rounded-card bg-hard/10 p-4 ring-1 ring-inset ring-hard/25 transition hover:bg-hard/14">
+          <div className="flex items-center gap-3 rounded-card bg-hard/10 p-4 ring-1 ring-inset ring-hard/25 transition-[background,transform] duration-300 ease-soft hover:bg-hard/14 hover:-translate-y-px">
             <AlertTriangle className="size-5 shrink-0 text-hard" />
             <div className="min-w-0 flex-1">
               <p className="text-[14px] font-semibold text-hard">
@@ -106,7 +106,7 @@ export default async function AdminDashboard() {
         </Link>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+      <div className="motion-list grid grid-cols-2 gap-2.5 lg:grid-cols-4">
         <StatTile
           label="На модерации"
           value={pendingReview}
@@ -130,7 +130,7 @@ export default async function AdminDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="motion-list grid grid-cols-3 gap-2.5">
         <StatTile label="Отправлено за сутки" value={submittedToday} />
         <StatTile label="Оплачено за сутки" value={paidToday} tone="money" />
         <StatTile
@@ -143,12 +143,12 @@ export default async function AdminDashboard() {
       {etaMismatch.length > 0 ? (
         <div className="space-y-2.5">
           <SectionTitle>Заявленное время одобрения расходится с фактом</SectionTitle>
-          <Card className="divide-y divide-border-subtle">
+          <Card className="motion-list divide-y divide-border-subtle">
             {etaMismatch.map((offer) => (
               <Link
                 key={offer.id}
                 href={`/admin/offers/${offer.id}`}
-                className="flex items-center gap-3 p-3.5 transition hover:bg-surface-overlay/40"
+                className="flex items-center gap-3 p-3.5 transition-colors duration-300 ease-soft hover:bg-surface-overlay/40"
               >
                 <Clock className="size-4 shrink-0 text-medium" />
                 <div className="min-w-0 flex-1">
@@ -186,12 +186,12 @@ export default async function AdminDashboard() {
               </p>
             </Card>
           ) : (
-            <Card className="divide-y divide-border-subtle">
+            <Card className="motion-list divide-y divide-border-subtle">
               {recent.map((submission) => (
                 <Link
                   key={submission.id}
                   href={`/admin/moderation/${submission.id}`}
-                  className="flex items-center gap-3 p-3.5 transition hover:bg-surface-overlay/40"
+                  className="flex items-center gap-3 p-3.5 transition-colors duration-300 ease-soft hover:bg-surface-overlay/40"
                 >
                   <OfferAvatar
                     title={submission.offer.brandName ?? submission.offer.title}
@@ -228,7 +228,7 @@ export default async function AdminDashboard() {
 
         <div className="space-y-2.5">
           <SectionTitle>Популярные офферы</SectionTitle>
-          <Card className="divide-y divide-border-subtle">
+          <Card className="motion-list divide-y divide-border-subtle">
             {topOffers.map((offer) => {
               const total = offer.approvedCount + offer.rejectedCount;
               const rate = total > 0 ? Math.round((offer.approvedCount / total) * 100) : null;
@@ -236,7 +236,7 @@ export default async function AdminDashboard() {
                 <Link
                   key={offer.id}
                   href={`/admin/offers/${offer.id}`}
-                  className="flex items-center gap-3 p-3.5 transition hover:bg-surface-overlay/40"
+                  className="flex items-center gap-3 p-3.5 transition-colors duration-300 ease-soft hover:bg-surface-overlay/40"
                 >
                   <OfferAvatar
                     title={offer.brandName ?? offer.title}

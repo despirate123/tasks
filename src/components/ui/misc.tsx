@@ -99,7 +99,7 @@ export function StatTile({
   return (
     <div
       className={cn(
-        "stat-tile rounded-card p-3.5 ring-1 ring-inset",
+        "stat-tile rounded-card p-3.5 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft",
         meta.ring,
         className,
       )}

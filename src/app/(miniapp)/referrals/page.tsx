@@ -45,7 +45,7 @@ export default async function ReferralsPage() {
 
       <ReferralShare link={overview.link} code={overview.code} />
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="motion-list grid grid-cols-3 gap-2">
         <StatTile label="Приглашено" value={overview.referrals.length} />
         <StatTile label="Активных" value={activeCount} tone="brand" />
         <StatTile
@@ -74,7 +74,7 @@ export default async function ReferralsPage() {
             </p>
           </Card>
         ) : (
-          <Card className="divide-y divide-border-subtle">
+          <Card className="motion-list divide-y divide-border-subtle">
             {overview.referrals.map((referral) => (
               <div key={referral.id} className="flex items-center gap-3 p-3.5">
                 <OfferAvatar
@@ -111,7 +111,7 @@ export default async function ReferralsPage() {
       {overview.earnings.length > 0 ? (
         <div className="space-y-2.5">
           <SectionTitle>История начислений</SectionTitle>
-          <Card className="divide-y divide-border-subtle">
+          <Card className="motion-list divide-y divide-border-subtle">
             {overview.earnings.map((earning) => (
               <div key={earning.id} className="flex items-center gap-3 p-3.5">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-money-500/12 text-money-400">

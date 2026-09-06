@@ -41,7 +41,7 @@ export default async function AdminLayout({
 
             <Link
               href="/"
-              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-surface-raised px-3 py-2 text-[12.5px] font-medium text-content-secondary ring-1 ring-inset ring-border-subtle transition hover:text-content-primary"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-surface-raised px-3 py-2 text-[12.5px] font-medium text-content-secondary ring-1 ring-inset ring-border-subtle transition-[background,color,transform] duration-300 ease-soft hover:bg-white/5 hover:text-content-primary active:scale-[0.98]"
             >
               <ArrowLeftRight className="size-3.5" />
               <span className="hidden sm:inline">В приложение</span>

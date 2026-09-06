@@ -69,7 +69,7 @@ export default async function TaskPage({
     <div className="space-y-4">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-[13px] text-content-secondary transition hover:text-content-primary"
+        className="back-nav"
       >
         <ArrowLeft className="size-4" />
         Все задания
@@ -134,7 +134,7 @@ export default async function TaskPage({
           {offer.steps.length > 0 ? (
             <>
               <Separator className="my-4" />
-              <ol className="space-y-3.5">
+              <ol className="motion-list space-y-3.5">
                 {offer.steps.map((step) => (
                   <li key={step.id} className="flex gap-3">
                     <span className="tabular mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg bg-brand-500/16 text-[12px] font-bold text-brand-300">
@@ -176,7 +176,7 @@ export default async function TaskPage({
       <div className="space-y-2.5">
         <SectionTitle>Доказательства</SectionTitle>
         <Card className="p-4">
-          <ul className="space-y-2.5">
+          <ul className="motion-list space-y-2.5">
             {proofRequirements.map((req) => (
               <li key={req.label} className="flex items-center gap-2.5">
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-surface-overlay text-content-secondary [&_svg]:size-4">

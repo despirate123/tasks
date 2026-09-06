@@ -29,7 +29,7 @@ export default async function ModerationQueuePage({
   const overdueCount = queue.filter((item) => item.overdue).length;
 
   return (
-    <div className="space-y-5">
+    <div className="motion-page space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-[24px] leading-tight font-bold">Модерация</h1>
@@ -52,7 +52,7 @@ export default async function ModerationQueuePage({
         <Link
           href="/admin/moderation"
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
+            "inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition-[background,color,box-shadow,transform] duration-300 ease-soft active:scale-[0.97]",
             !onlyOverdue
               ? "bg-brand-500/14 text-brand-300 ring-brand-500/28"
               : "bg-surface-raised/70 text-content-secondary ring-border-subtle",
@@ -63,7 +63,7 @@ export default async function ModerationQueuePage({
         <Link
           href="/admin/moderation?filter=overdue"
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
+            "inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition-[background,color,box-shadow,transform] duration-300 ease-soft active:scale-[0.97]",
             onlyOverdue
               ? "bg-hard/12 text-hard ring-hard/25"
               : "bg-surface-raised/70 text-content-secondary ring-border-subtle",

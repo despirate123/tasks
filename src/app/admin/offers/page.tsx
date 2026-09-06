@@ -35,7 +35,7 @@ export default async function AdminOffersPage({
   });
 
   return (
-    <div className="space-y-5">
+    <div className="motion-page space-y-5">
       <div>
         <h1 className="text-[24px] leading-tight font-bold">Офферы</h1>
         <p className="mt-1 text-[13px] leading-relaxed text-content-secondary">
@@ -50,7 +50,7 @@ export default async function AdminOffersPage({
             key={status || "all"}
             href={status ? `/admin/offers?status=${status}` : "/admin/offers"}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
+              "inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition-[background,color,box-shadow,transform] duration-300 ease-soft active:scale-[0.97]",
               (params.status ?? "") === status
                 ? "bg-brand-500/14 text-brand-300 ring-brand-500/28"
                 : "bg-surface-raised/70 text-content-secondary ring-border-subtle",
@@ -138,7 +138,7 @@ export default async function AdminOffersPage({
                     </p>
                     <Link
                       href={`/admin/offers/${offer.id}`}
-                      className="mt-1 inline-flex items-center gap-1.5 rounded-xl bg-surface-overlay px-3 py-1.5 text-[12px] font-medium text-content-secondary ring-1 ring-inset ring-border-strong transition hover:text-content-primary"
+                      className="mt-1 inline-flex items-center gap-1.5 rounded-xl bg-surface-overlay px-3 py-1.5 text-[12px] font-medium text-content-secondary ring-1 ring-inset ring-border-strong transition-[background,color,transform] duration-300 ease-soft hover:bg-white/5 hover:text-content-primary active:scale-[0.98]"
                     >
                       <Pencil className="size-3" />
                       Редактировать

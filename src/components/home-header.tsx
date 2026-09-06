@@ -28,7 +28,7 @@ export async function HomeHeader() {
             <Link
               href="/admin"
               aria-label="Админ-панель"
-              className="flex size-10 items-center justify-center rounded-full glass-thin ring-1 ring-inset ring-white/12 transition active:scale-95"
+              className="flex size-10 items-center justify-center rounded-full glass-thin ring-1 ring-inset ring-white/12 transition-[transform,background] duration-300 ease-soft hover:bg-white/6 active:scale-95"
             >
               <ShieldCheck className="size-[18px] text-content-secondary" />
             </Link>

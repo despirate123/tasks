@@ -51,7 +51,7 @@ export default async function SubmissionPage({
     <div className="space-y-4">
       <Link
         href="/my-tasks"
-        className="inline-flex items-center gap-1.5 text-[13px] text-content-secondary transition hover:text-content-primary"
+        className="back-nav"
       >
         <ArrowLeft className="size-4" />
         Мои задания
@@ -270,7 +270,7 @@ export default async function SubmissionPage({
         <div className="space-y-2.5">
           <SectionTitle>История</SectionTitle>
           <Card className="p-4">
-            <ol className="space-y-4">
+            <ol className="motion-list space-y-4">
               {timeline.map((event, index) => (
                 <li key={event.id} className="relative flex gap-3">
                   <span className="relative flex flex-col items-center">

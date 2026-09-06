@@ -126,7 +126,7 @@ export default async function ProfilePage() {
         </p>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="motion-list grid grid-cols-2 gap-2">
         <StatTile
           label="Выполнено"
           value={stats?.tasksApproved ?? 0}
@@ -162,7 +162,7 @@ export default async function ProfilePage() {
       {activeWithdrawals.length > 0 ? (
         <div className="space-y-2.5">
           <SectionTitle>Заявки на вывод</SectionTitle>
-          <Card className="divide-y divide-border-subtle">
+          <Card className="motion-list divide-y divide-border-subtle">
             {activeWithdrawals.map((w) => (
               <div key={w.id} className="flex items-center gap-3 p-3.5">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-overlay text-content-secondary">
@@ -213,7 +213,7 @@ export default async function ProfilePage() {
             </p>
           </Card>
         ) : (
-          <Card className="divide-y divide-border-subtle">
+          <Card className="motion-list divide-y divide-border-subtle">
             {transactions.slice(0, 8).map((entry) => (
               <div key={entry.id} className="flex items-center gap-3 p-3.5">
                 <span
@@ -247,7 +247,7 @@ export default async function ProfilePage() {
         )}
       </div>
 
-      <Card className="divide-y divide-border-subtle overflow-hidden">
+      <Card className="motion-list divide-y divide-border-subtle overflow-hidden">
         <LinkRow
           href="/profile/withdraw"
           icon={<Wallet2 />}

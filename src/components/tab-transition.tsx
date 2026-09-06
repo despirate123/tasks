@@ -27,6 +27,7 @@ export function TabTransition({ children }: { children: React.ReactNode }) {
     <div
       ref={node}
       className={cn(
+        "tab-surface",
         direction > 0 && "animate-tab-next",
         direction < 0 && "animate-tab-prev",
         direction === 0 && "animate-tab-fade",
