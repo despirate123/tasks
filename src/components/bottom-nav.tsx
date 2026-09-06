@@ -26,21 +26,15 @@ export function BottomNav() {
   }, [router]);
 
   return (
-    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-50">
-      <div
-        aria-hidden
-        className="absolute inset-x-0 bottom-0 bg-[var(--canvas)]"
-        style={{ height: "calc(var(--nav-height) + 0.35rem)" }}
-      />
-      <div
-        className="relative px-3"
-        style={{
-          paddingBottom: "calc(var(--safe-bottom) + 0.55rem)",
-          paddingLeft: "max(0.75rem, var(--safe-left))",
-          paddingRight: "max(0.75rem, var(--safe-right))",
-        }}
-      >
-        <div className="clip-frame clip-dock liquid-glass pointer-events-auto relative mx-auto flex max-w-[var(--app-max-width)] items-start overflow-hidden rounded-[28px] px-2 py-2 glass-dock">
+    <nav
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3"
+      style={{
+        paddingBottom: "calc(var(--safe-bottom) + 0.55rem)",
+        paddingLeft: "max(0.75rem, var(--safe-left))",
+        paddingRight: "max(0.75rem, var(--safe-right))",
+      }}
+    >
+      <div className="clip-frame clip-dock liquid-glass pointer-events-auto relative mx-auto flex max-w-[var(--app-max-width)] items-start overflow-hidden rounded-[28px] px-2 py-2 glass-dock">
           <div
             aria-hidden
             className="pointer-events-none absolute top-2 right-2 left-2 grid h-9 grid-cols-3"
@@ -91,7 +85,6 @@ export function BottomNav() {
             );
           })}
         </div>
-      </div>
     </nav>
   );
 }

@@ -242,7 +242,7 @@ body::after {
 }
 
 .glass-dock {
-  background: #161616;
+  background: rgb(28 28 28 / 0.88);
 }
 
 .corner-wash {
