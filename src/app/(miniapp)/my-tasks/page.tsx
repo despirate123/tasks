@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/misc";
 import { DifficultyBadge, OfferAvatar, SubmissionStatusBadge } from "@/components/domain";
 import { ChipScroller } from "@/components/chip-scroller";
+import { chipClass } from "@/lib/chips";
 
 const TABS: { key: string; label: string; statuses: SubmissionStatus[] }[] = [
   {
@@ -68,12 +69,7 @@ export default async function MyTasksPage({
             <Link
               key={item.key}
               href={`/my-tasks?tab=${item.key}`}
-              className={cn(
-                "inline-flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
-                active
-                  ? "bg-brand-500/14 text-brand-300 ring-brand-500/28"
-                  : "bg-surface-raised/70 text-content-secondary ring-border-subtle",
-              )}
+              className={chipClass(active)}
             >
               {item.label}
               {count > 0 ? <span className="tabular opacity-70">{count}</span> : null}

@@ -18,6 +18,7 @@ import { EmptyState } from "@/components/ui/misc";
 import { OfferCard } from "@/components/domain";
 import { HomeHeader } from "@/components/home-header";
 import { ChipScroller } from "@/components/chip-scroller";
+import { chipClass } from "@/lib/chips";
 
 const SORTS = [
   { key: "", label: "Рекомендуем" },
@@ -187,12 +188,7 @@ export default async function CatalogPage({
             <Link
               key={value}
               href={toggleDifficultyHref(value)}
-              className={cn(
-                "inline-flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
-                active
-                  ? meta.className
-                  : "glass-thin text-content-secondary ring-white/10",
-              )}
+              className={chipClass(active, active ? meta.className : undefined)}
             >
               <span className={cn("size-1.5 rounded-full", meta.dot)} />
               {meta.label}
@@ -206,12 +202,7 @@ export default async function CatalogPage({
           <Link
             key={sort.key || "default"}
             href={buildHref({ sort: sort.key || undefined })}
-            className={cn(
-              "inline-flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
-              (params.sort ?? "") === sort.key
-                ? "bg-brand-500/14 text-brand-300 ring-brand-500/28"
-                : "glass-thin text-content-secondary ring-white/10",
-            )}
+            className={chipClass((params.sort ?? "") === sort.key)}
           >
             {sort.key === "" ? <SlidersHorizontal className="size-3" /> : null}
             {sort.label}
@@ -223,12 +214,7 @@ export default async function CatalogPage({
         <ChipScroller>
           <Link
             href={buildHref({ category: undefined })}
-            className={cn(
-              "inline-flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
-              !params.category
-                ? "bg-[var(--acid)] text-black ring-[var(--acid)]"
-                : "glass-thin text-content-secondary ring-white/10",
-            )}
+            className={chipClass(!params.category)}
           >
             Все категории
           </Link>
@@ -236,12 +222,7 @@ export default async function CatalogPage({
             <Link
               key={category.slug}
               href={buildHref({ category: category.slug })}
-              className={cn(
-                "inline-flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
-                params.category === category.slug
-                  ? "bg-[var(--acid)] text-black ring-[var(--acid)]"
-                  : "glass-thin text-content-secondary ring-white/10",
-              )}
+              className={chipClass(params.category === category.slug)}
             >
               {category.icon ? <span>{category.icon}</span> : null}
               {category.name}
