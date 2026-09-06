@@ -4,7 +4,7 @@ import { ArrowLeft, Clock, ExternalLink, Tag } from "lucide-react";
 import { getCurrentUser } from "@/server/auth";
 import { db } from "@/server/db";
 import { validateProofs } from "@/server/modules/submissions";
-import { formatCountdown, formatDateTime, formatEta, formatMoney } from "@/lib/format";
+import { formatCountdown, formatDateTime, formatMoney } from "@/lib/format";
 import { SUBMISSION_STATUS } from "@/lib/labels";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -313,11 +313,6 @@ export default async function SubmissionPage({
           </Card>
         </div>
       ) : null}
-
-      <p className="px-1 text-center text-[11.5px] text-content-muted">
-        Заявленное время проверки — {formatEta(submission.offer.approvalEtaMinutes)}.
-        Если срок нарушен, напишите в поддержку и укажите код {submission.publicCode}.
-      </p>
     </div>
   );
 }
