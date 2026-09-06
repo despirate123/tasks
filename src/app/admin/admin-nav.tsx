@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ChipScroller } from "@/components/chip-scroller";
 
 const ITEMS = [
   { href: "/admin", label: "Дашборд", icon: LayoutDashboard, exact: true },
@@ -25,7 +26,7 @@ export function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-2.5 no-scrollbar">
+    <ChipScroller className="pb-2.5">
       {ITEMS.map((item) => {
         const active = item.exact
           ? pathname === item.href
@@ -47,6 +48,6 @@ export function AdminNav() {
           </Link>
         );
       })}
-    </nav>
+    </ChipScroller>
   );
 }

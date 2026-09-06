@@ -209,24 +209,20 @@ export default async function AdminDashboard() {
                     <p className="truncate text-[13px] font-medium">
                       {submission.offer.title}
                     </p>
-                    <p className="mt-0.5 text-[11.5px] text-content-muted">
+                    <p className="mt-0.5 truncate text-[11.5px] text-content-muted">
                       {submission.publicCode} ·{" "}
                       {submission.submittedAt
                         ? formatRelative(submission.submittedAt)
                         : "—"}
+                      {submission.reviewDeadlineAt &&
+                      submission.reviewDeadlineAt < now
+                        ? " · просрочено"
+                        : ""}
                     </p>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className="tabular text-[13px] font-semibold text-money-400">
-                      {formatMoney(submission.rewardAmount)}
-                    </p>
-                    {submission.reviewDeadlineAt &&
-                    submission.reviewDeadlineAt < now ? (
-                      <Badge tone="danger" className="mt-0.5">
-                        просрочено
-                      </Badge>
-                    ) : null}
-                  </div>
+                  <p className="tabular shrink-0 text-[13px] font-semibold text-money-400">
+                    {formatMoney(submission.rewardAmount)}
+                  </p>
                 </Link>
               ))}
             </Card>
