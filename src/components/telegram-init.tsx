@@ -1,0 +1,76 @@
+"use client";
+
+import { useEffect } from "react";
+
+type TelegramWebApp = {
+  ready: () => void;
+  expand: () => void;
+  initData: string;
+  themeParams?: Record<string, string>;
+  viewportStableHeight?: number;
+  onEvent?: (event: string, handler: () => void) => void;
+  setHeaderColor?: (color: string) => void;
+  setBackgroundColor?: (color: string) => void;
+  HapticFeedback?: {
+    impactOccurred: (style: "light" | "medium" | "heavy") => void;
+    notificationOccurred: (type: "error" | "success" | "warning") => void;
+  };
+  disableVerticalSwipes?: () => void;
+};
+
+declare global {
+  interface Window {
+    Telegram?: { WebApp?: TelegramWebApp };
+  }
+}
+
+/**
+ * Инициализация Telegram WebView.
+ *
+ * Вне Telegram (обычный браузер, локальная разработка) молча ничего не делает —
+ * приложение остаётся работоспособным, аутентификация идёт через DEV_AUTH_BYPASS.
+ */
+export function TelegramInit() {
+  useEffect(() => {
+    const webApp = window.Telegram?.WebApp;
+    if (!webApp) return;
+
+    webApp.ready();
+    webApp.expand();
+    webApp.disableVerticalSwipes?.();
+    webApp.setHeaderColor?.("#0b0f1a");
+    webApp.setBackgroundColor?.("#0b0f1a");
+
+    // Safe area и высота вьюпорта — иначе контент уезжает под системные элементы
+    // и нижняя навигация оказывается за пределами экрана.
+    const applyViewport = () => {
+      if (webApp.viewportStableHeight) {
+        document.documentElement.style.setProperty(
+          "--tg-viewport-stable-height",
+          `${webApp.viewportStableHeight}px`,
+        );
+      }
+    };
+    applyViewport();
+    webApp.onEvent?.("viewportChanged", applyViewport);
+
+    // Обмен initData на серверную сессию.
+    if (webApp.initData) {
+      void fetch("/api/auth/telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ initData: webApp.initData }),
+      });
+    }
+  }, []);
+
+  return null;
+}
+
+export function haptic(style: "light" | "medium" | "heavy" = "light") {
+  window.Telegram?.WebApp?.HapticFeedback?.impactOccurred(style);
+}
+
+export function hapticNotify(type: "error" | "success" | "warning") {
+  window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred(type);
+}

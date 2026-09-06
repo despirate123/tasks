@@ -1,0 +1,1094 @@
+// ProfiBux — Telegram Mini App для выполнения рекламных заданий (CPA).
+//
+// Принципы схемы:
+//  1. Деньги — только Decimal, никогда Float. Внутренняя учётная валюта — RUB.
+//  2. Баланс не хранится как "истина" — истина это append-only ledger_entries.
+//     Поля в wallets — денормализованный кэш, пересчитываемый из леджера.
+//  3. Любой переход статуса (выполнение, вывод) пишется в *_events — полный аудит.
+//  4. Все внешние деньги/интеграции идемпотентны через idempotencyKey.
+//  5. Доставка уведомлений и вебхуков — через outbox (transactional outbox pattern).
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  SUPPORT
+  MODERATOR
+  FINANCE
+  ADMIN
+  OWNER
+}
+
+enum UserStatus {
+  ACTIVE
+  LIMITED // может смотреть, но не может брать задания (антифрод)
+  BLOCKED
+}
+
+enum OfferSourceCode {
+  GETBLOGGER
+  LEADGID
+  RAFINAD
+  MANUAL
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+/// Откуда взялось значение сложности / времени одобрения.
+/// MANUAL означает, что админ выставил вручную и автосинк это НЕ перезапишет.
+enum ValueSource {
+  AUTO
+  NETWORK
+  MANUAL
+}
+
+enum OfferStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum ProofKind {
+  PHOTO
+  VIDEO
+  TEXT
+  FILE
+}
+
+enum DeviceRequirement {
+  ANY
+  IOS
+  ANDROID
+  DESKTOP
+}
+
+/// Жизненный цикл выполнения задания.
+/// Основная цепочка из ТЗ: PENDING_REVIEW → PENDING_PAYOUT → PAID / REJECTED
+enum SubmissionStatus {
+  DRAFT // пользователь взял задание, но ещё не отправил доказательства
+  PENDING_REVIEW // ожидает подтверждения
+  IN_REVIEW // взято модератором в работу (лок)
+  NEEDS_REVISION // отправлено на доработку, пользователь может дозагрузить пруфы
+  PENDING_PAYOUT // подтверждено, ожидает выплаты (в холде до истечения hold-периода)
+  PAID // выплачено — деньги зачислены на баланс
+  REJECTED // отклонено
+  EXPIRED // истёк срок выполнения / доработки
+  CANCELLED // отменено пользователем
+}
+
+enum ActorType {
+  USER
+  MODERATOR
+  ADMIN
+  SYSTEM
+  NETWORK // постбек партнёрской сети
+}
+
+enum LedgerDirection {
+  CREDIT // приход на баланс
+  DEBIT // расход с баланса
+}
+
+enum LedgerEntryType {
+  TASK_REWARD
+  REFERRAL_BONUS
+  WITHDRAWAL_HOLD
+  WITHDRAWAL_SETTLED
+  WITHDRAWAL_REFUND
+  WITHDRAWAL_FEE
+  MANUAL_ADJUSTMENT
+  PROMO_BONUS
+  PENALTY
+  REVERSAL
+}
+
+enum PayoutMethodKind {
+  CARD_RUB
+  SBP_RUB
+  USDT_TRC20
+  USDT_ERC20
+  USDT_TON
+}
+
+enum WithdrawalStatus {
+  PENDING_REVIEW // заявка создана, средства в холде
+  APPROVED // одобрена финансистом, ждёт отправки
+  PROCESSING // отправлена в провайдера/сеть
+  SENT // транзакция в сети, ждём подтверждений
+  COMPLETED // подтверждено
+  FAILED // техническая ошибка, средства возвращены
+  REJECTED // отклонено вручную, средства возвращены
+  CANCELLED // отменено пользователем до обработки
+}
+
+enum PayoutProvider {
+  MANUAL
+  CRYPTO_HOT_WALLET
+  CRYPTO_EXCHANGE
+  RUB_GATEWAY
+}
+
+enum NotificationType {
+  SUBMISSION_RECEIVED
+  SUBMISSION_APPROVED
+  SUBMISSION_REJECTED
+  SUBMISSION_NEEDS_REVISION
+  SUBMISSION_PAID
+  WITHDRAWAL_CREATED
+  WITHDRAWAL_COMPLETED
+  WITHDRAWAL_FAILED
+  REFERRAL_JOINED
+  REFERRAL_EARNING
+  NEW_OFFER
+  OFFER_EXPIRING
+  BALANCE_CREDITED
+  SYSTEM_ANNOUNCEMENT
+  ACCOUNT_LIMITED
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum NotificationChannel {
+  IN_APP
+  BOT
+}
+
+enum DeliveryStatus {
+  QUEUED
+  SENT
+  FAILED
+  SKIPPED // отключено настройками пользователя или дедуплицировано
+}
+
+enum ReferralStatus {
+  PENDING // зарегистрировался, но ещё не выполнил ни одного задания
+  ACTIVE // есть хотя бы одно оплаченное задание
+  BLOCKED // отклонён антифродом
+}
+
+enum MediaStatus {
+  PENDING // получен presigned URL, загрузка не подтверждена
+  READY
+  QUARANTINED // не прошёл проверку (вирус / запрещённый контент)
+  DELETED
+}
+
+enum SyncRunStatus {
+  RUNNING
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+enum BroadcastStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  CANCELLED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ПОЛЬЗОВАТЕЛИ
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(cuid())
+  telegramId   BigInt     @unique
+  username     String?
+  firstName    String?
+  lastName     String?
+  languageCode String?    @default("ru")
+  photoUrl     String?
+  isPremium    Boolean    @default(false)
+  role         UserRole   @default(USER)
+  status       UserStatus @default(ACTIVE)
+  statusReason String?
+
+  // Реферальная система
+  referralCode String  @unique
+  referrerId   String?
+  referrer     User?   @relation("UserReferrals", fields: [referrerId], references: [id], onDelete: SetNull)
+  referrals    User[]  @relation("UserReferrals")
+
+  // Антифрод-снапшот
+  riskScore   Int     @default(0)
+  lastIp      String?
+  lastDeviceH String? // хэш отпечатка устройства
+
+  botBlockedAt DateTime? // пользователь заблокировал бота — не пытаемся писать
+  onboardedAt  DateTime?
+  lastSeenAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  wallets             Wallet[]
+  ledgerEntries       LedgerEntry[]
+  submissions         TaskSubmission[]
+  payoutMethods       PayoutMethod[]
+  withdrawals         Withdrawal[]
+  notifications       Notification[]
+  notificationPrefs   NotificationPreference[]
+  referralEarnings    ReferralEarning[]        @relation("EarningReferrer")
+  referralAttribution ReferralEarning[]        @relation("EarningReferee")
+  referralLinksOut    Referral[]               @relation("ReferralReferrer")
+  referralLinkIn      Referral?                @relation("ReferralReferee")
+  devices             UserDevice[]
+  fraudFlags          FraudFlag[]
+  auditLogs           AuditLog[]               @relation("AuditActor")
+  reviewedSubmissions TaskSubmission[]         @relation("SubmissionReviewer")
+  reviewedWithdrawals Withdrawal[]             @relation("WithdrawalReviewer")
+  createdOffers       Offer[]                  @relation("OfferCreatedBy")
+  updatedOffers       Offer[]                  @relation("OfferUpdatedBy")
+  uploadedMedia       MediaAsset[]
+  stats               UserStats?
+
+  @@index([referrerId])
+  @@index([status, role])
+  @@index([createdAt])
+  @@map("users")
+}
+
+/// Денормализованная статистика профиля — чтобы не считать агрегаты на каждый запрос.
+model UserStats {
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tasksSubmitted   Int     @default(0)
+  tasksApproved    Int     @default(0)
+  tasksRejected    Int     @default(0)
+  approvalRate     Decimal @default(0) @db.Decimal(5, 2)
+  totalEarned      Decimal @default(0) @db.Decimal(18, 2)
+  totalWithdrawn   Decimal @default(0) @db.Decimal(18, 2)
+  referralsTotal   Int     @default(0)
+  referralsActive  Int     @default(0)
+  referralEarnings Decimal @default(0) @db.Decimal(18, 2)
+  currentStreak    Int     @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  @@map("user_stats")
+}
+
+/// Отпечатки устройств — базовая детекция мультиаккаунтов.
+model UserDevice {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fingerprint String
+  ip          String?
+  userAgent   String?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @updatedAt
+  seenCount   Int      @default(1)
+
+  @@unique([userId, fingerprint])
+  @@index([fingerprint])
+  @@index([ip])
+  @@map("user_devices")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ОФФЕРЫ (ЗАДАНИЯ)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model OfferSource {
+  id          String          @id @default(cuid())
+  code        OfferSourceCode @unique
+  name        String
+  enabled     Boolean         @default(true)
+  /// Конфиг интеграции: base_url, ключи (шифруются на уровне приложения), маппинг полей.
+  config      Json            @default("{}")
+  syncCron    String? // например "0 */2 * * *"
+  lastSyncAt  DateTime?
+  /// Автоматический дефолт при импорте: если true — сложность/ETA берём из эвристики,
+  /// но никогда не перезаписываем поля, помеченные как MANUAL.
+  autoClassify Boolean        @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  offers   Offer[]
+  syncRuns OfferSyncRun[]
+
+  @@map("offer_sources")
+}
+
+model OfferSyncRun {
+  id         String        @id @default(cuid())
+  sourceId   String
+  source     OfferSource   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  status     SyncRunStatus @default(RUNNING)
+  created    Int           @default(0)
+  updated    Int           @default(0)
+  skipped    Int           @default(0)
+  failed     Int           @default(0)
+  error      String?
+  payload    Json?
+  startedAt  DateTime      @default(now())
+  finishedAt DateTime?
+
+  @@index([sourceId, startedAt])
+  @@map("offer_sync_runs")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  icon      String? // emoji или ключ иконки
+  color     String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  offers Offer[]
+
+  @@map("categories")
+}
+
+model Offer {
+  id         String       @id @default(cuid())
+  sourceId   String
+  source     OfferSource  @relation(fields: [sourceId], references: [id])
+  /// ID оффера в партнёрской сети — ключ идемпотентности при синхронизации.
+  externalId String?
+  slug       String       @unique
+  categoryId String?
+  category   Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  title       String
+  subtitle    String?
+  description String  @db.Text
+  brandName   String?
+  iconUrl     String?
+  coverUrl    String?
+
+  // ── Сложность и время одобрения (ручное переопределение админом) ──────────
+  difficulty       Difficulty  @default(MEDIUM)
+  difficultySource ValueSource @default(AUTO)
+  /// Минуты. Показывается пользователю как "≈ 2 часа", "≈ 3 дня".
+  approvalEtaMinutes Int         @default(1440)
+  approvalEtaSource  ValueSource @default(AUTO)
+  /// Фактическая медиана времени модерации — считается воркером, служит основой для AUTO.
+  actualEtaMinutes   Int?
+
+  // ── Деньги ────────────────────────────────────────────────────────────────
+  /// Сколько получает пользователь.
+  rewardAmount  Decimal @db.Decimal(18, 2)
+  /// Сколько платит сеть нам (для расчёта маржи, скрыто от пользователя).
+  networkPayout Decimal? @db.Decimal(18, 2)
+  currency      String  @default("RUB")
+  /// Холд перед зачислением после одобрения (антифрод / отмены у рекламодателя).
+  holdHours     Int     @default(0)
+
+  // ── Требования к доказательствам ──────────────────────────────────────────
+  requirePhoto   Boolean @default(true)
+  requireVideo   Boolean @default(false)
+  requireComment Boolean @default(true)
+  minPhotos      Int     @default(1)
+  maxPhotos      Int     @default(5)
+  proofHint      String? @db.Text
+
+  // ── Автоодобрение ─────────────────────────────────────────────────────────
+  autoApprove          Boolean @default(false)
+  autoApproveDelayMins Int     @default(0)
+
+  // ── Лимиты и таргетинг ────────────────────────────────────────────────────
+  totalLimit      Int?
+  perUserLimit    Int               @default(1)
+  dailyLimit      Int?
+  /// Сколько минут у пользователя на выполнение после взятия задания.
+  completionTtlMins Int             @default(1440)
+  geo             String[]          @default(["RU"])
+  minAge          Int?
+  device          DeviceRequirement @default(ANY)
+  newUsersOnly    Boolean           @default(false)
+
+  // ── Трекинг ───────────────────────────────────────────────────────────────
+  trackingUrl     String? @db.Text
+  postbackEnabled Boolean @default(false)
+  promoCode       String?
+
+  // ── Публикация ────────────────────────────────────────────────────────────
+  status     OfferStatus @default(DRAFT)
+  isFeatured Boolean     @default(false)
+  isHot      Boolean     @default(false)
+  priority   Int         @default(0)
+  startsAt   DateTime?
+  endsAt     DateTime?
+
+  // ── Денормализованная статистика ──────────────────────────────────────────
+  takenCount    Int     @default(0)
+  completedCount Int    @default(0)
+  approvedCount Int     @default(0)
+  rejectedCount Int     @default(0)
+  approvalRate  Decimal @default(0) @db.Decimal(5, 2)
+
+  createdById String?
+  createdBy   User?    @relation("OfferCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+  updatedBy   User?    @relation("OfferUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  steps       OfferStep[]
+  submissions TaskSubmission[]
+
+  @@unique([sourceId, externalId])
+  @@index([status, priority(sort: Desc)])
+  @@index([categoryId, status])
+  @@index([difficulty, status])
+  @@index([rewardAmount])
+  @@map("offers")
+}
+
+/// Пошаговая инструкция — рендерится в Mini App как чек-лист.
+model OfferStep {
+  id          String  @id @default(cuid())
+  offerId     String
+  offer       Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  order       Int
+  title       String
+  description String? @db.Text
+
+  @@unique([offerId, order])
+  @@map("offer_steps")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ВЫПОЛНЕНИЯ И МОДЕРАЦИЯ
+// ─────────────────────────────────────────────────────────────────────────────
+
+model TaskSubmission {
+  id         String           @id @default(cuid())
+  /// Короткий человекочитаемый код для поддержки, напр. "TS-8F3K2".
+  publicCode String           @unique
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offerId    String
+  offer      Offer            @relation(fields: [offerId], references: [id])
+  status     SubmissionStatus @default(DRAFT)
+
+  /// Снапшот вознаграждения на момент взятия задания — защищает пользователя
+  /// от изменения ставки в оффере после начала выполнения.
+  rewardAmount Decimal @db.Decimal(18, 2)
+  currency     String  @default("RUB")
+
+  /// Текстовый комментарий-доказательство.
+  comment String? @db.Text
+
+  attemptNo     Int @default(1)
+  revisionCount Int @default(0)
+
+  /// SLA-дедлайн модерации = submittedAt + offer.approvalEtaMinutes.
+  reviewDeadlineAt DateTime?
+  /// Дедлайн выполнения = startedAt + offer.completionTtlMins.
+  expiresAt        DateTime?
+  /// Когда деньги выйдут из холда и станут доступными.
+  payoutAvailableAt DateTime?
+
+  reviewerId       String?
+  reviewer         User?             @relation("SubmissionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewLockedAt   DateTime?
+  rejectionReasonId String?
+  rejectionReason  RejectionReason?  @relation(fields: [rejectionReasonId], references: [id], onDelete: SetNull)
+  reviewComment    String?           @db.Text
+  autoApproved     Boolean           @default(false)
+
+  // Антифрод
+  clickId    String? @unique
+  ip         String?
+  deviceHash String?
+  riskScore  Int     @default(0)
+
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+  reviewedAt  DateTime?
+  paidAt      DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  proofs        SubmissionProof[]
+  events        SubmissionEvent[]
+  ledgerEntries LedgerEntry[]
+  refEarnings   ReferralEarning[]
+  fraudFlags    FraudFlag[]
+
+  @@index([userId, status])
+  @@index([offerId, status])
+  @@index([status, submittedAt])
+  @@index([status, reviewDeadlineAt])
+  @@index([status, payoutAvailableAt])
+  @@map("task_submissions")
+}
+
+model SubmissionProof {
+  id           String         @id @default(cuid())
+  submissionId String
+  submission   TaskSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  kind         ProofKind
+  mediaId      String?
+  media        MediaAsset?    @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  text         String?        @db.Text
+  order        Int            @default(0)
+  createdAt    DateTime       @default(now())
+
+  @@index([submissionId])
+  @@map("submission_proofs")
+}
+
+model MediaAsset {
+  id         String      @id @default(cuid())
+  storageKey String      @unique
+  bucket     String
+  mimeType   String
+  sizeBytes  Int
+  width      Int?
+  height     Int?
+  durationS  Int?
+  /// SHA-256 файла — мгновенно ловит повторную отправку того же пруфа.
+  checksum   String?
+  /// Перцептивный хэш изображения — ловит пересжатые/обрезанные дубликаты.
+  phash      String?
+  status     MediaStatus @default(PENDING)
+  /// file_id из Telegram, если пруф пришёл через бота.
+  tgFileId   String?
+  uploadedById String?
+  uploadedBy   User?     @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  meta       Json        @default("{}")
+  createdAt  DateTime    @default(now())
+
+  proofs SubmissionProof[]
+
+  @@index([checksum])
+  @@index([phash])
+  @@map("media_assets")
+}
+
+/// Справочник причин отказа — модератор выбирает из списка, а не пишет текст.
+/// Даёт аналитику и предсказуемые формулировки для пользователя.
+model RejectionReason {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  title          String
+  description    String?  @db.Text
+  /// Разрешает пользователю дозагрузить пруфы (NEEDS_REVISION вместо REJECTED).
+  allowsRevision Boolean  @default(false)
+  /// Штрафные очки к riskScore пользователя.
+  riskPoints     Int      @default(0)
+  sortOrder      Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  submissions TaskSubmission[]
+
+  @@map("rejection_reasons")
+}
+
+/// Неизменяемая лента событий выполнения — история для пользователя и аудит для админа.
+model SubmissionEvent {
+  id           String            @id @default(cuid())
+  submissionId String
+  submission   TaskSubmission    @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  actorType    ActorType
+  actorId      String?
+  fromStatus   SubmissionStatus?
+  toStatus     SubmissionStatus?
+  comment      String?           @db.Text
+  payload      Json?
+  createdAt    DateTime          @default(now())
+
+  @@index([submissionId, createdAt])
+  @@map("submission_events")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ДЕНЬГИ: КОШЕЛЬКИ, ЛЕДЖЕР, ВЫВОДЫ
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Wallet {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currency String @default("RUB")
+
+  /// Доступно к выводу.
+  available Decimal @default(0) @db.Decimal(18, 2)
+  /// Одобрено, но в холде (ещё не доступно).
+  pending   Decimal @default(0) @db.Decimal(18, 2)
+  /// Заморожено в активных заявках на вывод.
+  hold      Decimal @default(0) @db.Decimal(18, 2)
+
+  totalEarned    Decimal @default(0) @db.Decimal(18, 2)
+  totalWithdrawn Decimal @default(0) @db.Decimal(18, 2)
+
+  /// Оптимистичная блокировка при конкурентных списаниях.
+  version   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entries     LedgerEntry[]
+  withdrawals Withdrawal[]
+
+  @@unique([userId, currency])
+  @@map("wallets")
+}
+
+/// Append-only журнал операций. Единственный источник истины по деньгам.
+/// UPDATE/DELETE запрещены на уровне БД-грантов; исправление — только REVERSAL-записью.
+model LedgerEntry {
+  id       String          @id @default(cuid())
+  walletId String
+  wallet   Wallet          @relation(fields: [walletId], references: [id])
+  userId   String
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  direction LedgerDirection
+  type      LedgerEntryType
+  amount    Decimal         @db.Decimal(18, 2)
+  currency  String          @default("RUB")
+  /// Баланс available после применения записи — для сверки и выписки.
+  balanceAfter Decimal      @db.Decimal(18, 2)
+
+  submissionId String?
+  submission   TaskSubmission? @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+  withdrawalId String?
+  withdrawal   Withdrawal?     @relation(fields: [withdrawalId], references: [id], onDelete: SetNull)
+
+  /// Гарантия ровно одного начисления на событие.
+  idempotencyKey String  @unique
+  description    String?
+  createdById    String? // админ, если это ручная корректировка
+  meta           Json    @default("{}")
+  createdAt      DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([walletId, createdAt(sort: Desc)])
+  @@index([type, createdAt])
+  @@map("ledger_entries")
+}
+
+/// Сохранённые реквизиты. `detailsEncrypted` — AES-256-GCM, ключ в KMS/ENV,
+/// в открытом виде хранится только маска для отображения.
+model PayoutMethod {
+  id               String           @id @default(cuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind             PayoutMethodKind
+  label            String?
+  /// Например "•••• 4242" или "TQn9...WkL2".
+  maskedValue      String
+  detailsEncrypted String           @db.Text
+  holderName       String?
+  isDefault        Boolean          @default(false)
+  verifiedAt       DateTime?
+  lastUsedAt       DateTime?
+  createdAt        DateTime         @default(now())
+  deletedAt        DateTime?
+
+  withdrawals Withdrawal[]
+
+  @@index([userId, kind])
+  @@map("payout_methods")
+}
+
+model Withdrawal {
+  id         String           @id @default(cuid())
+  publicCode String           @unique
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletId   String
+  wallet     Wallet           @relation(fields: [walletId], references: [id])
+  methodId   String?
+  method     PayoutMethod?    @relation(fields: [methodId], references: [id], onDelete: SetNull)
+  status     WithdrawalStatus @default(PENDING_REVIEW)
+
+  /// Списывается с баланса (RUB).
+  amountGross Decimal @db.Decimal(18, 2)
+  fee         Decimal @default(0) @db.Decimal(18, 2)
+  /// К отправке в валюте выплаты.
+  amountNet   Decimal @db.Decimal(18, 2)
+  /// RUB для карты/СБП, USDT для крипты.
+  payoutCurrency String @default("RUB")
+  /// Курс RUB→USDT, зафиксированный при создании заявки.
+  fxRate      Decimal? @db.Decimal(18, 8)
+  fxSource    String?
+  fxLockedAt  DateTime?
+  /// Сумма в крипте с точностью до 8 знаков.
+  cryptoAmount Decimal? @db.Decimal(24, 8)
+
+  /// Снапшот реквизитов на момент заявки (маска + сеть), чтобы удаление
+  /// метода не ломало историю.
+  methodKind     PayoutMethodKind
+  methodSnapshot Json
+
+  provider    PayoutProvider @default(MANUAL)
+  providerRef String?
+  network     String?
+  txHash      String?
+  confirmations Int          @default(0)
+
+  reviewerId    String?
+  reviewer      User?     @relation("WithdrawalReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewComment String?   @db.Text
+  failureReason String?   @db.Text
+  retryCount    Int       @default(0)
+
+  antifraud      Json     @default("{}")
+  idempotencyKey String   @unique
+
+  requestedAt DateTime  @default(now())
+  reviewedAt  DateTime?
+  processedAt DateTime?
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  events        WithdrawalEvent[]
+  ledgerEntries LedgerEntry[]
+  cryptoTx      CryptoTransaction[]
+
+  @@index([userId, requestedAt(sort: Desc)])
+  @@index([status, requestedAt])
+  @@map("withdrawals")
+}
+
+model WithdrawalEvent {
+  id           String            @id @default(cuid())
+  withdrawalId String
+  withdrawal   Withdrawal        @relation(fields: [withdrawalId], references: [id], onDelete: Cascade)
+  actorType    ActorType
+  actorId      String?
+  fromStatus   WithdrawalStatus?
+  toStatus     WithdrawalStatus?
+  comment      String?           @db.Text
+  payload      Json?
+  createdAt    DateTime          @default(now())
+
+  @@index([withdrawalId, createdAt])
+  @@map("withdrawal_events")
+}
+
+/// Блокчейн-транзакции. Вебхуки провайдера идемпотентны по (network, txHash).
+model CryptoTransaction {
+  id            String     @id @default(cuid())
+  withdrawalId  String
+  withdrawal    Withdrawal @relation(fields: [withdrawalId], references: [id], onDelete: Cascade)
+  network       String
+  toAddress     String
+  amount        Decimal    @db.Decimal(24, 8)
+  asset         String     @default("USDT")
+  txHash        String?
+  confirmations Int        @default(0)
+  feePaid       Decimal?   @db.Decimal(24, 8)
+  rawPayload    Json?
+  broadcastAt   DateTime?
+  confirmedAt   DateTime?
+  createdAt     DateTime   @default(now())
+
+  @@unique([network, txHash])
+  @@index([withdrawalId])
+  @@map("crypto_transactions")
+}
+
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  pair      String // "RUB/USDT"
+  rate      Decimal  @db.Decimal(18, 8)
+  source    String // "cbr" | "binance" | "manual"
+  fetchedAt DateTime @default(now())
+
+  @@index([pair, fetchedAt(sort: Desc)])
+  @@map("exchange_rates")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// УВЕДОМЛЕНИЯ
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id       String               @id @default(cuid())
+  userId   String
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type     NotificationType
+  priority NotificationPriority @default(NORMAL)
+
+  title String
+  body  String  @db.Text
+  icon  String?
+  /// Глубокая ссылка внутри Mini App, напр. "/tasks/abc" или "/profile/withdrawals/xyz".
+  deepLink String?
+
+  entityType String?
+  entityId   String?
+  /// Ключ группировки: несколько однотипных событий сворачиваются в одно.
+  groupKey   String?
+  data       Json    @default("{}")
+
+  readAt    DateTime?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  deliveries NotificationDelivery[]
+
+  @@index([userId, readAt, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model NotificationDelivery {
+  id             String              @id @default(cuid())
+  notificationId String
+  notification   Notification        @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  channel        NotificationChannel
+  status         DeliveryStatus      @default(QUEUED)
+  attempts       Int                 @default(0)
+  lastError      String?             @db.Text
+  providerMsgId  String?
+  sentAt         DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([notificationId, channel])
+  @@index([status, createdAt])
+  @@map("notification_deliveries")
+}
+
+/// Шаблоны текстов — редактируются в админке без релиза.
+model NotificationTemplate {
+  id       String              @id @default(cuid())
+  type     NotificationType
+  channel  NotificationChannel
+  locale   String              @default("ru")
+  title    String
+  body     String              @db.Text
+  /// Список доступных переменных для подсказки в админке.
+  variables String[]           @default([])
+  priority NotificationPriority @default(NORMAL)
+  isActive Boolean             @default(true)
+  updatedAt DateTime           @updatedAt
+
+  @@unique([type, channel, locale])
+  @@map("notification_templates")
+}
+
+model NotificationPreference {
+  id      String           @id @default(cuid())
+  userId  String
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type    NotificationType
+  inApp   Boolean          @default(true)
+  bot     Boolean          @default(true)
+
+  @@unique([userId, type])
+  @@map("notification_preferences")
+}
+
+/// Массовые рассылки из админки.
+model Broadcast {
+  id          String          @id @default(cuid())
+  title       String
+  body        String          @db.Text
+  deepLink    String?
+  /// Фильтр аудитории: {status, minBalance, hasSubmissions, geo, ...}
+  audience    Json            @default("{}")
+  channels    NotificationChannel[] @default([IN_APP, BOT])
+  status      BroadcastStatus @default(DRAFT)
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  totalCount  Int             @default(0)
+  sentCount   Int             @default(0)
+  failedCount Int             @default(0)
+  createdById String?
+  createdAt   DateTime        @default(now())
+
+  @@index([status, scheduledAt])
+  @@map("broadcasts")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// РЕФЕРАЛЬНАЯ СИСТЕМА
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ReferralProgram {
+  id          String   @id @default(cuid())
+  name        String
+  /// Уровень: 1 — прямые приглашённые, 2 — приглашённые приглашённых.
+  level       Int
+  /// Процент от вознаграждения приглашённого.
+  percent     Decimal  @db.Decimal(5, 2)
+  /// Разовый бонус за активацию реферала (первое оплаченное задание).
+  signupBonus Decimal  @default(0) @db.Decimal(18, 2)
+  minReferrals Int     @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([level, minReferrals])
+  @@map("referral_programs")
+}
+
+model Referral {
+  id         String         @id @default(cuid())
+  referrerId String
+  referrer   User           @relation("ReferralReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  refereeId  String         @unique
+  referee    User           @relation("ReferralReferee", fields: [refereeId], references: [id], onDelete: Cascade)
+  level      Int            @default(1)
+  source     String? // "bot_deeplink" | "link" | "qr"
+  status     ReferralStatus @default(PENDING)
+  activatedAt DateTime?
+  createdAt  DateTime       @default(now())
+
+  @@index([referrerId, status])
+  @@map("referrals")
+}
+
+model ReferralEarning {
+  id           String         @id @default(cuid())
+  referrerId   String
+  referrer     User           @relation("EarningReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  refereeId    String
+  referee      User           @relation("EarningReferee", fields: [refereeId], references: [id], onDelete: Cascade)
+  submissionId String?
+  submission   TaskSubmission? @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+  level        Int            @default(1)
+  percent      Decimal        @db.Decimal(5, 2)
+  amount       Decimal        @db.Decimal(18, 2)
+  createdAt    DateTime       @default(now())
+
+  @@unique([referrerId, submissionId, level])
+  @@index([referrerId, createdAt(sort: Desc)])
+  @@map("referral_earnings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// АНТИФРОД, АУДИТ, ИНФРАСТРУКТУРА
+// ─────────────────────────────────────────────────────────────────────────────
+
+model FraudRule {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?  @db.Text
+  /// Сколько очков риска добавляет срабатывание.
+  points      Int      @default(10)
+  /// Порог, после которого выполнение отправляется на ручную проверку.
+  config      Json     @default("{}")
+  isActive    Boolean  @default(true)
+
+  flags FraudFlag[]
+
+  @@map("fraud_rules")
+}
+
+model FraudFlag {
+  id           String          @id @default(cuid())
+  ruleId       String
+  rule         FraudRule       @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submissionId String?
+  submission   TaskSubmission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  points       Int             @default(0)
+  details      Json            @default("{}")
+  resolvedAt   DateTime?
+  resolvedById String?
+  createdAt    DateTime        @default(now())
+
+  @@index([userId, createdAt])
+  @@index([submissionId])
+  @@map("fraud_flags")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action     String // "offer.update" | "submission.approve" | "withdrawal.reject"
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+  @@map("audit_logs")
+}
+
+/// Транзакционный outbox: событие пишется в одной транзакции с бизнес-данными,
+/// воркер разгребает очередь. Гарантирует, что уведомление в бот не потеряется
+/// и не отправится, если транзакция откатилась.
+model OutboxEvent {
+  id          String       @id @default(cuid())
+  topic       String
+  payload     Json
+  status      OutboxStatus @default(PENDING)
+  attempts    Int          @default(0)
+  lastError   String?      @db.Text
+  availableAt DateTime     @default(now())
+  processedAt DateTime?
+  createdAt   DateTime     @default(now())
+
+  @@index([status, availableAt])
+  @@map("outbox_events")
+}
+
+/// Логи постбеков партнёрских сетей — сырые запросы для разбора спорных конверсий.
+model PostbackLog {
+  id         String   @id @default(cuid())
+  sourceCode String
+  clickId    String?
+  status     String?
+  payload    Json
+  headers    Json?
+  ip         String?
+  processed  Boolean  @default(false)
+  error      String?
+  createdAt  DateTime @default(now())
+
+  @@index([clickId])
+  @@index([sourceCode, createdAt])
+  @@map("postback_logs")
+}
+
+/// Настройки приложения, редактируемые из админки без деплоя.
+model AppSetting {
+  key         String   @id
+  value       Json
+  description String?
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("app_settings")
+}

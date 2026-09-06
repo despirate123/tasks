@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Дизайн-токены ProfiBux.
+   Значения соответствуют макету и одновременно подхватывают тему Telegram
+   через переменные --tg-theme-*, которые SDK пишет в :root.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Поверхности */
+  --color-surface-base: #0b0f1a;
+  --color-surface-raised: #131a2a;
+  --color-surface-overlay: #1a2336;
+  --color-surface-input: #0f1524;
+  --color-border-subtle: #212b40;
+  --color-border-strong: #2d3a55;
+
+  /* Текст */
+  --color-content-primary: #f1f5fb;
+  --color-content-secondary: #97a3bd;
+  --color-content-muted: #64708a;
+
+  /* Бренд */
+  --color-brand-50: #eef0ff;
+  --color-brand-300: #a3a8ff;
+  --color-brand-400: #8b8fff;
+  --color-brand-500: #6c6cf5;
+  --color-brand-600: #5a4fe0;
+  --color-brand-700: #4a3fc4;
+
+  /* Деньги и статусы */
+  --color-money-400: #4ade9a;
+  --color-money-500: #22c97e;
+  --color-money-600: #15a866;
+  --color-easy: #22c97e;
+  --color-medium: #f5b544;
+  --color-hard: #f4646a;
+  --color-info: #4aa8f5;
+
+  /* Радиусы */
+  --radius-card: 1.125rem;
+  --radius-pill: 999px;
+
+  /* Шрифты */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+  --app-max-width: 30rem;
+  /* Высота видимой области Telegram WebView; переопределяется из JS */
+  --tg-viewport-stable-height: 100vh;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+* {
+  border-color: var(--color-border-subtle);
+}
+
+html,
+body {
+  background: var(--color-surface-base);
+  color: var(--color-content-primary);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  text-rendering: optimizeLegibility;
+}
+
+/* Фоновое свечение — как в макете */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(
+      52rem 34rem at 50% -14rem,
+      rgb(108 108 245 / 0.24),
+      transparent 70%
+    ),
+    radial-gradient(
+      34rem 26rem at 92% 6%,
+      rgb(34 201 126 / 0.09),
+      transparent 72%
+    );
+}
+
+/* Скрываем скроллбары внутри WebView, оставляя прокрутку */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes pb-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: pb-fade-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pb-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.05),
+    transparent
+  );
+  animation: pb-shimmer 1.6s infinite;
+}
+
+/* Числа в таблицах и суммах — табличные цифры, чтобы не «прыгали» */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
