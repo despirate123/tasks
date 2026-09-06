@@ -353,6 +353,22 @@ type OfferSeed = {
   steps: { title: string; description?: string }[];
 };
 
+const OFFER_ICONS: Record<string, string> = {
+  "wildberries-first-order": "/offers/wildberries.svg",
+  "tinkoff-black-card": "/offers/tbank.svg",
+  "yandex-eda-install": "/offers/yandex-eda.svg",
+  "vk-music-subscription": "/offers/vk-music.svg",
+  "broker-account-with-deposit": "/offers/invest.svg",
+  "consumer-survey-15min": "/offers/researchlab.svg",
+  "mobile-game-level-10": "/offers/empire-rush.svg",
+  "ozon-premium-trial": "/offers/ozon.svg",
+  "credit-card-cashback": "/offers/alfa.svg",
+  "grocery-delivery-first-order": "/offers/samokat.svg",
+  "insurance-quote-request": "/offers/strahdom.svg",
+  "fitness-app-trial": "/offers/fitpro.svg",
+  "neo-bank-draft": "/offers/neobank.svg",
+};
+
 const OFFERS: OfferSeed[] = [
   {
     slug: "wildberries-first-order",
@@ -757,6 +773,7 @@ async function seedOffers() {
         subtitle: seed.subtitle,
         description: seed.description,
         brandName: seed.brandName,
+        iconUrl: OFFER_ICONS[seed.slug],
         difficulty: seed.difficulty,
         difficultySource: seed.difficultySource ?? "AUTO",
         approvalEtaMinutes: seed.etaMinutes,
@@ -809,6 +826,7 @@ async function seedOffers() {
         description:
           "Оффер импортирован синхронизацией и ожидает публикации. Награда рассчитана по правилу маржи и должна быть подтверждена вручную: цена для участника не меняется автоматически.",
         brandName: "NeoBank",
+        iconUrl: OFFER_ICONS[draftSlug],
         difficulty: "MEDIUM",
         difficultySource: "NETWORK",
         approvalEtaMinutes: 2880,
@@ -820,6 +838,10 @@ async function seedOffers() {
         geo: ["RU"],
       },
     });
+  }
+
+  for (const [slug, iconUrl] of Object.entries(OFFER_ICONS)) {
+    await db.offer.updateMany({ where: { slug }, data: { iconUrl } });
   }
 }
 

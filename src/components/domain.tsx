@@ -103,7 +103,7 @@ export function OfferAvatar({
         className={cn(
           dims,
           radius,
-          "shrink-0 object-cover ring-1 ring-border-subtle",
+          "shrink-0 bg-surface-raised object-cover ring-1 ring-white/14",
           className,
         )}
       />
