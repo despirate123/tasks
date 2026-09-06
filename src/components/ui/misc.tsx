@@ -36,7 +36,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-card glass-thin px-6 py-12 text-center ring-1 ring-inset ring-white/10",
+        "flex flex-col items-center justify-center gap-3 rounded-card glass-thin px-6 py-12 text-center ring-1 ring-inset ring-white/[0.07]",
         className,
       )}
     >
@@ -99,7 +99,7 @@ export function StatTile({
   return (
     <div
       className={cn(
-        "stat-tile rounded-2xl p-3.5 ring-1 ring-inset",
+        "stat-tile rounded-card p-3.5 ring-1 ring-inset",
         meta.ring,
         className,
       )}

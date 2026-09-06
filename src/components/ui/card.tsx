@@ -9,7 +9,7 @@ function Card({
   return (
     <div
       className={cn(
-        "relative rounded-card glass-thin ring-1 ring-inset ring-white/10",
+        "relative rounded-card glass-thin ring-1 ring-inset ring-white/[0.07]",
         interactive &&
           "transition-[transform,box-shadow] duration-150 hover:ring-white/18 active:scale-[0.99]",
         className,

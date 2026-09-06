@@ -13,7 +13,7 @@ export function SupportButton({ href }: { href: string }) {
       }}
       className="group w-full text-left"
     >
-      <div className="relative overflow-hidden rounded-[1.45rem] p-4 ring-1 ring-inset ring-info/28 transition-[transform,box-shadow] duration-150 active:scale-[0.99]">
+      <div className="relative overflow-hidden rounded-card p-4 ring-1 ring-inset ring-info/28 transition-[transform,box-shadow] duration-150 active:scale-[0.99]">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-16 -right-10 size-40 rounded-full bg-info/22 blur-3xl"

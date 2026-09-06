@@ -40,12 +40,12 @@ export default async function HistoryPage() {
           description="Здесь появятся начисления за задания, реферальные бонусы и выводы."
         />
       ) : (
-        <Card className="divide-y divide-border-subtle">
+        <Card className="divide-y divide-border-subtle overflow-hidden">
           {transactions.map((entry) => (
-            <div key={entry.id} className="p-3.5">
+            <div key={entry.id} className="px-4 py-3.5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[13.5px] font-medium">
+                  <p className="text-[13.5px] font-semibold">
                     {LEDGER_TYPE[entry.type]}
                   </p>
                   {entry.type === "TASK_REWARD" && entry.submission?.offer.title ? (

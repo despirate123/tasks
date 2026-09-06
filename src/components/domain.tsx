@@ -161,7 +161,7 @@ export function OfferCard({
     <Link href={`/tasks/${offer.slug}`} className="block">
       <article
         className={cn(
-          "offer-card relative overflow-hidden rounded-[1.45rem] p-4 ring-1 ring-inset transition-[transform,box-shadow] duration-150 active:scale-[0.99]",
+          "offer-card relative overflow-hidden rounded-card p-4 ring-1 ring-inset transition-[transform,box-shadow] duration-150 active:scale-[0.99]",
           offer.isHot
             ? "ring-hard/28"
             : offer.isFeatured
@@ -243,7 +243,7 @@ export function OfferCard({
 
 export function OfferCardSkeleton() {
   return (
-    <div className="offer-card rounded-[1.45rem] p-4 ring-1 ring-inset ring-white/10">
+    <div className="offer-card rounded-card p-4 ring-1 ring-inset ring-white/[0.07]">
       <div className="flex gap-3.5">
         <div className="shimmer size-12 shrink-0 rounded-2xl bg-surface-overlay/60" />
         <div className="flex-1 space-y-2">
