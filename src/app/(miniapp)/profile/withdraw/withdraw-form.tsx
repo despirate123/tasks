@@ -28,6 +28,7 @@ import {
 } from "@/server/actions";
 import { haptic, hapticNotify } from "@/components/telegram-init";
 import { CancelWithdrawalButton } from "@/components/cancel-withdrawal-button";
+import { StickyActionBar } from "@/components/sticky-action-bar";
 
 type Method = {
   id: string;
@@ -475,32 +476,20 @@ export function WithdrawForm({
       ) : null}
 
       {selected && !adding ? (
-        <>
-          <div
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pt-3"
-            style={{
-              paddingBottom: "calc(var(--nav-height) + 0.75rem)",
-              paddingLeft: "max(1rem, var(--safe-left))",
-              paddingRight: "max(1rem, var(--safe-right))",
-            }}
+        <StickyActionBar spacerClassName="h-28">
+          <Button
+            variant={canSubmit ? "money" : "secondary"}
+            size="lg"
+            block
+            onClick={submit}
+            disabled={!canSubmit}
           >
-            <div className="pointer-events-auto mx-auto max-w-[var(--app-max-width)]">
-              <Button
-                variant={canSubmit ? "money" : "secondary"}
-                size="lg"
-                block
-                onClick={submit}
-                disabled={!canSubmit}
-              >
-                {pending ? <Loader2 className="animate-spin" /> : null}
-                {quote.gross > 0
-                  ? `Вывести ${isCrypto && quote.crypto != null ? formatCrypto(quote.crypto) : formatMoney(quote.net)}`
-                  : "Вывести средства"}
-              </Button>
-            </div>
-          </div>
-          <div className="h-24" />
-        </>
+            {pending ? <Loader2 className="animate-spin" /> : null}
+            {quote.gross > 0
+              ? `Вывести ${isCrypto && quote.crypto != null ? formatCrypto(quote.crypto) : formatMoney(quote.net)}`
+              : "Вывести средства"}
+          </Button>
+        </StickyActionBar>
       ) : null}
     </div>
   );

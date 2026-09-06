@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DetailRow, SectionTitle, Separator } from "@/components/ui/misc";
 import { DifficultyBadge, OfferAvatar } from "@/components/domain";
+import { StickyActionBar } from "@/components/sticky-action-bar";
 import { TakeOfferButton } from "./take-button";
 
 export default async function TaskPage({
@@ -251,40 +252,29 @@ export default async function TaskPage({
         ) : null}
       </div>
 
-      {/* Липкая панель действия — основная кнопка всегда в зоне большого пальца */}
-      <div
-        className="fixed inset-x-0 bottom-0 z-40 glass-thin px-4 pt-3"
-        style={{
-          paddingBottom: "calc(var(--nav-height) + 0.75rem)",
-          paddingLeft: "max(1rem, var(--safe-left))",
-          paddingRight: "max(1rem, var(--safe-right))",
-        }}
-      >
-        <div className="mx-auto max-w-[var(--app-max-width)]">
-          {activeSubmission ? (
-            <Button variant="secondary" size="lg" block asChild>
-              <Link href={`/submissions/${activeSubmission.id}`}>
-                Продолжить выполнение
-              </Link>
+      <StickyActionBar>
+        {activeSubmission ? (
+          <Button variant="secondary" size="lg" block asChild>
+            <Link href={`/submissions/${activeSubmission.id}`}>
+              Продолжить выполнение
+            </Link>
+          </Button>
+        ) : eligibility.ok ? (
+          <TakeOfferButton
+            offerId={offer.id}
+            reward={formatMoney(offer.rewardAmount)}
+          />
+        ) : (
+          <div className="space-y-2">
+            <Button variant="secondary" size="lg" block disabled>
+              Недоступно
             </Button>
-          ) : eligibility.ok ? (
-            <TakeOfferButton
-              offerId={offer.id}
-              reward={formatMoney(offer.rewardAmount)}
-            />
-          ) : (
-            <div className="space-y-2">
-              <Button variant="secondary" size="lg" block disabled>
-                Недоступно
-              </Button>
-              <p className="text-center text-[12px] text-content-muted">
-                {eligibility.reason}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="h-16" />
+            <p className="text-center text-[12px] text-content-muted">
+              {eligibility.reason}
+            </p>
+          </div>
+        )}
+      </StickyActionBar>
     </div>
   );
 }
