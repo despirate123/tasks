@@ -1,16 +1,12 @@
 import Link from "next/link";
 import {
   ArrowUpRight,
-  Clock,
   Coins,
   ShieldAlert,
-  Sparkles,
-  TrendingUp,
-  Users,
 } from "lucide-react";
 import type { Difficulty, SubmissionStatus, WithdrawalStatus } from "@/generated/prisma";
 import { cn } from "@/lib/utils";
-import { formatEta, formatMoney } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { DIFFICULTY, SUBMISSION_STATUS, WITHDRAWAL_STATUS } from "@/lib/labels";
 import { Badge } from "@/components/ui/badge";
 
@@ -143,12 +139,6 @@ type OfferCardData = {
   category?: { name: string; icon: string | null } | null;
 };
 
-const DIFFICULTY_GLOW: Record<Difficulty, string> = {
-  EASY: "rgb(251 248 228 / 0.16)",
-  MEDIUM: "rgb(224 181 106 / 0.18)",
-  HARD: "rgb(224 112 112 / 0.18)",
-};
-
 export function OfferCard({
   offer,
   mine,
@@ -161,7 +151,7 @@ export function OfferCard({
     <Link href={`/tasks/${offer.slug}`} className="block">
       <article
         className={cn(
-          "offer-card relative overflow-hidden rounded-card p-4 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-0.5 active:scale-[0.985]",
+          "offer-card flex items-center gap-3 rounded-card px-3 py-2.5 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-px active:scale-[0.99]",
           offer.isHot
             ? "ring-hard/28"
             : offer.isFeatured
@@ -170,72 +160,24 @@ export function OfferCard({
           mine === "done" && "opacity-75",
         )}
       >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-14 -right-10 size-36 rounded-full blur-3xl"
-          style={{ background: DIFFICULTY_GLOW[offer.difficulty] }}
+        <OfferAvatar
+          title={offer.brandName ?? offer.title}
+          iconUrl={offer.iconUrl}
+          size="sm"
+          className="ring-white/14"
         />
-
-        <div className="relative flex gap-3.5">
-          <OfferAvatar
-            title={offer.brandName ?? offer.title}
-            iconUrl={offer.iconUrl}
-            className="shadow-[0_10px_22px_rgba(0,0,0,0.4)] ring-white/14"
-          />
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start gap-2.5">
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-[15px] leading-snug font-semibold tracking-[-0.015em]">
-                  {offer.title}
-                </p>
-                {offer.brandName ? (
-                  <p className="mt-0.5 truncate text-[12px] text-content-muted">
-                    {offer.brandName}
-                    {offer.category ? ` · ${offer.category.name}` : ""}
-                  </p>
-                ) : null}
-              </div>
-              <span className="tabular shrink-0 rounded-pill bg-black/40 px-2.5 py-1 text-[13px] font-bold text-content-primary ring-1 ring-inset ring-white/14">
-                {formatMoney(offer.rewardAmount as number)}
-              </span>
-            </div>
-
-            {offer.subtitle ? (
-              <p className="mt-2 line-clamp-2 text-[12.5px] leading-relaxed text-content-secondary">
-                {offer.subtitle}
-              </p>
-            ) : null}
-
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              <DifficultyBadge difficulty={offer.difficulty} />
-              <Badge tone="neutral">
-                <Clock className="size-3" />
-                {formatEta(offer.approvalEtaMinutes)}
-              </Badge>
-              {offer.takenCount && offer.takenCount > 0 ? (
-                <Badge tone="neutral">
-                  <Users className="size-3" />
-                  {offer.takenCount}
-                </Badge>
-              ) : null}
-              {offer.isHot ? (
-                <Badge tone="danger">
-                  <TrendingUp className="size-3" />
-                  Хит
-                </Badge>
-              ) : null}
-              {offer.isFeatured && !offer.isHot ? (
-                <Badge tone="brand">
-                  <Sparkles className="size-3" />
-                  Топ
-                </Badge>
-              ) : null}
-              {mine === "active" ? <Badge tone="info">В работе</Badge> : null}
-              {mine === "done" ? <Badge tone="money">Выполнено</Badge> : null}
-            </div>
-          </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[14.5px] leading-snug font-semibold tracking-[-0.015em]">
+            {offer.title}
+          </p>
+          <p className="mt-0.5 truncate text-[12px] text-content-muted">
+            {offer.brandName ?? offer.category?.name ?? "Задание"}
+            {mine === "active" ? " · в работе" : mine === "done" ? " · выполнено" : ""}
+          </p>
         </div>
+        <span className="tabular shrink-0 text-[14px] font-bold text-content-primary">
+          {formatMoney(offer.rewardAmount as number)}
+        </span>
       </article>
     </Link>
   );
@@ -243,19 +185,13 @@ export function OfferCard({
 
 export function OfferCardSkeleton() {
   return (
-    <div className="offer-card rounded-card p-4 ring-1 ring-inset ring-white/[0.07]">
-      <div className="flex gap-3.5">
-        <div className="shimmer size-12 shrink-0 rounded-2xl bg-surface-overlay/60" />
-        <div className="flex-1 space-y-2">
-          <div className="shimmer h-4 w-2/3 rounded bg-surface-overlay/60" />
-          <div className="shimmer h-3 w-1/3 rounded bg-surface-overlay/60" />
-          <div className="shimmer h-3 w-full rounded bg-surface-overlay/60" />
-          <div className="flex gap-2">
-            <div className="shimmer h-5 w-16 rounded-pill bg-surface-overlay/60" />
-            <div className="shimmer h-5 w-20 rounded-pill bg-surface-overlay/60" />
-          </div>
-        </div>
+    <div className="offer-card flex items-center gap-3 rounded-card px-3 py-2.5 ring-1 ring-inset ring-white/[0.07]">
+      <div className="shimmer size-9 shrink-0 rounded-2xl bg-surface-overlay/60" />
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="shimmer h-3.5 w-2/3 rounded bg-surface-overlay/60" />
+        <div className="shimmer h-3 w-1/3 rounded bg-surface-overlay/60" />
       </div>
+      <div className="shimmer h-3.5 w-12 rounded bg-surface-overlay/60" />
     </div>
   );
 }

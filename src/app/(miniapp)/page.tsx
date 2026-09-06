@@ -123,22 +123,22 @@ export default async function CatalogPage({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <HomeHeader />
 
       {wallet ? (
         <Link
           href="/profile"
-          className="flex items-center gap-3 rounded-card glass-thin p-3.5 ring-1 ring-inset ring-[var(--acid)]/20 transition-[transform,box-shadow,background] duration-300 ease-soft hover:-translate-y-px active:scale-[0.99]"
+          className="flex items-center gap-3 rounded-card glass-thin px-3 py-2.5 ring-1 ring-inset ring-[var(--acid)]/20 transition-[transform,box-shadow,background] duration-300 ease-soft hover:-translate-y-px active:scale-[0.99]"
         >
-          <span className="flex size-10 items-center justify-center rounded-full bg-[var(--acid)]/12 text-[var(--acid)]">
-            <Wallet2 className="size-[18px]" />
+          <span className="flex size-9 items-center justify-center rounded-full bg-[var(--acid)]/12 text-[var(--acid)]">
+            <Wallet2 className="size-4" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[11px] tracking-wide text-content-muted uppercase">
-              Ваш баланс
+              Баланс
             </span>
-            <span className="tabular block text-lg leading-tight font-bold text-money-400">
+            <span className="tabular block text-[17px] leading-tight font-bold text-money-400">
               {formatMoney(wallet.available)}
             </span>
           </span>
@@ -148,92 +148,97 @@ export default async function CatalogPage({
 
       <ActiveWork items={activeWork} />
 
-      <div>
-        <h1 className="text-[22px] leading-tight font-bold">Задания</h1>
-        <p className="mt-1 text-[13px] text-content-secondary">
-          Выполните условия, приложите доказательства и получите вознаграждение.
-        </p>
-      </div>
+      <div className="space-y-2">
+        <h1 className="text-[17px] leading-tight font-bold">
+          Задания
+          {offers.length > 0 ? (
+            <span className="tabular ml-1.5 text-[13px] font-medium text-content-muted">
+              {offers.length}
+            </span>
+          ) : null}
+        </h1>
 
-      <form action="/" className="flex gap-2">
-        <div className="relative flex-1">
+        <form action="/" className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-content-muted" />
           <Input
             name="q"
             defaultValue={params.q ?? ""}
             placeholder="Название или бренд"
-            className="pl-10"
+            className="h-10 pl-10"
           />
-        </div>
-        {params.sort ? <input type="hidden" name="sort" value={params.sort} /> : null}
-        <Button type="submit" variant="secondary" size="icon" aria-label="Найти">
-          <Search />
-        </Button>
-      </form>
+          {params.sort ? <input type="hidden" name="sort" value={params.sort} /> : null}
+          {params.category ? (
+            <input type="hidden" name="category" value={params.category} />
+          ) : null}
+          {difficulty.map((value) => (
+            <input key={value} type="hidden" name="difficulty" value={value} />
+          ))}
+        </form>
 
-      <ChipScroller>
-        {DIFFICULTY_ORDER.map((value) => {
-          const active = difficulty.includes(value);
-          const meta = DIFFICULTY[value];
-          return (
-            <Link
-              key={value}
-              href={toggleDifficultyHref(value)}
-              className={chipClass(active, active ? meta.className : undefined)}
-            >
-              <span className={cn("size-1.5 rounded-full", meta.dot)} />
-              {meta.label}
-            </Link>
-          );
-        })}
-
-        <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
-
-        {SORTS.map((sort) => {
-          const active = (params.sort ?? "") === sort.key;
-          return (
-            <Link
-              key={sort.key || "default"}
-              href={buildHref({ sort: sort.key || undefined })}
-              className={chipClass(active)}
-            >
-              {active ? (
-                <ChipDot />
-              ) : sort.key === "" ? (
-                <SlidersHorizontal className="size-3" />
-              ) : null}
-              {sort.label}
-            </Link>
-          );
-        })}
-      </ChipScroller>
-
-      {categories.length > 0 ? (
         <ChipScroller>
-          <Link
-            href={buildHref({ category: undefined })}
-            className={chipClass(!params.category)}
-          >
-            {!params.category ? <ChipDot /> : null}
-            Все категории
-          </Link>
-          {categories.map((category) => {
-            const active = params.category === category.slug;
+          {DIFFICULTY_ORDER.map((value) => {
+            const active = difficulty.includes(value);
+            const meta = DIFFICULTY[value];
             return (
               <Link
-                key={category.slug}
-                href={buildHref({ category: category.slug })}
-                className={chipClass(active)}
+                key={value}
+                href={toggleDifficultyHref(value)}
+                className={chipClass(active, active ? meta.className : undefined)}
               >
-                {active ? <ChipDot /> : null}
-                {category.icon ? <span>{category.icon}</span> : null}
-                {category.name}
-                <span className="tabular text-content-muted">{category._count.offers}</span>
+                <span className={cn("size-1.5 rounded-full", meta.dot)} />
+                {meta.label}
               </Link>
             );
           })}
+
+          <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
+
+          {SORTS.map((sort) => {
+            const active = (params.sort ?? "") === sort.key;
+            return (
+              <Link
+                key={sort.key || "default"}
+                href={buildHref({ sort: sort.key || undefined })}
+                className={chipClass(active)}
+              >
+                {active ? (
+                  <ChipDot />
+                ) : sort.key === "" ? (
+                  <SlidersHorizontal className="size-3" />
+                ) : null}
+                {sort.label}
+              </Link>
+            );
+          })}
+
+          {categories.length > 0 ? (
+            <>
+              <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
+              <Link
+                href={buildHref({ category: undefined })}
+                className={chipClass(!params.category)}
+              >
+                {!params.category ? <ChipDot /> : null}
+                Все категории
+              </Link>
+              {categories.map((category) => {
+                const active = params.category === category.slug;
+                return (
+                  <Link
+                    key={category.slug}
+                    href={buildHref({ category: category.slug })}
+                    className={chipClass(active)}
+                  >
+                    {active ? <ChipDot /> : null}
+                    {category.icon ? <span>{category.icon}</span> : null}
+                    {category.name}
+                  </Link>
+                );
+              })}
+            </>
+          ) : null}
         </ChipScroller>
-      ) : null}
+      </div>
 
       {offers.length === 0 ? (
         <EmptyState
@@ -257,19 +262,14 @@ export default async function CatalogPage({
           }
         />
       ) : (
-        <div className="space-y-3">
-          <p className="text-[12px] text-content-muted">
-            Найдено заданий: <span className="tabular font-semibold">{offers.length}</span>
-          </p>
-          <div className="motion-list space-y-3">
-            {offers.map((offer) => (
-              <OfferCard
-                key={offer.id}
-                offer={offer}
-                mine={mineByOffer.get(offer.id) ?? null}
-              />
-            ))}
-          </div>
+        <div className="motion-list space-y-2">
+          {offers.map((offer) => (
+            <OfferCard
+              key={offer.id}
+              offer={offer}
+              mine={mineByOffer.get(offer.id) ?? null}
+            />
+          ))}
         </div>
       )}
     </div>
