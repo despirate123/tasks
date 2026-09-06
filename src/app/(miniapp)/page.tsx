@@ -20,7 +20,7 @@ import { OfferCard } from "@/components/domain";
 import { ActiveWork } from "@/components/active-work";
 import { HomeHeader } from "@/components/home-header";
 import { ChipScroller } from "@/components/chip-scroller";
-import { chipClass } from "@/lib/chips";
+import { ChipDot, chipClass } from "@/lib/chips";
 
 const SORTS = [
   { key: "", label: "Рекомендуем" },
@@ -189,16 +189,23 @@ export default async function CatalogPage({
 
         <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
 
-        {SORTS.map((sort) => (
-          <Link
-            key={sort.key || "default"}
-            href={buildHref({ sort: sort.key || undefined })}
-            className={chipClass((params.sort ?? "") === sort.key)}
-          >
-            {sort.key === "" ? <SlidersHorizontal className="size-3" /> : null}
-            {sort.label}
-          </Link>
-        ))}
+        {SORTS.map((sort) => {
+          const active = (params.sort ?? "") === sort.key;
+          return (
+            <Link
+              key={sort.key || "default"}
+              href={buildHref({ sort: sort.key || undefined })}
+              className={chipClass(active)}
+            >
+              {active ? (
+                <ChipDot />
+              ) : sort.key === "" ? (
+                <SlidersHorizontal className="size-3" />
+              ) : null}
+              {sort.label}
+            </Link>
+          );
+        })}
       </ChipScroller>
 
       {categories.length > 0 ? (
@@ -207,19 +214,24 @@ export default async function CatalogPage({
             href={buildHref({ category: undefined })}
             className={chipClass(!params.category)}
           >
+            {!params.category ? <ChipDot /> : null}
             Все категории
           </Link>
-          {categories.map((category) => (
-            <Link
-              key={category.slug}
-              href={buildHref({ category: category.slug })}
-              className={chipClass(params.category === category.slug)}
-            >
-              {category.icon ? <span>{category.icon}</span> : null}
-              {category.name}
-              <span className="tabular text-content-muted">{category._count.offers}</span>
-            </Link>
-          ))}
+          {categories.map((category) => {
+            const active = params.category === category.slug;
+            return (
+              <Link
+                key={category.slug}
+                href={buildHref({ category: category.slug })}
+                className={chipClass(active)}
+              >
+                {active ? <ChipDot /> : null}
+                {category.icon ? <span>{category.icon}</span> : null}
+                {category.name}
+                <span className="tabular text-content-muted">{category._count.offers}</span>
+              </Link>
+            );
+          })}
         </ChipScroller>
       ) : null}
 

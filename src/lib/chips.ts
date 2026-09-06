@@ -7,8 +7,17 @@ const chipOff =
   "glass-thin text-content-secondary ring-1 ring-inset ring-white/[0.07]";
 
 const chipOn =
-  "bg-[var(--acid)]/22 text-[var(--acid)] ring-2 ring-inset ring-[var(--acid)]";
+  "glass-thin text-[var(--acid)] ring-1 ring-inset ring-white/[0.07]";
 
 export function chipClass(active: boolean, extra?: string) {
   return cn(chipBase, active ? chipOn : chipOff, extra);
+}
+
+export function ChipDot() {
+  return (
+    <span
+      className="size-1.5 shrink-0 rounded-full bg-[var(--acid)]"
+      aria-hidden
+    />
+  );
 }
