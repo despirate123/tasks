@@ -147,11 +147,13 @@ export function OfferCard({
   /** Состояние собственного выполнения участника по этому офферу, если оно есть. */
   mine?: "active" | "done" | null;
 }) {
+  const difficulty = DIFFICULTY[offer.difficulty];
+
   return (
-    <Link href={`/tasks/${offer.slug}`} className="block">
+    <Link href={`/tasks/${offer.slug}`} className="block h-full">
       <article
         className={cn(
-          "offer-card flex items-center gap-3 rounded-card px-3 py-2.5 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-px active:scale-[0.99]",
+          "offer-card flex aspect-square h-full flex-col rounded-card p-3 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-0.5 active:scale-[0.99]",
           offer.isHot
             ? "ring-hard/28"
             : offer.isFeatured
@@ -163,21 +165,22 @@ export function OfferCard({
         <OfferAvatar
           title={offer.brandName ?? offer.title}
           iconUrl={offer.iconUrl}
-          size="sm"
+          size="lg"
           className="ring-white/14"
         />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[14.5px] leading-snug font-semibold tracking-[-0.015em]">
-            {offer.title}
-          </p>
-          <p className="mt-0.5 truncate text-[12px] text-content-muted">
+        <p className="mt-3 line-clamp-2 text-[13.5px] leading-snug font-semibold tracking-[-0.015em]">
+          {offer.title}
+        </p>
+        <p className="mt-1 flex min-w-0 items-center gap-1.5 text-[11.5px] text-content-muted">
+          <span className={cn("size-1.5 shrink-0 rounded-full", difficulty.dot)} />
+          <span className="truncate">
             {offer.brandName ?? offer.category?.name ?? "Задание"}
             {mine === "active" ? " · в работе" : mine === "done" ? " · выполнено" : ""}
-          </p>
-        </div>
-        <span className="tabular shrink-0 text-[14px] font-bold text-content-primary">
+          </span>
+        </p>
+        <p className="tabular mt-auto pt-3 text-[16px] leading-none font-bold text-content-primary">
           {formatMoney(offer.rewardAmount as number)}
-        </span>
+        </p>
       </article>
     </Link>
   );
@@ -185,13 +188,11 @@ export function OfferCard({
 
 export function OfferCardSkeleton() {
   return (
-    <div className="offer-card flex items-center gap-3 rounded-card px-3 py-2.5 ring-1 ring-inset ring-white/[0.07]">
-      <div className="shimmer size-9 shrink-0 rounded-2xl bg-surface-overlay/60" />
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <div className="shimmer h-3.5 w-2/3 rounded bg-surface-overlay/60" />
-        <div className="shimmer h-3 w-1/3 rounded bg-surface-overlay/60" />
-      </div>
-      <div className="shimmer h-3.5 w-12 rounded bg-surface-overlay/60" />
+    <div className="offer-card flex aspect-square flex-col rounded-card p-3 ring-1 ring-inset ring-white/[0.07]">
+      <div className="shimmer size-16 shrink-0 rounded-2xl bg-surface-overlay/60" />
+      <div className="shimmer mt-3 h-3.5 w-full rounded bg-surface-overlay/60" />
+      <div className="shimmer mt-1.5 h-3 w-1/2 rounded bg-surface-overlay/60" />
+      <div className="shimmer mt-auto h-4 w-14 rounded bg-surface-overlay/60" />
     </div>
   );
 }
