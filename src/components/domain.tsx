@@ -150,10 +150,10 @@ export function OfferCard({
   const difficulty = DIFFICULTY[offer.difficulty];
 
   return (
-    <Link href={`/tasks/${offer.slug}`} className="block h-full">
+    <Link href={`/tasks/${offer.slug}`} className="block min-w-0">
       <article
         className={cn(
-          "offer-card flex aspect-square h-full flex-col rounded-card p-3 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-0.5 active:scale-[0.99]",
+          "offer-card flex aspect-square w-full flex-col rounded-card p-3 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-0.5 active:scale-[0.99]",
           offer.isHot
             ? "ring-hard/28"
             : offer.isFeatured
