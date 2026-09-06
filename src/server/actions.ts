@@ -348,6 +348,7 @@ export async function cancelWithdrawalAction(id: string): Promise<ActionResult> 
     }
     await refundWithdrawal(id, "CANCELLED", "Отменено пользователем", user.id);
     revalidatePath("/profile");
+    revalidatePath("/profile/withdraw");
     return { ok: true, message: "Заявка отменена, средства возвращены" };
   } catch (error) {
     return fail(error);

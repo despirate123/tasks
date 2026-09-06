@@ -80,7 +80,9 @@ export default async function WithdrawPage() {
         rate={Number(rate.rate)}
         config={config}
         hasActiveRequest={Boolean(activeWithdrawal)}
+        activeRequestId={activeWithdrawal?.id ?? null}
         activeRequestCode={activeWithdrawal?.publicCode ?? null}
+        canCancelActive={activeWithdrawal?.status === "PENDING_REVIEW"}
       />
     </div>
   );

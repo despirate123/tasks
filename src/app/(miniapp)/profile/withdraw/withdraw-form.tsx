@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -27,6 +27,7 @@ import {
   deletePayoutMethodAction,
 } from "@/server/actions";
 import { haptic, hapticNotify } from "@/components/telegram-init";
+import { CancelWithdrawalButton } from "@/components/cancel-withdrawal-button";
 
 type Method = {
   id: string;
@@ -83,14 +84,18 @@ export function WithdrawForm({
   rate,
   config,
   hasActiveRequest,
+  activeRequestId,
   activeRequestCode,
+  canCancelActive,
 }: {
   available: number;
   methods: Method[];
   rate: number;
   config: Config;
   hasActiveRequest: boolean;
+  activeRequestId: string | null;
   activeRequestCode: string | null;
+  canCancelActive: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -102,6 +107,16 @@ export function WithdrawForm({
   const [newKind, setNewKind] = useState<PayoutMethodKind>("CARD_RUB");
   const [newValue, setNewValue] = useState("");
   const [newHolder, setNewHolder] = useState("");
+
+  useEffect(() => {
+    if (methods.length === 0) {
+      if (selectedId) setSelectedId("");
+      return;
+    }
+    if (!methods.some((method) => method.id === selectedId)) {
+      setSelectedId(methods[0].id);
+    }
+  }, [methods, selectedId]);
 
   const selected = methods.find((m) => m.id === selectedId);
   const isCrypto = selected
@@ -198,6 +213,12 @@ export function WithdrawForm({
           <p className="text-[12.5px] leading-relaxed text-content-secondary">
             Заявка {activeRequestCode} ещё в обработке. Новую можно создать после её
             завершения — так мы исключаем двойные выплаты.
+            {canCancelActive && activeRequestId ? (
+              <>
+                {" "}
+                <CancelWithdrawalButton id={activeRequestId} />
+              </>
+            ) : null}
           </p>
         </div>
       ) : null}
@@ -453,30 +474,34 @@ export function WithdrawForm({
         </div>
       ) : null}
 
-      <div
-        className="fixed inset-x-0 bottom-0 z-40 glass-thin px-4 pt-3"
-        style={{
-          paddingBottom: "calc(var(--nav-height) + 0.75rem)",
-          paddingLeft: "max(1rem, var(--safe-left))",
-          paddingRight: "max(1rem, var(--safe-right))",
-        }}
-      >
-        <div className="mx-auto max-w-[var(--app-max-width)]">
-          <Button
-            variant={canSubmit ? "money" : "secondary"}
-            size="lg"
-            block
-            onClick={submit}
-            disabled={!canSubmit}
+      {selected && !adding ? (
+        <>
+          <div
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pt-3"
+            style={{
+              paddingBottom: "calc(var(--nav-height) + 0.75rem)",
+              paddingLeft: "max(1rem, var(--safe-left))",
+              paddingRight: "max(1rem, var(--safe-right))",
+            }}
           >
-            {pending ? <Loader2 className="animate-spin" /> : null}
-            {quote.gross > 0
-              ? `Вывести ${isCrypto && quote.crypto != null ? formatCrypto(quote.crypto) : formatMoney(quote.net)}`
-              : "Вывести средства"}
-          </Button>
-        </div>
-      </div>
-      <div className="h-16" />
+            <div className="pointer-events-auto mx-auto max-w-[var(--app-max-width)]">
+              <Button
+                variant={canSubmit ? "money" : "secondary"}
+                size="lg"
+                block
+                onClick={submit}
+                disabled={!canSubmit}
+              >
+                {pending ? <Loader2 className="animate-spin" /> : null}
+                {quote.gross > 0
+                  ? `Вывести ${isCrypto && quote.crypto != null ? formatCrypto(quote.crypto) : formatMoney(quote.net)}`
+                  : "Вывести средства"}
+              </Button>
+            </div>
+          </div>
+          <div className="h-24" />
+        </>
+      ) : null}
     </div>
   );
 }

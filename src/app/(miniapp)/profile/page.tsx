@@ -25,6 +25,7 @@ import {
   OfferAvatar,
   WithdrawalStatusBadge,
 } from "@/components/domain";
+import { CancelWithdrawalButton } from "@/components/cancel-withdrawal-button";
 
 export default async function ProfilePage() {
   const user = await getCurrentUser();
@@ -177,7 +178,12 @@ export default async function ProfilePage() {
                     {formatRelative(w.requestedAt)}
                   </p>
                 </div>
-                <WithdrawalStatusBadge status={w.status} />
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <WithdrawalStatusBadge status={w.status} />
+                  {w.status === "PENDING_REVIEW" ? (
+                    <CancelWithdrawalButton id={w.id} />
+                  ) : null}
+                </div>
               </div>
             ))}
           </Card>
