@@ -3,7 +3,6 @@ import {
   ArrowUpRight,
   BellRing,
   CheckCircle2,
-  Handshake,
   History,
   ListChecks,
   ShieldCheck,
@@ -46,7 +45,7 @@ export default async function ProfilePage() {
   const [wallet, transactions, withdrawals, stats, activeWorkCount] =
     await Promise.all([
       getWallet(user.id),
-      getTransactions(user.id, { take: 8 }),
+      getTransactions(user.id, { take: 3 }),
       getUserWithdrawals(user.id),
       db.userStats.findUnique({ where: { userId: user.id } }),
       db.taskSubmission.count({
@@ -223,16 +222,6 @@ export default async function ProfilePage() {
           title="Уведомления"
           subtitle="История и настройки"
         />
-        <LinkRow
-          href="/referrals"
-          icon={<Handshake />}
-          title="Пригласить друзей"
-          subtitle={
-            stats?.referralsTotal
-              ? `${stats.referralsTotal} приглашено`
-              : "10 % с заработка друга"
-          }
-        />
       </Card>
 
       <div className="space-y-2.5">
@@ -257,7 +246,7 @@ export default async function ProfilePage() {
           </Card>
         ) : (
           <Card className="motion-list divide-y divide-border-subtle">
-            {transactions.slice(0, 8).map((entry) => (
+            {transactions.map((entry) => (
               <div key={entry.id} className="flex items-center gap-3 p-3.5">
                 <span
                   className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
