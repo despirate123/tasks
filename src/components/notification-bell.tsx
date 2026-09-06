@@ -90,7 +90,7 @@ export function NotificationBell({ initialCount }: { initialCount: number }) {
       {count > 0 ? (
         <span
           className={cn(
-            "animate-pop tabular absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-pill bg-[var(--acid)] px-1.5 text-[10px] font-bold text-black ring-2 ring-black",
+            "animate-pop tabular absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-pill bg-[var(--acid)] px-1.5 text-[10px] font-bold text-black ring-2 ring-[var(--canvas)]",
           )}
         >
           {count > 99 ? "99+" : count}
