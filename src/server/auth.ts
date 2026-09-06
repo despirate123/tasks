@@ -9,7 +9,7 @@ const SESSION_COOKIE = "pb_session";
 const INIT_DATA_MAX_AGE_S = 86_400;
 
 console.info(
-  `[profibux] DEV_AUTH_BYPASS=${process.env.DEV_AUTH_BYPASS === "true" ? "ON (демо-Алексей)" : "OFF"}`,
+  `[profibux] DEV_AUTH_BYPASS=${process.env.DEV_AUTH_BYPASS === "true" ? `ON (демо ${process.env.DEV_USER_TELEGRAM_ID ?? "777000002"})` : "OFF"}`,
 );
 
 export type TelegramUser = {
@@ -180,16 +180,28 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Use
 
   const bypass = process.env.DEV_AUTH_BYPASS === "true";
 
+  const bypassTelegramId = bypass
+    ? BigInt(process.env.DEV_USER_TELEGRAM_ID ?? "777000002")
+    : null;
+
   if (sessionUserId) {
     const user = await db.user.findUnique({ where: { id: sessionUserId } });
     // После выключения bypass старая cookie Алексея не должна оставлять
     // админку открытой в настоящем Mini App.
-    if (user && (bypass || !isSeedDemoUser(user.telegramId))) return user;
+    // В bypass не держим сессию другого демо-аккаунта, если в .env
+    // выбран обычный участник.
+    if (user) {
+      const seedSession = isSeedDemoUser(user.telegramId);
+      if (bypass) {
+        if (!seedSession || user.telegramId === bypassTelegramId) return user;
+      } else if (!seedSession) {
+        return user;
+      }
+    }
   }
 
-  if (bypass) {
-    const devId = process.env.DEV_USER_TELEGRAM_ID ?? "777000001";
-    return db.user.findUnique({ where: { telegramId: BigInt(devId) } });
+  if (bypass && bypassTelegramId != null) {
+    return db.user.findUnique({ where: { telegramId: bypassTelegramId } });
   }
 
   return null;
