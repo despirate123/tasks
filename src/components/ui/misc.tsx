@@ -58,6 +58,34 @@ export function EmptyState({
   );
 }
 
+const STAT_TONE = {
+  default: {
+    value: "text-content-primary",
+    ring: "ring-white/10",
+    glow: "rgb(255 255 255 / 0.08)",
+  },
+  money: {
+    value: "text-[var(--acid)]",
+    ring: "ring-[var(--acid)]/20",
+    glow: "rgb(200 255 0 / 0.18)",
+  },
+  brand: {
+    value: "text-brand-300",
+    ring: "ring-brand-500/22",
+    glow: "rgb(200 255 0 / 0.12)",
+  },
+  info: {
+    value: "text-info",
+    ring: "ring-info/22",
+    glow: "rgb(122 212 255 / 0.16)",
+  },
+  warn: {
+    value: "text-medium",
+    ring: "ring-medium/22",
+    glow: "rgb(245 181 68 / 0.16)",
+  },
+} as const;
+
 export function StatTile({
   label,
   value,
@@ -68,30 +96,38 @@ export function StatTile({
   label: string;
   value: React.ReactNode;
   hint?: string;
-  tone?: "default" | "money" | "warn" | "brand";
+  tone?: keyof typeof STAT_TONE;
   className?: string;
 }) {
-  const toneClass = {
-    default: "text-content-primary",
-    money: "text-money-400",
-    warn: "text-medium",
-    brand: "text-brand-300",
-  }[tone];
+  const meta = STAT_TONE[tone];
 
   return (
     <div
       className={cn(
-        "rounded-2xl bg-surface-raised/70 p-3.5 ring-1 ring-inset ring-border-subtle",
+        "stat-tile rounded-2xl p-3.5 ring-1 ring-inset",
+        meta.ring,
         className,
       )}
     >
-      <p className="text-[11px] font-medium tracking-wide text-content-muted uppercase">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-10 -right-8 size-24 rounded-full blur-2xl"
+        style={{ background: meta.glow }}
+      />
+      <p className="relative text-[11px] font-medium tracking-wide text-content-muted uppercase">
         {label}
       </p>
-      <p className={cn("tabular mt-1.5 text-lg leading-none font-bold", toneClass)}>
+      <p
+        className={cn(
+          "tabular relative mt-1.5 text-lg leading-none font-bold",
+          meta.value,
+        )}
+      >
         {value}
       </p>
-      {hint ? <p className="mt-1 text-[11px] text-content-muted">{hint}</p> : null}
+      {hint ? (
+        <p className="relative mt-1 text-[11px] text-content-muted">{hint}</p>
+      ) : null}
     </div>
   );
 }
