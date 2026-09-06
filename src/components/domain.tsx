@@ -78,14 +78,19 @@ export function OfferAvatar({
   title,
   iconUrl,
   size = "md",
+  shape = "rounded",
+  className,
 }: {
   title: string;
   iconUrl?: string | null;
   size?: "sm" | "md" | "lg";
+  shape?: "rounded" | "circle";
+  className?: string;
 }) {
   const dims = { sm: "size-9 text-sm", md: "size-12 text-base", lg: "size-16 text-xl" }[
     size
   ];
+  const radius = shape === "circle" ? "rounded-full" : "rounded-2xl";
   // Стабильный цвет из названия — узнаваемость без загрузки картинок.
   const hue = [...title].reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % 360;
 
@@ -95,7 +100,12 @@ export function OfferAvatar({
       <img
         src={iconUrl}
         alt=""
-        className={cn(dims, "shrink-0 rounded-2xl object-cover ring-1 ring-border-subtle")}
+        className={cn(
+          dims,
+          radius,
+          "shrink-0 object-cover ring-1 ring-border-subtle",
+          className,
+        )}
       />
     );
   }
@@ -104,7 +114,9 @@ export function OfferAvatar({
     <div
       className={cn(
         dims,
-        "flex shrink-0 items-center justify-center rounded-2xl font-bold text-white/90 ring-1 ring-white/10",
+        radius,
+        "flex shrink-0 items-center justify-center font-bold text-white/90 ring-1 ring-white/10",
+        className,
       )}
       style={{
         background: `linear-gradient(140deg, hsl(${hue} 62% 46%), hsl(${(hue + 42) % 360} 58% 32%))`,

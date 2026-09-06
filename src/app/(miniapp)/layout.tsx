@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { getCurrentUser, displayName, hasRole } from "@/server/auth";
+import { listActiveBanners } from "@/server/modules/banners";
 import { getUnreadCount } from "@/server/modules/notifications";
 import { BottomNav } from "@/components/bottom-nav";
 import { NotificationBell } from "@/components/notification-bell";
+import { ProfileAvatarButton } from "@/components/profile-avatar-button";
+import { PromoBannerRail } from "@/components/promo-banner";
 import { TelegramInit } from "@/components/telegram-init";
-import { OfferAvatar } from "@/components/domain";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +17,10 @@ export default async function MiniAppLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-  const unread = user ? await getUnreadCount(user.id) : 0;
+  const [unread, banners] = await Promise.all([
+    user ? getUnreadCount(user.id) : Promise.resolve(0),
+    listActiveBanners(),
+  ]);
   const isStaff = user ? hasRole(user, "MODERATOR") : false;
   const demoBypass = process.env.DEV_AUTH_BYPASS === "true";
 
@@ -38,21 +43,10 @@ export default async function MiniAppLayout({
           }}
         >
           <div className="flex items-center gap-3 py-3">
-            <Link href="/profile" className="flex min-w-0 items-center gap-2.5">
-              <OfferAvatar
-                title={user ? displayName(user) : "PB"}
-                iconUrl={user?.photoUrl}
-                size="sm"
-              />
-              <span className="min-w-0">
-                <span className="block truncate text-[13.5px] leading-tight font-semibold">
-                  {user ? displayName(user) : "ProfiBux"}
-                </span>
-                <span className="block text-[11px] text-content-muted">
-                  {user ? "Профиль и баланс" : "Задания за вознаграждение"}
-                </span>
-              </span>
-            </Link>
+            <ProfileAvatarButton
+              title={user ? displayName(user) : "PB"}
+              photoUrl={user?.photoUrl}
+            />
 
             <div className="ml-auto flex items-center gap-2">
               {isStaff ? (
@@ -67,6 +61,7 @@ export default async function MiniAppLayout({
               <NotificationBell initialCount={unread} />
             </div>
           </div>
+          <PromoBannerRail banners={banners} />
         </header>
 
         <main

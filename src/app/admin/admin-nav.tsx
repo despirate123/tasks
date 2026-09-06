@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Banknote,
   LayoutDashboard,
+  Megaphone,
   Package,
   ShieldCheck,
   Users,
@@ -17,6 +18,7 @@ const ITEMS = [
   { href: "/admin/offers", label: "Офферы", icon: Package },
   { href: "/admin/payouts", label: "Выплаты", icon: Banknote },
   { href: "/admin/users", label: "Пользователи", icon: Users },
+  { href: "/admin/banners", label: "Баннеры", icon: Megaphone },
 ];
 
 export function AdminNav() {

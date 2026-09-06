@@ -282,6 +282,41 @@ async function seedReferenceData() {
     });
   }
 
+  const bannerCount = await db.promoBanner.count();
+  if (bannerCount === 0) {
+    await db.promoBanner.createMany({
+      data: [
+        {
+          title: "Новые задания каждый день",
+          subtitle: "В каталоге свежие CPA-офферы — бери и отправляй пруф.",
+          href: "/",
+          background: "#111111",
+          accent: "#C8FF00",
+          sortOrder: 0,
+          isActive: true,
+        },
+        {
+          title: "Приведи друга — 10%",
+          subtitle: "С каждой выплаты реферала тебе капает процент на кошелёк.",
+          href: "/referrals",
+          background: "#0B1F0B",
+          accent: "#C8FF00",
+          sortOrder: 1,
+          isActive: true,
+        },
+        {
+          title: "Вывод без сюрпризов",
+          subtitle: "Карта или крипта. Минималка и холд видны до заявки.",
+          href: "/profile/withdraw",
+          background: "#16120A",
+          accent: "#F5C518",
+          sortOrder: 2,
+          isActive: true,
+        },
+      ],
+    });
+  }
+
   await db.exchangeRate.create({
     data: { pair: "RUB/USDT", rate: new D("94.80"), source: "seed" },
   });

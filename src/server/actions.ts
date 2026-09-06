@@ -29,6 +29,7 @@ import {
   refundWithdrawal,
 } from "@/server/modules/withdrawals";
 import { markAllRead, markRead } from "@/server/modules/notifications";
+import { deleteBanner, toggleBanner, upsertBanner } from "@/server/modules/banners";
 import { postLedgerEntry } from "@/server/modules/wallet";
 import { maskCard, maskCryptoAddress } from "@/lib/format";
 import { PAYOUT_METHOD } from "@/lib/labels";
@@ -638,6 +639,61 @@ export async function setUserStatusAction(
 
     revalidatePath("/admin/users");
     return { ok: true, message: "Статус пользователя обновлён" };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+function parseOptionalDate(value: string | undefined) {
+  if (!value?.trim()) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error("Некорректная дата");
+  return date;
+}
+
+export async function upsertBannerAction(formData: FormData): Promise<ActionResult> {
+  try {
+    const admin = await requireRole("ADMIN");
+    const id = String(formData.get("id") ?? "").trim() || undefined;
+    await upsertBanner(id, {
+      title: String(formData.get("title") ?? ""),
+      subtitle: String(formData.get("subtitle") ?? ""),
+      href: String(formData.get("href") ?? ""),
+      imageUrl: String(formData.get("imageUrl") ?? ""),
+      background: String(formData.get("background") ?? "#111111"),
+      accent: String(formData.get("accent") ?? "#C8FF00"),
+      sortOrder: Number(formData.get("sortOrder") ?? 0),
+      isActive: formData.get("isActive") === "on",
+      startsAt: parseOptionalDate(String(formData.get("startsAt") ?? "")),
+      endsAt: parseOptionalDate(String(formData.get("endsAt") ?? "")),
+    }, admin.id);
+    revalidatePath("/");
+    revalidatePath("/admin/banners");
+    return { ok: true, message: id ? "Баннер обновлён" : "Баннер создан" };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function toggleBannerAction(id: string, isActive: boolean): Promise<ActionResult> {
+  try {
+    await requireRole("ADMIN");
+    await toggleBanner(id, isActive);
+    revalidatePath("/");
+    revalidatePath("/admin/banners");
+    return { ok: true, message: isActive ? "Баннер включён" : "Баннер скрыт" };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function deleteBannerAction(id: string): Promise<ActionResult> {
+  try {
+    await requireRole("ADMIN");
+    await deleteBanner(id);
+    revalidatePath("/");
+    revalidatePath("/admin/banners");
+    return { ok: true, message: "Баннер удалён" };
   } catch (error) {
     return fail(error);
   }

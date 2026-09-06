@@ -166,3 +166,15 @@ body::before {
 .tabular {
   font-variant-numeric: tabular-nums;
 }
+
+::view-transition-old(profile-avatar),
+::view-transition-new(profile-avatar) {
+  animation-duration: 0.42s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.36s;
+}

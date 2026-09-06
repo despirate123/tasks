@@ -1082,7 +1082,27 @@ model PostbackLog {
   @@map("postback_logs")
 }
 
-/// Настройки приложения, редактируемые из админки без деплоя.
+/// Промо-баннеры в шапке Mini App. Редактируются из /admin/banners.
+model PromoBanner {
+  id          String    @id @default(cuid())
+  title       String
+  subtitle    String?
+  href        String?
+  imageUrl    String?
+  background  String    @default("#111111")
+  accent      String    @default("#C8FF00")
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdById String?
+
+  @@index([isActive, sortOrder])
+  @@map("promo_banners")
+}
+
 model AppSetting {
   key         String   @id
   value       Json
