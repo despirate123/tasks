@@ -34,7 +34,7 @@ export function BottomNav() {
         paddingRight: "max(0.75rem, var(--safe-right))",
       }}
     >
-      <div className="liquid-glass pointer-events-auto relative mx-auto flex max-w-[var(--app-max-width)] items-start rounded-[28px] bg-[var(--canvas)]/78 px-2 py-2 glass">
+      <div className="clip-frame liquid-glass pointer-events-auto relative mx-auto flex max-w-[var(--app-max-width)] items-start overflow-hidden rounded-[28px] bg-[var(--canvas)]/78 px-2 py-2 glass">
         <div
           aria-hidden
           className="pointer-events-none absolute top-2 right-2 left-2 grid h-9 grid-cols-3"
@@ -46,7 +46,7 @@ export function BottomNav() {
               opacity: activeIndex >= 0 ? 1 : 0,
             }}
           >
-            <span className="acid-pulse size-9 rounded-full bg-[var(--acid)] shadow-[0_0_22px_rgba(247,241,106,0.35)]" />
+            <span className="size-9 rounded-full bg-[var(--acid)]" />
           </div>
         </div>
 

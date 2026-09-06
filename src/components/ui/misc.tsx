@@ -106,8 +106,12 @@ export function StatTile({
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-10 -right-8 size-24 rounded-full blur-2xl"
-        style={{ background: meta.glow }}
+        className="pointer-events-none absolute -top-10 -right-8 size-24 rounded-full"
+        style={{
+          background: meta.glow === "transparent"
+            ? "transparent"
+            : `radial-gradient(circle, ${meta.glow} 0%, transparent 70%)`,
+        }}
       />
       <p className="relative text-[11px] font-medium tracking-wide text-content-muted uppercase">
         {label}

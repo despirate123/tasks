@@ -17,11 +17,11 @@ export default async function MiniAppLayout({
     <>
       <TelegramInit serverUserId={user?.id ?? null} />
       <div
-        className="relative z-10 mx-auto flex min-h-[var(--tg-viewport-stable-height,100dvh)] max-w-[var(--app-max-width)] flex-col overflow-x-hidden"
+        className="relative z-10 mx-auto flex min-h-[var(--tg-viewport-stable-height,100dvh)] max-w-[var(--app-max-width)] flex-col overflow-x-clip"
         style={{ paddingTop: "var(--safe-top)" }}
       >
         <main
-          className="flex-1 px-4 pt-4"
+          className="flex-1 overflow-x-clip px-4 pt-4"
           style={{
             paddingBottom: "calc(var(--nav-height) + 1rem)",
             paddingLeft: "max(1rem, var(--safe-left))",

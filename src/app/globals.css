@@ -93,6 +93,7 @@ html {
 html,
 body {
   min-height: var(--tg-viewport-stable-height, 100dvh);
+  overflow-x: clip;
   background: var(--canvas);
   color: var(--color-content-primary);
   -webkit-tap-highlight-color: transparent;
@@ -126,10 +127,10 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(34rem 22rem at 18% -10%, rgb(247 241 106 / 0.18), transparent 58%),
-    radial-gradient(26rem 20rem at 110% 8%, rgb(251 248 228 / 0.08), transparent 56%),
-    radial-gradient(28rem 24rem at -8% 72%, rgb(247 241 106 / 0.1), transparent 62%),
-    radial-gradient(22rem 18rem at 92% 88%, rgb(224 181 106 / 0.07), transparent 58%),
+    radial-gradient(28rem 18rem at 18% 6%, rgb(247 241 106 / 0.14), transparent 62%),
+    radial-gradient(22rem 16rem at 88% 10%, rgb(251 248 228 / 0.07), transparent 60%),
+    radial-gradient(24rem 20rem at 8% 78%, rgb(247 241 106 / 0.08), transparent 64%),
+    radial-gradient(20rem 16rem at 90% 86%, rgb(224 181 106 / 0.06), transparent 62%),
     linear-gradient(180deg, #191919 0%, #121212 46%, #111111 100%);
   animation: pb-aurora 16s var(--ease-soft) infinite alternate;
 }
@@ -145,13 +146,22 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* iOS/Telegram: blur и радиальные пятна рисуются мимо overflow:hidden.
+   Полная маска заставляет WebKit реально обрезать содержимое по радиусу. */
+.clip-frame {
+  overflow: hidden;
+  isolation: isolate;
+  -webkit-mask-image: linear-gradient(#fff 0 0);
+  mask-image: linear-gradient(#fff 0 0);
+}
+
 .offer-card {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: rgb(28 28 28 / 0.88);
-  backdrop-filter: blur(32px) saturate(140%);
-  -webkit-backdrop-filter: blur(32px) saturate(140%);
+  -webkit-mask-image: linear-gradient(#fff 0 0);
+  mask-image: linear-gradient(#fff 0 0);
+  background: rgb(28 28 28 / 0.94);
 }
 
 .offer-card::before {
@@ -181,13 +191,14 @@ body::after {
 .stat-tile {
   position: relative;
   overflow: hidden;
-  background: rgb(28 28 28 / 0.74);
-  backdrop-filter: blur(26px) saturate(140%);
-  -webkit-backdrop-filter: blur(26px) saturate(140%);
+  isolation: isolate;
+  -webkit-mask-image: linear-gradient(#fff 0 0);
+  mask-image: linear-gradient(#fff 0 0);
+  background: rgb(28 28 28 / 0.9);
 }
 
 .offer-card-featured {
-  box-shadow: 0 0 0 1px rgb(247 241 106 / 0.32);
+  box-shadow: inset 0 0 0 1px rgb(247 241 106 / 0.32);
 }
 
 .offer-card-featured::after {

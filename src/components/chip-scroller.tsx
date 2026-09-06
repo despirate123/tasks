@@ -44,10 +44,10 @@ export function ChipScroller({
   const mask = `linear-gradient(to right, ${start}, ${end})`;
 
   return (
-    <div className={cn("relative -mx-4", className)}>
+    <div className={cn("relative -mx-4 overflow-x-clip", className)}>
       <div
         ref={scroller}
-        className="motion-chips flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar"
+        className="motion-chips flex gap-2 overflow-x-auto overflow-y-hidden px-4 py-0.5 no-scrollbar"
         style={{
           WebkitMaskImage: mask,
           maskImage: mask,

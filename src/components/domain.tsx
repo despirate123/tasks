@@ -158,12 +158,7 @@ function OfferMark({
   size?: "sm" | "md" | "lg";
 }) {
   return (
-    <span className="relative shrink-0">
-      <span
-        aria-hidden
-        className="absolute -inset-1 rounded-[1.35rem] opacity-50 blur-xl"
-        style={{ background: "var(--offer-accent)" }}
-      />
+    <span className="relative shrink-0 overflow-hidden rounded-2xl">
       <OfferAvatar
         title={title}
         iconUrl={iconUrl}
@@ -214,7 +209,7 @@ export function OfferCard({
           iconUrl={offer.iconUrl}
           fallback={fallback}
           className={cn(
-            "offer-card flex items-center gap-3.5 rounded-card p-3.5 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-px active:scale-[0.99]",
+            "offer-card flex items-center gap-3.5 rounded-card p-3.5 ring-1 ring-inset transition-[box-shadow] duration-300 ease-soft active:scale-[0.99]",
             offer.isHot
               ? "offer-card-featured ring-white/12"
               : "offer-card-featured ring-[var(--acid)]/22",
@@ -256,7 +251,7 @@ export function OfferCard({
         iconUrl={offer.iconUrl}
         fallback={fallback}
         className={cn(
-          "offer-card flex aspect-square w-full flex-col rounded-card p-3 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-0.5 active:scale-[0.99]",
+          "offer-card flex aspect-square w-full flex-col rounded-card p-3 ring-1 ring-inset transition-[box-shadow] duration-300 ease-soft active:scale-[0.99]",
           offer.isHot
             ? "offer-card-featured ring-white/12"
             : offer.isFeatured
@@ -314,8 +309,15 @@ export function BalanceCard({
   const hasFrozen = Number(pending) > 0 || Number(hold) > 0;
 
   return (
-    <div className="relative overflow-hidden rounded-card glass p-5 ring-1 ring-inset ring-[var(--acid)]/25">
-      <div className="glow-breathe absolute -top-16 -right-10 size-44 rounded-full bg-[var(--acid)]/18 blur-2xl" />
+    <div className="clip-frame relative overflow-hidden rounded-card glass p-5 ring-1 ring-inset ring-[var(--acid)]/25">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-16 -right-10 size-44 rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle, rgb(247 241 106 / 0.22) 0%, transparent 70%)",
+        }}
+      />
       <div className="relative">
         <p className="text-[12px] font-medium tracking-wide text-content-secondary uppercase">
           Доступно к выводу

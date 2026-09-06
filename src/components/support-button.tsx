@@ -13,10 +13,14 @@ export function SupportButton({ href }: { href: string }) {
       }}
       className="group w-full text-left"
     >
-      <div className="relative overflow-hidden rounded-card p-4 ring-1 ring-inset ring-support/30 transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-px active:scale-[0.985]">
+      <div className="clip-frame relative overflow-hidden rounded-card p-4 ring-1 ring-inset ring-support/30 transition-[box-shadow] duration-300 ease-soft active:scale-[0.985]">
         <div
           aria-hidden
-          className="glow-breathe pointer-events-none absolute -top-16 -right-10 size-40 rounded-full bg-support/22 blur-3xl"
+          className="pointer-events-none absolute -top-16 -right-10 size-40 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgb(122 212 255 / 0.28) 0%, transparent 70%)",
+          }}
         />
         <div className="relative flex items-center gap-3.5">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-support/16 text-support ring-1 ring-inset ring-support/35">

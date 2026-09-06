@@ -28,7 +28,7 @@ export function PromoBannerCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[22px] px-4 py-3.5 ring-1 ring-inset ring-white/12",
+        "clip-frame relative overflow-hidden rounded-[22px] px-4 py-3.5 ring-1 ring-inset ring-white/12",
         className,
       )}
       style={{ background: banner.background }}
@@ -42,8 +42,11 @@ export function PromoBannerCard({
         />
       ) : (
         <div
-          className="absolute -top-10 -right-8 size-28 rounded-full blur-2xl"
-          style={{ background: banner.accent, opacity: 0.28 }}
+          className="pointer-events-none absolute -top-10 -right-8 size-28 rounded-full"
+          style={{
+            background: `radial-gradient(circle, ${banner.accent} 0%, transparent 70%)`,
+            opacity: 0.4,
+          }}
         />
       )}
       <div className="relative flex items-start gap-3">
