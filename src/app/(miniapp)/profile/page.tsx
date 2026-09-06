@@ -200,6 +200,41 @@ export default async function ProfilePage() {
         </div>
       ) : null}
 
+      <Card className="motion-list divide-y divide-border-subtle overflow-hidden">
+        <LinkRow
+          href="/my-tasks"
+          icon={<ListChecks />}
+          title="Мои задания"
+          subtitle={
+            activeWorkCount > 0
+              ? `${activeWorkCount} в работе`
+              : "История выполнений"
+          }
+        />
+        <LinkRow
+          href="/profile/withdraw"
+          icon={<Wallet2 />}
+          title="Реквизиты для выплат"
+          subtitle="Карта, СБП, USDT"
+        />
+        <LinkRow
+          href="/notifications"
+          icon={<BellRing />}
+          title="Уведомления"
+          subtitle="История и настройки"
+        />
+        <LinkRow
+          href="/referrals"
+          icon={<Handshake />}
+          title="Пригласить друзей"
+          subtitle={
+            stats?.referralsTotal
+              ? `${stats.referralsTotal} приглашено`
+              : "10 % с заработка друга"
+          }
+        />
+      </Card>
+
       <div className="space-y-2.5">
         <SectionTitle
           action={
@@ -254,41 +289,6 @@ export default async function ProfilePage() {
           </Card>
         )}
       </div>
-
-      <Card className="motion-list divide-y divide-border-subtle overflow-hidden">
-        <LinkRow
-          href="/my-tasks"
-          icon={<ListChecks />}
-          title="Мои задания"
-          subtitle={
-            activeWorkCount > 0
-              ? `${activeWorkCount} в работе`
-              : "История выполнений"
-          }
-        />
-        <LinkRow
-          href="/profile/withdraw"
-          icon={<Wallet2 />}
-          title="Реквизиты для выплат"
-          subtitle="Карта, СБП, USDT"
-        />
-        <LinkRow
-          href="/notifications"
-          icon={<BellRing />}
-          title="Уведомления"
-          subtitle="История и настройки"
-        />
-        <LinkRow
-          href="/referrals"
-          icon={<Handshake />}
-          title="Пригласить друзей"
-          subtitle={
-            stats?.referralsTotal
-              ? `${stats.referralsTotal} приглашено`
-              : "10 % с заработка друга"
-          }
-        />
-      </Card>
 
       <div className="space-y-2">
         <SupportButton
