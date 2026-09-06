@@ -662,7 +662,7 @@ export async function upsertBannerAction(formData: FormData): Promise<ActionResu
       href: String(formData.get("href") ?? ""),
       imageUrl: String(formData.get("imageUrl") ?? ""),
       background: String(formData.get("background") ?? "#111111"),
-      accent: String(formData.get("accent") ?? "#EF7A7C"),
+      accent: String(formData.get("accent") ?? "#F7F16A"),
       sortOrder: Number(formData.get("sortOrder") ?? 0),
       isActive: formData.get("isActive") === "on",
       startsAt: parseOptionalDate(String(formData.get("startsAt") ?? "")),

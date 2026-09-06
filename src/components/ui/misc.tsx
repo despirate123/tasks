@@ -65,19 +65,19 @@ const STAT_TONE = {
     glow: "transparent",
   },
   money: {
-    value: "text-[var(--acid)]",
-    ring: "ring-[var(--acid)]/20",
-    glow: "rgb(239 122 124 / 0.2)",
+    value: "text-content-primary",
+    ring: "ring-white/12",
+    glow: "transparent",
   },
   brand: {
-    value: "text-brand-300",
+    value: "text-content-primary",
     ring: "ring-brand-500/22",
-    glow: "rgb(244 168 174 / 0.16)",
+    glow: "rgb(212 232 246 / 0.14)",
   },
   warn: {
-    value: "text-medium",
+    value: "text-content-primary",
     ring: "ring-medium/22",
-    glow: "rgb(245 181 68 / 0.16)",
+    glow: "transparent",
   },
 } as const;
 

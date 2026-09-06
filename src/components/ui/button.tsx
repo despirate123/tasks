@@ -9,9 +9,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-[var(--acid)] text-[var(--ink)] shadow-[0_8px_24px_-8px_rgba(239,122,124,0.55)] hover:bg-brand-300",
+          "bg-[var(--acid)] text-[var(--ink)] shadow-[0_8px_24px_-8px_rgba(247,241,106,0.45)] hover:bg-brand-50",
         money:
-          "bg-[var(--acid)] text-[var(--ink)] shadow-[0_8px_24px_-8px_rgba(239,122,124,0.55)] hover:bg-brand-300",
+          "bg-[var(--acid)] text-[var(--ink)] shadow-[0_8px_24px_-8px_rgba(247,241,106,0.45)] hover:bg-brand-50",
         secondary:
           "glass-thin text-content-primary ring-1 ring-inset ring-white/12 hover:bg-white/10",
         outline:

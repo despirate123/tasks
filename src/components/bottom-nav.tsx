@@ -38,7 +38,7 @@ export function BottomNav() {
               opacity: activeIndex >= 0 ? 1 : 0,
             }}
           >
-            <span className="acid-pulse size-9 rounded-full bg-[var(--acid)] shadow-[0_0_22px_rgba(239,122,124,0.4)]" />
+            <span className="acid-pulse size-9 rounded-full bg-[var(--acid)] shadow-[0_0_22px_rgba(247,241,106,0.35)]" />
           </div>
         </div>
 
