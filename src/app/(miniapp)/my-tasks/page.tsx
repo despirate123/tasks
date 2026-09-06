@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/misc";
 import { DifficultyBadge, OfferAvatar, SubmissionStatusBadge } from "@/components/domain";
+import { ChipScroller } from "@/components/chip-scroller";
 
 const TABS: { key: string; label: string; statuses: SubmissionStatus[] }[] = [
   {
@@ -59,7 +60,7 @@ export default async function MyTasksPage({
         </p>
       </div>
 
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar">
+      <ChipScroller>
         {TABS.map((item) => {
           const active = item.key === tab.key;
           const count = counts.get(item.key) ?? 0;
@@ -79,7 +80,7 @@ export default async function MyTasksPage({
             </Link>
           );
         })}
-      </div>
+      </ChipScroller>
 
       {submissions.length === 0 ? (
         <EmptyState

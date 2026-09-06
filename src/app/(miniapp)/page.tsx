@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/misc";
 import { OfferCard } from "@/components/domain";
 import { HomeHeader } from "@/components/home-header";
+import { ChipScroller } from "@/components/chip-scroller";
 
 const SORTS = [
   { key: "", label: "Рекомендуем" },
@@ -178,7 +179,7 @@ export default async function CatalogPage({
         </Button>
       </form>
 
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar">
+      <ChipScroller>
         {DIFFICULTY_ORDER.map((value) => {
           const active = difficulty.includes(value);
           const meta = DIFFICULTY[value];
@@ -216,10 +217,10 @@ export default async function CatalogPage({
             {sort.label}
           </Link>
         ))}
-      </div>
+      </ChipScroller>
 
       {categories.length > 0 ? (
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar">
+        <ChipScroller>
           <Link
             href={buildHref({ category: undefined })}
             className={cn(
@@ -247,7 +248,7 @@ export default async function CatalogPage({
               <span className="tabular text-content-muted">{category._count.offers}</span>
             </Link>
           ))}
-        </div>
+        </ChipScroller>
       ) : null}
 
       {offers.length === 0 ? (
