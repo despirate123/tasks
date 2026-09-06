@@ -1,12 +1,15 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import {
   ArrowUpRight,
+  Clock,
   Coins,
   ShieldAlert,
 } from "lucide-react";
 import type { Difficulty, SubmissionStatus, WithdrawalStatus } from "@/generated/prisma";
 import { cn } from "@/lib/utils";
-import { formatMoney } from "@/lib/format";
+import { formatEta, formatMoney } from "@/lib/format";
+import { offerAccent, offerHue } from "@/lib/offer-accent";
 import { DIFFICULTY, SUBMISSION_STATUS, WITHDRAWAL_STATUS } from "@/lib/labels";
 import { Badge } from "@/components/ui/badge";
 
@@ -87,8 +90,7 @@ export function OfferAvatar({
     size
   ];
   const radius = shape === "circle" ? "rounded-full" : "rounded-2xl";
-  // Стабильный цвет из названия — узнаваемость без загрузки картинок.
-  const hue = [...title].reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % 360;
+  const hue = offerHue(title);
 
   if (iconUrl) {
     return (
@@ -146,6 +148,49 @@ function offerMeta(offer: OfferCardData, mine?: "active" | "done" | null) {
   return brand;
 }
 
+function OfferMark({
+  title,
+  iconUrl,
+  accent,
+  size = "lg",
+}: {
+  title: string;
+  iconUrl?: string | null;
+  accent: string;
+  size?: "sm" | "md" | "lg";
+}) {
+  return (
+    <span className="relative shrink-0">
+      <span
+        aria-hidden
+        className="absolute -inset-1 rounded-[1.35rem] opacity-50 blur-xl"
+        style={{ background: accent }}
+      />
+      <OfferAvatar
+        title={title}
+        iconUrl={iconUrl}
+        size={size}
+        className="relative ring-white/16"
+      />
+    </span>
+  );
+}
+
+function HighlightBadge({ kind }: { kind: "hot" | "featured" }) {
+  if (kind === "hot") {
+    return (
+      <span className="inline-flex items-center rounded-pill bg-[var(--acid)] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[var(--ink)] uppercase">
+        Хит
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-pill bg-brand-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-[var(--ink)] uppercase">
+      Топ
+    </span>
+  );
+}
+
 export function OfferCard({
   offer,
   mine,
@@ -157,30 +202,29 @@ export function OfferCard({
   layout?: "tile" | "wide";
 }) {
   const difficulty = DIFFICULTY[offer.difficulty];
-  const highlight = offer.isHot ? "Хит" : offer.isFeatured ? "Топ" : null;
+  const brandTitle = offer.brandName ?? offer.title;
+  const accent = offerAccent(offer.iconUrl, brandTitle);
+  const highlight = offer.isHot ? "hot" : offer.isFeatured ? "featured" : null;
+  const cardStyle = { "--offer-accent": accent } as CSSProperties;
 
   if (layout === "wide") {
     return (
       <Link href={`/tasks/${offer.slug}`} className="block min-w-0">
         <article
+          style={cardStyle}
           className={cn(
             "offer-card flex items-center gap-3.5 rounded-card p-3.5 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-px active:scale-[0.99]",
             offer.isHot
-              ? "ring-hard/28"
+              ? "offer-card-featured ring-white/12"
               : "offer-card-featured ring-[var(--acid)]/22",
             mine === "done" && "opacity-75",
           )}
         >
-          <OfferAvatar
-            title={offer.brandName ?? offer.title}
-            iconUrl={offer.iconUrl}
-            size="lg"
-            className="ring-white/14"
-          />
+          <OfferMark title={brandTitle} iconUrl={offer.iconUrl} accent={accent} />
           <div className="min-w-0 flex-1">
             {highlight ? (
-              <p className="mb-1 text-[11px] font-medium tracking-wide text-[var(--acid)] uppercase">
-                {highlight}
+              <p className="mb-1.5">
+                <HighlightBadge kind={highlight} />
               </p>
             ) : null}
             <p className="line-clamp-2 text-[15px] leading-snug font-semibold tracking-[-0.015em]">
@@ -191,9 +235,15 @@ export function OfferCard({
               <span className="truncate">{offerMeta(offer, mine)}</span>
             </p>
           </div>
-          <span className="tabular shrink-0 text-[16px] font-bold text-content-primary">
-            {formatMoney(offer.rewardAmount as number)}
-          </span>
+          <div className="shrink-0 rounded-2xl bg-black/25 px-2.5 py-2 text-right ring-1 ring-inset ring-white/[0.06]">
+            <p className="tabular text-[16px] leading-none font-bold text-content-primary">
+              {formatMoney(offer.rewardAmount as number)}
+            </p>
+            <p className="mt-1.5 flex items-center justify-end gap-1 text-[10.5px] text-content-muted">
+              <Clock className="size-3" />
+              {formatEta(offer.approvalEtaMinutes)}
+            </p>
+          </div>
         </article>
       </Link>
     );
@@ -202,30 +252,35 @@ export function OfferCard({
   return (
     <Link href={`/tasks/${offer.slug}`} className="block min-w-0">
       <article
+        style={cardStyle}
         className={cn(
           "offer-card flex aspect-square w-full flex-col rounded-card p-3 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-0.5 active:scale-[0.99]",
           offer.isHot
-            ? "ring-hard/28"
+            ? "offer-card-featured ring-white/12"
             : offer.isFeatured
               ? "offer-card-featured ring-[var(--acid)]/22"
               : "ring-white/10",
           mine === "done" && "opacity-75",
         )}
       >
-        <OfferAvatar
-          title={offer.brandName ?? offer.title}
-          iconUrl={offer.iconUrl}
-          size="lg"
-          className="ring-white/14"
-        />
+        <div className="flex items-start justify-between gap-2">
+          <OfferMark title={brandTitle} iconUrl={offer.iconUrl} accent={accent} />
+          <span
+            className={cn(
+              "rounded-pill px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset",
+              difficulty.className,
+            )}
+          >
+            {difficulty.label}
+          </span>
+        </div>
         <p className="mt-3 line-clamp-2 text-[13.5px] leading-snug font-semibold tracking-[-0.015em]">
           {offer.title}
         </p>
-        <p className="mt-1 flex min-w-0 items-center gap-1.5 text-[11.5px] text-content-muted">
-          <span className={cn("size-1.5 shrink-0 rounded-full", difficulty.dot)} />
-          <span className="truncate">{offerMeta(offer, mine)}</span>
+        <p className="mt-1 truncate text-[11.5px] text-content-muted">
+          {offerMeta(offer, mine)}
         </p>
-        <p className="tabular mt-auto pt-3 text-[16px] leading-none font-bold text-content-primary">
+        <p className="tabular mt-auto border-t border-white/[0.06] pt-2.5 text-[16px] leading-none font-bold text-content-primary">
           {formatMoney(offer.rewardAmount as number)}
         </p>
       </article>

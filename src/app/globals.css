@@ -146,9 +146,36 @@ body::after {
 }
 
 .offer-card {
-  background: rgb(28 28 28 / 0.78);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: rgb(28 28 28 / 0.88);
   backdrop-filter: blur(32px) saturate(140%);
   -webkit-backdrop-filter: blur(32px) saturate(140%);
+}
+
+.offer-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      130% 95% at 6% -8%,
+      color-mix(in srgb, var(--offer-accent, #f7f16a) 30%, transparent),
+      transparent 58%
+    ),
+    radial-gradient(
+      80% 70% at 108% 112%,
+      color-mix(in srgb, var(--offer-accent, #f7f16a) 12%, transparent),
+      transparent 56%
+    );
+}
+
+.offer-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .stat-tile {
@@ -161,6 +188,19 @@ body::after {
 
 .offer-card-featured {
   box-shadow: 0 0 0 1px rgb(247 241 106 / 0.32);
+}
+
+.offer-card-featured::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    70% 50% at 92% -8%,
+    rgb(247 241 106 / 0.16),
+    transparent 58%
+  );
 }
 
 .glass {
