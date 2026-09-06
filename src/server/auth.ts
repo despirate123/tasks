@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { db } from "@/server/db";
 import { referralCode } from "@/lib/utils";
@@ -173,7 +174,7 @@ export async function createSession(userId: string) {
  * чтобы приложение можно было открыть в обычном браузере без Telegram.
  * В продакшене этот путь отключён — иначе это дыра размером с проект.
  */
-export async function getCurrentUser(): Promise<User | null> {
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<User | null> {
   const jar = await cookies();
   const sessionUserId = jar.get(SESSION_COOKIE)?.value;
 
@@ -192,7 +193,7 @@ export async function getCurrentUser(): Promise<User | null> {
   }
 
   return null;
-}
+});
 
 export async function requireUser(): Promise<User> {
   const user = await getCurrentUser();

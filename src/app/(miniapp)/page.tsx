@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Search, SlidersHorizontal, Wallet2 } from "lucide-react";
 import type { Difficulty } from "@/generated/prisma";
@@ -22,6 +23,11 @@ import { ActiveWork } from "@/components/active-work";
 import { HomeHeader } from "@/components/home-header";
 import { ChipScroller } from "@/components/chip-scroller";
 import { ChipDot, chipClass } from "@/lib/chips";
+import {
+  HomeCatalogSkeleton,
+  HomeHeaderSkeleton,
+  HomeWalletSkeleton,
+} from "@/components/page-skeleton";
 
 type CatalogOffer = Awaited<ReturnType<typeof listOffers>>[number];
 
@@ -81,24 +87,79 @@ type SearchParams = Promise<{
   q?: string;
 }>;
 
+type CatalogQuery = Awaited<SearchParams>;
+
+function parseDifficulty(params: CatalogQuery): Difficulty[] {
+  const rawDifficulty = Array.isArray(params.difficulty)
+    ? params.difficulty
+    : params.difficulty
+      ? [params.difficulty]
+      : [];
+  return rawDifficulty.filter((d): d is Difficulty =>
+    DIFFICULTY_ORDER.includes(d as Difficulty),
+  );
+}
+
+async function HomeWalletAndWork() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const [wallet, activeWork] = await Promise.all([
+    getWallet(user.id),
+    getUserSubmissions(user.id, ACTIVE_SUBMISSION_STATUSES),
+  ]);
+
+  return (
+    <>
+      <Link
+        href="/profile"
+        className="flex items-center gap-3 rounded-card glass-thin px-3 py-2.5 ring-1 ring-inset ring-[var(--acid)]/20 transition-[transform,box-shadow,background] duration-300 ease-soft hover:-translate-y-px active:scale-[0.99]"
+      >
+        <span className="flex size-9 items-center justify-center rounded-full bg-[var(--acid)]/12 text-[var(--acid)]">
+          <Wallet2 className="size-4" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[11px] tracking-wide text-content-muted uppercase">
+            Баланс
+          </span>
+          <span className="tabular block text-[17px] leading-tight font-bold text-money-400">
+            {formatMoney(wallet.available)}
+          </span>
+        </span>
+        <span className="text-[12px] font-medium text-[var(--acid)]">Вывести →</span>
+      </Link>
+      <ActiveWork items={activeWork} />
+    </>
+  );
+}
+
 export default async function CatalogPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
-  const rawDifficulty = Array.isArray(params.difficulty)
-    ? params.difficulty
-    : params.difficulty
-      ? [params.difficulty]
-      : [];
-  const difficulty = rawDifficulty.filter((d): d is Difficulty =>
-    DIFFICULTY_ORDER.includes(d as Difficulty),
-  );
 
+  return (
+    <div className="space-y-3">
+      <Suspense fallback={<HomeHeaderSkeleton />}>
+        <HomeHeader />
+      </Suspense>
+      <Suspense fallback={<HomeWalletSkeleton />}>
+        <HomeWalletAndWork />
+      </Suspense>
+      <Suspense fallback={<HomeCatalogSkeleton />}>
+        <HomeCatalog params={params} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function HomeCatalog({ params }: { params: CatalogQuery }) {
+  const difficulty = parseDifficulty(params);
   const user = await getCurrentUser();
 
-  const [offers, categories, wallet, activeWork] = await Promise.all([
+  const [offers, categories, own] = await Promise.all([
     listOffers({
       difficulty: difficulty.length ? difficulty : undefined,
       categorySlug: params.category,
@@ -106,32 +167,29 @@ export default async function CatalogPage({
       sort: params.sort as "reward" | "eta" | "new" | undefined,
     }),
     getCategoriesWithCounts(),
-    user ? getWallet(user.id) : null,
-    user ? getUserSubmissions(user.id, ACTIVE_SUBMISSION_STATUSES) : [],
+    user
+      ? db.taskSubmission.findMany({
+          where: {
+            userId: user.id,
+            status: { notIn: ["CANCELLED", "EXPIRED", "REJECTED"] },
+          },
+          select: { offerId: true, status: true },
+        })
+      : Promise.resolve([]),
   ]);
 
   // Помечаем в каталоге офферы, по которым у участника уже есть выполнение.
   // «В работе» и «Выполнено» — разные вещи: первое требует действия,
   // второе просто объясняет, почему задание нельзя взять снова.
   const mineByOffer = new Map<string, "active" | "done">();
-  if (user) {
-    const own = await db.taskSubmission.findMany({
-      where: {
-        userId: user.id,
-        offerId: { in: offers.map((o) => o.id) },
-        status: { notIn: ["CANCELLED", "EXPIRED", "REJECTED"] },
-      },
-      select: { offerId: true, status: true },
-    });
-    for (const submission of own) {
-      const state = ACTIVE_SUBMISSION_STATUSES.includes(submission.status)
-        ? "active"
-        : "done";
-      // «В работе» приоритетнее: если по офферу есть и активное выполнение,
-      // и завершённое, участнику важнее первое.
-      if (state === "active" || !mineByOffer.has(submission.offerId)) {
-        mineByOffer.set(submission.offerId, state);
-      }
+  for (const submission of own) {
+    const state = ACTIVE_SUBMISSION_STATUSES.includes(submission.status)
+      ? "active"
+      : "done";
+    // «В работе» приоритетнее: если по офферу есть и активное выполнение,
+    // и завершённое, участнику важнее первое.
+    if (state === "active" || !mineByOffer.has(submission.offerId)) {
+      mineByOffer.set(submission.offerId, state);
     }
   }
 
@@ -168,31 +226,7 @@ export default async function CatalogPage({
   };
 
   return (
-    <div className="space-y-3">
-      <HomeHeader />
-
-      {wallet ? (
-        <Link
-          href="/profile"
-          className="flex items-center gap-3 rounded-card glass-thin px-3 py-2.5 ring-1 ring-inset ring-[var(--acid)]/20 transition-[transform,box-shadow,background] duration-300 ease-soft hover:-translate-y-px active:scale-[0.99]"
-        >
-          <span className="flex size-9 items-center justify-center rounded-full bg-[var(--acid)]/12 text-[var(--acid)]">
-            <Wallet2 className="size-4" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[11px] tracking-wide text-content-muted uppercase">
-              Баланс
-            </span>
-            <span className="tabular block text-[17px] leading-tight font-bold text-money-400">
-              {formatMoney(wallet.available)}
-            </span>
-          </span>
-          <span className="text-[12px] font-medium text-[var(--acid)]">Вывести →</span>
-        </Link>
-      ) : null}
-
-      <ActiveWork items={activeWork} />
-
+    <>
       <div className="space-y-2">
         <h1 className="text-[17px] leading-tight font-bold">
           Задания
@@ -309,6 +343,6 @@ export default async function CatalogPage({
       ) : (
         <HybridCatalog offers={offers} mineByOffer={mineByOffer} />
       )}
-    </div>
+    </>
   );
 }

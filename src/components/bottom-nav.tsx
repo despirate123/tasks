@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Compass, Handshake, UserRound } from "lucide-react";
 import { APP_TABS, appTabIndex } from "@/lib/app-tabs";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,14 @@ const ICONS = {
 
 export function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const activeIndex = appTabIndex(pathname);
+
+  useEffect(() => {
+    for (const tab of APP_TABS) {
+      router.prefetch(tab.href);
+    }
+  }, [router]);
 
   return (
     <nav
@@ -49,6 +57,7 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch
               onClick={() => haptic(active ? "medium" : "light")}
               className="relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 transition-transform duration-300 ease-soft active:scale-95"
             >

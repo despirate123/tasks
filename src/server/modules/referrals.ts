@@ -130,7 +130,7 @@ async function buildReferrerChain(tx: Tx, userId: string, maxLevels: number) {
 }
 
 export async function getReferralOverview(userId: string) {
-  const [user, programs, referrals, earnings, stats] = await Promise.all([
+  const [user, programs, referrals, earnings, stats, allEarnings] = await Promise.all([
     db.user.findUnique({
       where: { id: userId },
       select: { referralCode: true },
@@ -162,14 +162,14 @@ export async function getReferralOverview(userId: string) {
       take: 30,
     }),
     db.userStats.findUnique({ where: { userId } }),
+    db.referralEarning.groupBy({
+      by: ["refereeId"],
+      where: { referrerId: userId },
+      _sum: { amount: true },
+    }),
   ]);
 
   const perReferee = new Map<string, Prisma.Decimal>();
-  const allEarnings = await db.referralEarning.groupBy({
-    by: ["refereeId"],
-    where: { referrerId: userId },
-    _sum: { amount: true },
-  });
   for (const row of allEarnings) {
     perReferee.set(row.refereeId, new D(row._sum.amount ?? 0));
   }

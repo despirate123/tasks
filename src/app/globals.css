@@ -335,61 +335,31 @@ body::after {
 }
 
 .motion-list > * {
-  animation: pb-fade-up 0.5s var(--ease-soft) both;
+  animation: pb-fade-up 0.28s var(--ease-soft) both;
 }
-.motion-list > *:nth-child(1) { animation-delay: 0.02s; }
-.motion-list > *:nth-child(2) { animation-delay: 0.06s; }
-.motion-list > *:nth-child(3) { animation-delay: 0.1s; }
-.motion-list > *:nth-child(4) { animation-delay: 0.14s; }
-.motion-list > *:nth-child(5) { animation-delay: 0.18s; }
-.motion-list > *:nth-child(6) { animation-delay: 0.22s; }
-.motion-list > *:nth-child(7) { animation-delay: 0.26s; }
-.motion-list > *:nth-child(8) { animation-delay: 0.3s; }
-.motion-list > *:nth-child(9) { animation-delay: 0.34s; }
-.motion-list > *:nth-child(10) { animation-delay: 0.38s; }
-.motion-list > *:nth-child(n + 11) { animation-delay: 0.4s; }
+.motion-list > *:nth-child(1) { animation-delay: 0s; }
+.motion-list > *:nth-child(2) { animation-delay: 0.03s; }
+.motion-list > *:nth-child(3) { animation-delay: 0.05s; }
+.motion-list > *:nth-child(4) { animation-delay: 0.07s; }
+.motion-list > *:nth-child(n + 5) { animation-delay: 0.08s; }
 
 .motion-chips > * {
-  animation: pb-fade-up 0.42s var(--ease-soft) both;
+  animation: pb-fade-up 0.24s var(--ease-soft) both;
 }
-.motion-chips > *:nth-child(1) { animation-delay: 0.02s; }
-.motion-chips > *:nth-child(2) { animation-delay: 0.05s; }
-.motion-chips > *:nth-child(3) { animation-delay: 0.08s; }
-.motion-chips > *:nth-child(4) { animation-delay: 0.11s; }
-.motion-chips > *:nth-child(5) { animation-delay: 0.14s; }
-.motion-chips > *:nth-child(6) { animation-delay: 0.17s; }
-.motion-chips > *:nth-child(7) { animation-delay: 0.2s; }
-.motion-chips > *:nth-child(8) { animation-delay: 0.23s; }
-.motion-chips > *:nth-child(9) { animation-delay: 0.26s; }
-.motion-chips > *:nth-child(n + 10) { animation-delay: 0.3s; }
+.motion-chips > *:nth-child(1) { animation-delay: 0s; }
+.motion-chips > *:nth-child(2) { animation-delay: 0.02s; }
+.motion-chips > *:nth-child(3) { animation-delay: 0.04s; }
+.motion-chips > *:nth-child(n + 4) { animation-delay: 0.06s; }
 
-/* Секции страницы: transform только на блоках контента, не на TabTransition. */
-.motion-page > *,
-.tab-surface > * > * {
-  animation: pb-fade-up 0.52s var(--ease-soft) both;
+/* Секции страницы: transform только на блоках контента, не на TabTransition.
+   На вкладках мини-приложения не растягиваем появление — это выглядит как долгий рендер. */
+.motion-page > * {
+  animation: pb-fade-up 0.28s var(--ease-soft) both;
 }
-.motion-page > *:nth-child(1),
-.tab-surface > * > *:nth-child(1) { animation-delay: 0.02s; }
-.motion-page > *:nth-child(2),
-.tab-surface > * > *:nth-child(2) { animation-delay: 0.07s; }
-.motion-page > *:nth-child(3),
-.tab-surface > * > *:nth-child(3) { animation-delay: 0.12s; }
-.motion-page > *:nth-child(4),
-.tab-surface > * > *:nth-child(4) { animation-delay: 0.17s; }
-.motion-page > *:nth-child(5),
-.tab-surface > * > *:nth-child(5) { animation-delay: 0.22s; }
-.motion-page > *:nth-child(6),
-.tab-surface > * > *:nth-child(6) { animation-delay: 0.27s; }
-.motion-page > *:nth-child(7),
-.tab-surface > * > *:nth-child(7) { animation-delay: 0.32s; }
-.motion-page > *:nth-child(8),
-.tab-surface > * > *:nth-child(8) { animation-delay: 0.36s; }
-.motion-page > *:nth-child(9),
-.tab-surface > * > *:nth-child(9) { animation-delay: 0.4s; }
-.motion-page > *:nth-child(10),
-.tab-surface > * > *:nth-child(10) { animation-delay: 0.44s; }
-.motion-page > *:nth-child(n + 11),
-.tab-surface > * > *:nth-child(n + 11) { animation-delay: 0.48s; }
+.motion-page > *:nth-child(1) { animation-delay: 0s; }
+.motion-page > *:nth-child(2) { animation-delay: 0.03s; }
+.motion-page > *:nth-child(3) { animation-delay: 0.05s; }
+.motion-page > *:nth-child(n + 4) { animation-delay: 0.07s; }
 
 .back-nav {
   display: inline-flex;
@@ -447,15 +417,15 @@ body::after {
 }
 
 .animate-tab-next {
-  animation: pb-tab-next 0.42s var(--ease-soft) both;
+  animation: pb-tab-next 0.16s var(--ease-soft) both;
 }
 
 .animate-tab-prev {
-  animation: pb-tab-prev 0.42s var(--ease-soft) both;
+  animation: pb-tab-prev 0.16s var(--ease-soft) both;
 }
 
 .animate-tab-fade {
-  animation: pb-tab-fade 0.38s var(--ease-soft) both;
+  animation: pb-tab-fade 0.14s var(--ease-soft) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -470,7 +440,6 @@ body::after {
   .motion-list > *,
   .motion-chips > *,
   .motion-page > *,
-  .tab-surface > * > *,
   .animate-fade-up,
   .animate-soft-in,
   .animate-pop,

@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState, SectionTitle, StatTile } from "@/components/ui/misc";
 import { OfferAvatar } from "@/components/domain";
-import { ReferralShare, EarningsChart } from "./referral-client";
+import { ReferralShare } from "./referral-client";
+import { EarningsChart } from "./referral-chart";
 
 export default async function ReferralsPage() {
   const user = await getCurrentUser();

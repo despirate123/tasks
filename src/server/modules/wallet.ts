@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { Prisma } from "@/generated/prisma";
 import type { LedgerDirection, LedgerEntryType } from "@/generated/prisma";
 import { db } from "@/server/db";
@@ -172,13 +173,13 @@ export async function releaseHold(
   return { available, pending };
 }
 
-export async function getWallet(userId: string) {
+export const getWallet = cache(async function getWallet(userId: string) {
   const wallet = await db.wallet.findUnique({
     where: { userId_currency: { userId, currency: "RUB" } },
   });
   if (wallet) return wallet;
   return db.wallet.create({ data: { userId, currency: "RUB" } });
-}
+});
 
 /**
  * Сверка: кэш в wallets против суммы по леджеру.

@@ -58,6 +58,8 @@ export function useLogoAccent(
   return accent;
 }
 
+const HEX_ACCENT = /^#[0-9a-f]{6}$/i;
+
 export function TintedOfferCard({
   iconUrl,
   fallback,
@@ -69,7 +71,7 @@ export function TintedOfferCard({
   className?: string;
   children: ReactNode;
 }) {
-  const accent = useLogoAccent(iconUrl, fallback);
+  const accent = useLogoAccent(HEX_ACCENT.test(fallback) ? null : iconUrl, fallback);
   return (
     <article
       className={className}
