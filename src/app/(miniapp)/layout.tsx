@@ -7,6 +7,8 @@ import { NotificationBell } from "@/components/notification-bell";
 import { TelegramInit } from "@/components/telegram-init";
 import { OfferAvatar } from "@/components/domain";
 
+export const dynamic = "force-dynamic";
+
 export default async function MiniAppLayout({
   children,
 }: {
@@ -18,7 +20,7 @@ export default async function MiniAppLayout({
 
   return (
     <>
-      <TelegramInit />
+      <TelegramInit serverUserId={user?.id ?? null} />
       <div className="relative z-10 mx-auto flex min-h-dvh max-w-[var(--app-max-width)] flex-col">
         <header
           className="sticky top-0 z-40 border-b border-border-subtle/70 bg-surface-base/85 backdrop-blur-xl"

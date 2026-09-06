@@ -33,7 +33,7 @@ declare global {
  * Вне Telegram (обычный браузер, локальная разработка) молча ничего не делает —
  * приложение остаётся работоспособным, аутентификация идёт через DEV_AUTH_BYPASS.
  */
-export function TelegramInit() {
+export function TelegramInit({ serverUserId = null }: { serverUserId?: string | null }) {
   useEffect(() => {
     const webApp = window.Telegram?.WebApp;
     if (!webApp) return;
@@ -68,15 +68,27 @@ export function TelegramInit() {
     webApp.onEvent?.("safeAreaChanged", applyViewport);
     webApp.onEvent?.("contentSafeAreaChanged", applyViewport);
 
-    // Обмен initData на серверную сессию.
+    // Обмен initData на серверную сессию. Если сервер ещё рисует демо-Алексея,
+    // после успешного входа перезагружаем страницу уже под реальным аккаунтом.
     if (webApp.initData) {
       void fetch("/api/auth/telegram", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ initData: webApp.initData }),
-      });
+      })
+        .then(async (response) => {
+          if (!response.ok) return;
+          const data = (await response.json()) as { user?: { id?: string } };
+          if (data.user?.id && data.user.id !== serverUserId) {
+            window.location.reload();
+          }
+        })
+        .catch(() => {
+          /* сеть туннеля могла моргнуть */
+        });
     }
-  }, []);
+  }, [serverUserId]);
 
   return null;
 }

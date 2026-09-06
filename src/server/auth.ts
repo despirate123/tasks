@@ -141,12 +141,22 @@ async function resolveReferrer(startParam?: string) {
   return db.user.findUnique({ where: { referralCode: code } });
 }
 
+const SEED_TELEGRAM_FROM = 777_000_001n;
+const SEED_TELEGRAM_TO = 777_000_099n;
+
+function isSeedDemoUser(telegramId: bigint) {
+  return telegramId >= SEED_TELEGRAM_FROM && telegramId <= SEED_TELEGRAM_TO;
+}
+
 export async function createSession(userId: string) {
   const jar = await cookies();
+  const httpsMiniApp = (process.env.MINIAPP_URL ?? "").startsWith("https");
   jar.set(SESSION_COOKIE, userId, {
     httpOnly: true,
-    sameSite: "none",
-    secure: process.env.NODE_ENV === "production",
+    // same-site: страница и API на одном хосте. SameSite=None без Secure
+    // браузер и WebView Telegram просто выбрасывают — сессия не сохраняется.
+    sameSite: "lax",
+    secure: httpsMiniApp || process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   });
@@ -163,12 +173,16 @@ export async function getCurrentUser(): Promise<User | null> {
   const jar = await cookies();
   const sessionUserId = jar.get(SESSION_COOKIE)?.value;
 
+  const bypass = process.env.DEV_AUTH_BYPASS === "true";
+
   if (sessionUserId) {
     const user = await db.user.findUnique({ where: { id: sessionUserId } });
-    if (user) return user;
+    // После выключения bypass старая cookie Алексея не должна оставлять
+    // админку открытой в настоящем Mini App.
+    if (user && (bypass || !isSeedDemoUser(user.telegramId))) return user;
   }
 
-  if (process.env.DEV_AUTH_BYPASS === "true") {
+  if (bypass) {
     const devId = process.env.DEV_USER_TELEGRAM_ID ?? "777000001";
     return db.user.findUnique({ where: { telegramId: BigInt(devId) } });
   }
