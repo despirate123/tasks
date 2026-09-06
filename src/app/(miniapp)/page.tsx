@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/misc";
 import { OfferCard } from "@/components/domain";
+import { HomeHeader } from "@/components/home-header";
 
 const SORTS = [
   { key: "", label: "Рекомендуем" },
@@ -126,6 +127,8 @@ export default async function CatalogPage({
 
   return (
     <div className="space-y-4">
+      <HomeHeader />
+
       {wallet ? (
         <Link
           href="/profile"
