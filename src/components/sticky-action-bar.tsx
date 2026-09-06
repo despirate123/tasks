@@ -2,13 +2,14 @@ import { cn } from "@/lib/utils";
 
 /**
  * Липкая кнопка над нижней навигацией.
+ * Без второй «коробки»: сама кнопка — акцент, снизу только мягкое затемнение.
  * Нельзя класть внутрь элемента с transform — fixed тогда
  * привязывается к карточке, а не к экрану.
  */
 export function StickyActionBar({
   children,
   className,
-  spacerClassName = "h-36",
+  spacerClassName = "h-32",
 }: {
   children: React.ReactNode;
   className?: string;
@@ -19,33 +20,25 @@ export function StickyActionBar({
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40">
         <div
           aria-hidden
-          className="absolute inset-x-0 bottom-0 bg-[#050505]"
-          style={{ height: "calc(var(--nav-height) + 7.25rem)" }}
-        />
-        <div
-          aria-hidden
-          className="absolute inset-x-0 bg-gradient-to-t from-[#050505] to-transparent"
+          className="absolute inset-x-0 bottom-0"
           style={{
-            bottom: "calc(var(--nav-height) + 7.25rem)",
-            height: "2rem",
+            height: "calc(var(--nav-height) + 6.25rem)",
+            background:
+              "linear-gradient(to top, #000 0, #000 calc(var(--nav-height) + 0.4rem), rgb(0 0 0 / 0.88) calc(var(--nav-height) + 4.25rem), transparent)",
           }}
         />
         <div
-          className="relative mx-auto w-full max-w-[var(--app-max-width)] px-4"
+          className={cn(
+            "pointer-events-auto relative mx-auto w-full max-w-[var(--app-max-width)]",
+            className,
+          )}
           style={{
             paddingBottom: "calc(var(--nav-height) + 0.75rem)",
             paddingLeft: "max(1rem, var(--safe-left))",
             paddingRight: "max(1rem, var(--safe-right))",
           }}
         >
-          <div
-            className={cn(
-              "pointer-events-auto rounded-[22px] border border-white/10 bg-[#0a0a0a] px-3 py-3 shadow-[0_-18px_48px_rgba(0,0,0,0.8)]",
-              className,
-            )}
-          >
-            {children}
-          </div>
+          {children}
         </div>
       </div>
       <div aria-hidden className={cn(spacerClassName)} />
