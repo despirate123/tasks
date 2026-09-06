@@ -83,7 +83,7 @@ export default async function AdminOffersPage({
                     iconUrl={offer.iconUrl}
                   />
 
-                  <div className="min-w-[14rem] flex-1">
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
                         href={`/admin/offers/${offer.id}`}

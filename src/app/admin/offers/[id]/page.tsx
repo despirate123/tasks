@@ -52,7 +52,7 @@ export default async function AdminOfferPage({
           iconUrl={offer.iconUrl}
           size="lg"
         />
-        <div className="min-w-[16rem] flex-1">
+        <div className="min-w-0 flex-1">
           <h1 className="text-[22px] leading-tight font-bold">{offer.title}</h1>
           <p className="mt-1 text-[12.5px] text-content-muted">
             {offer.source.name}

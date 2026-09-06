@@ -151,37 +151,17 @@ export function ReviewPanel({
           </p>
         ) : null}
 
-        <div className="grid grid-cols-3 gap-2">
-          <Button
-            variant="success"
-            onClick={approve}
-            disabled={pending}
-            title="Одобрить (A)"
-          >
-            {pending ? <Loader2 className="animate-spin" /> : <Check />}
-            Одобрить
-          </Button>
-          <Button
-            variant={mode === "revision" ? "primary" : "secondary"}
-            onClick={() => setMode(mode === "revision" ? "idle" : "revision")}
-            disabled={pending}
-            title="На доработку (V)"
-          >
-            <PencilLine />
-            Доработка
-          </Button>
-          <Button
-            variant={mode === "reject" ? "danger" : "secondary"}
-            onClick={() => setMode(mode === "reject" ? "idle" : "reject")}
-            disabled={pending}
-            title="Отклонить (R)"
-          >
-            <X />
-            Отклонить
-          </Button>
+        <div className="hidden lg:grid lg:grid-cols-3 lg:gap-2">
+          <DecisionButtons
+            pending={pending}
+            mode={mode}
+            onApprove={approve}
+            onRevision={() => setMode(mode === "revision" ? "idle" : "revision")}
+            onReject={() => setMode(mode === "reject" ? "idle" : "reject")}
+          />
         </div>
 
-        <p className="text-[11px] text-content-muted">
+        <p className="hidden text-[11px] text-content-muted lg:block">
           Горячие клавиши: <kbd className="font-mono">A</kbd> одобрить ·{" "}
           <kbd className="font-mono">V</kbd> доработка ·{" "}
           <kbd className="font-mono">R</kbd> отклонить ·{" "}
@@ -256,6 +236,78 @@ export function ReviewPanel({
             : "Это последнее выполнение в очереди."}
         </p>
       </Card>
+
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 gap-2 border-t border-border-subtle bg-surface-base/92 px-3 pt-2 backdrop-blur-xl lg:hidden"
+        style={{
+          paddingBottom: "max(0.65rem, var(--safe-bottom))",
+          paddingLeft: "max(0.75rem, var(--safe-left))",
+          paddingRight: "max(0.75rem, var(--safe-right))",
+        }}
+      >
+        <DecisionButtons
+          pending={pending}
+          mode={mode}
+          compact
+          onApprove={approve}
+          onRevision={() => setMode(mode === "revision" ? "idle" : "revision")}
+          onReject={() => setMode(mode === "reject" ? "idle" : "reject")}
+        />
+      </div>
     </div>
+  );
+}
+
+function DecisionButtons({
+  pending,
+  mode,
+  compact,
+  onApprove,
+  onRevision,
+  onReject,
+}: {
+  pending: boolean;
+  mode: "idle" | "reject" | "revision";
+  compact?: boolean;
+  onApprove: () => void;
+  onRevision: () => void;
+  onReject: () => void;
+}) {
+  return (
+    <>
+      <Button
+        variant="success"
+        size={compact ? "sm" : "md"}
+        onClick={onApprove}
+        disabled={pending}
+        title="Одобрить (A)"
+        className={compact ? "px-2" : undefined}
+      >
+        {pending ? <Loader2 className="animate-spin" /> : <Check />}
+        Одобрить
+      </Button>
+      <Button
+        variant={mode === "revision" ? "primary" : "secondary"}
+        size={compact ? "sm" : "md"}
+        onClick={onRevision}
+        disabled={pending}
+        title="На доработку (V)"
+        className={compact ? "px-2" : undefined}
+      >
+        <PencilLine />
+        Доработка
+      </Button>
+      <Button
+        variant={mode === "reject" ? "danger" : "secondary"}
+        size={compact ? "sm" : "md"}
+        onClick={onReject}
+        disabled={pending}
+        title="Отклонить (R)"
+        className={compact ? "px-2" : undefined}
+      >
+        <X />
+        Отклонить
+      </Button>
+    </>
   );
 }

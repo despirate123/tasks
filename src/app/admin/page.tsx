@@ -81,7 +81,7 @@ export default async function AdminDashboard() {
   return (
     <div className="motion-page space-y-5">
       <div>
-        <h1 className="text-[24px] leading-tight font-bold">Дашборд</h1>
+        <h1 className="text-[22px] leading-tight font-bold sm:text-[24px]">Дашборд</h1>
         <p className="mt-1 text-[13px] text-content-secondary">
           Что требует внимания прямо сейчас.
         </p>
@@ -130,7 +130,7 @@ export default async function AdminDashboard() {
         />
       </div>
 
-      <div className="motion-list grid grid-cols-3 gap-2.5">
+      <div className="motion-list grid grid-cols-1 gap-2.5 sm:grid-cols-3">
         <StatTile label="Отправлено за сутки" value={submittedToday} />
         <StatTile label="Оплачено за сутки" value={paidToday} tone="money" />
         <StatTile

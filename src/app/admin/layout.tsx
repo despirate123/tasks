@@ -14,42 +14,60 @@ export default async function AdminLayout({
   const user = await getCurrentUser();
   if (!user || !hasRole(user, "MODERATOR")) redirect("/");
 
+  const gutter = {
+    paddingLeft: "max(1rem, var(--safe-left))",
+    paddingRight: "max(1rem, var(--safe-right))",
+  } as const;
+
   return (
     <>
       <TelegramInit serverUserId={user.id} />
-      <div className="relative z-10 min-h-dvh">
+      <div className="relative z-10 min-h-dvh overflow-x-clip">
         <header
-          className="sticky top-0 z-40 border-b border-border-subtle bg-surface-base/88 backdrop-blur-xl"
+          className="sticky top-0 z-40 border-b border-border-subtle bg-surface-base/90 backdrop-blur-xl"
           style={{ paddingTop: "var(--safe-top)" }}
         >
-          <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
-            <Link href="/admin" className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-brand-500/16 text-brand-300">
+          <div
+            className="mx-auto flex max-w-6xl items-center gap-3 py-2.5"
+            style={gutter}
+          >
+            <Link href="/admin" className="flex min-w-0 items-center gap-2.5">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/16 text-brand-300">
                 <ShieldCheck className="size-[18px]" />
               </span>
-              <span>
-                <span className="block text-[14px] leading-tight font-bold">
+              <span className="min-w-0">
+                <span className="block truncate text-[14px] leading-tight font-bold">
                   ProfiBux Admin
                 </span>
-                <span className="block text-[11px] text-content-muted">
+                <span className="block truncate text-[11px] text-content-muted">
                   {displayName(user)} · {USER_ROLE[user.role]}
                 </span>
               </span>
             </Link>
 
-            <AdminNav />
-
             <Link
               href="/"
-              className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-surface-raised px-3 py-2 text-[12.5px] font-medium text-content-secondary ring-1 ring-inset ring-border-subtle transition-[background,color,transform] duration-300 ease-soft hover:bg-white/5 hover:text-content-primary active:scale-[0.98]"
+              className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-surface-raised px-3 py-2 text-[12.5px] font-medium text-content-secondary ring-1 ring-inset ring-border-subtle transition-[background,color,transform] duration-300 ease-soft hover:bg-white/5 hover:text-content-primary active:scale-[0.98]"
             >
               <ArrowLeftRight className="size-3.5" />
-              <span className="hidden sm:inline">В приложение</span>
+              В прилу
             </Link>
+          </div>
+
+          <div className="mx-auto max-w-6xl" style={gutter}>
+            <AdminNav />
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-4 py-5 pb-20">{children}</main>
+        <main
+          className="mx-auto max-w-6xl overflow-x-clip py-5"
+          style={{
+            ...gutter,
+            paddingBottom: "max(1.5rem, var(--safe-bottom))",
+          }}
+        >
+          {children}
+        </main>
       </div>
     </>
   );

@@ -112,7 +112,7 @@ export default async function ModerationQueuePage({
                       iconUrl={item.offer.iconUrl}
                     />
 
-                    <div className="min-w-[13rem] flex-1">
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-[14.5px] leading-snug font-semibold">
                           {item.offer.title}

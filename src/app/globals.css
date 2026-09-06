@@ -242,7 +242,9 @@ body::after {
 }
 
 .glass-dock {
-  background: rgb(28 28 28 / 0.88);
+  background: rgb(28 28 28 / 0.42);
+  backdrop-filter: blur(32px) saturate(165%);
+  -webkit-backdrop-filter: blur(32px) saturate(165%);
 }
 
 .corner-wash {

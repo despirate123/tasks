@@ -55,7 +55,7 @@ export default async function AdminUsersPage({
         </p>
       </div>
 
-      <form action="/admin/users" className="flex max-w-md gap-2">
+      <form action="/admin/users" className="flex w-full max-w-md gap-2">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-content-muted" />
           <Input
@@ -65,7 +65,7 @@ export default async function AdminUsersPage({
             className="pl-10"
           />
         </div>
-        <Button type="submit" variant="secondary">
+        <Button type="submit" variant="secondary" className="shrink-0">
           Найти
         </Button>
       </form>

@@ -9,7 +9,7 @@ const SESSION_COOKIE = "pb_session";
 const INIT_DATA_MAX_AGE_S = 86_400;
 
 console.info(
-  `[profibux] DEV_AUTH_BYPASS=${process.env.DEV_AUTH_BYPASS === "true" ? `ON (демо ${process.env.DEV_USER_TELEGRAM_ID ?? "777000002"})` : "OFF"}`,
+  `[profibux] DEV_AUTH_BYPASS=${process.env.DEV_AUTH_BYPASS === "true" ? `ON (демо ${process.env.DEV_USER_TELEGRAM_ID ?? "777000001"})` : "OFF"}`,
 );
 
 export type TelegramUser = {
@@ -181,7 +181,7 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Use
   const bypass = process.env.DEV_AUTH_BYPASS === "true";
 
   const bypassTelegramId = bypass
-    ? BigInt(process.env.DEV_USER_TELEGRAM_ID ?? "777000002")
+    ? BigInt(process.env.DEV_USER_TELEGRAM_ID ?? "777000001")
     : null;
 
   if (sessionUserId) {

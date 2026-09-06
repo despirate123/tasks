@@ -25,7 +25,7 @@ export function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="-mx-1 flex flex-1 gap-1 overflow-x-auto px-1 no-scrollbar">
+    <nav className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-2.5 no-scrollbar">
       {ITEMS.map((item) => {
         const active = item.exact
           ? pathname === item.href
@@ -36,14 +36,14 @@ export function AdminNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-[12.5px] font-medium transition-[background,color,transform] duration-300 ease-soft active:scale-[0.97]",
+              "inline-flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium transition-[background,color,transform] duration-300 ease-soft active:scale-[0.97]",
               active
                 ? "bg-brand-500/14 text-brand-300"
                 : "text-content-secondary hover:bg-surface-raised hover:text-content-primary",
             )}
           >
             <Icon className="size-3.5" />
-            <span className="hidden md:inline">{item.label}</span>
+            {item.label}
           </Link>
         );
       })}

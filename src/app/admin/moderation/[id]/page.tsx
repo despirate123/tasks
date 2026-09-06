@@ -103,7 +103,7 @@ export default async function ModerationDetailPage({
   ].filter(Boolean) as { label: string; met: boolean }[];
 
   return (
-    <div className="motion-page space-y-5">
+    <div className="motion-page space-y-5 max-lg:pb-20">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/admin/moderation"
@@ -135,7 +135,7 @@ export default async function ModerationDetailPage({
                 title={submission.offer.brandName ?? submission.offer.title}
                 iconUrl={submission.offer.iconUrl}
               />
-              <div className="min-w-[12rem] flex-1">
+              <div className="min-w-0 flex-1">
                 <Link
                   href={`/admin/offers/${submission.offerId}`}
                   className="text-[16px] leading-snug font-semibold hover:text-brand-300"
