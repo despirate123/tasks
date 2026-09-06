@@ -24,7 +24,13 @@ if (!token) {
   process.exit(1);
 }
 
-const MINIAPP_URL = process.env.MINIAPP_URL ?? "http://localhost:43117";
+function miniAppUrl(raw: string) {
+  const url = raw.trim().replace(/\/$/, "");
+  if (/^https?:\/\//i.test(url)) return url;
+  return `https://${url}`;
+}
+
+const MINIAPP_URL = miniAppUrl(process.env.MINIAPP_URL ?? "http://localhost:43117");
 const bot = new Bot(token);
 
 const REFERRAL_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
