@@ -37,10 +37,15 @@ export default async function AdminLayout({
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-[14px] leading-tight font-bold">
-                  ProfiBux Admin
+                  <span className="sm:hidden">Admin</span>
+                  <span className="hidden sm:inline">ProfiBux Admin</span>
                 </span>
                 <span className="block truncate text-[11px] text-content-muted">
-                  {displayName(user)} · {USER_ROLE[user.role]}
+                  {displayName(user)}
+                  <span className="hidden min-[400px]:inline">
+                    {" "}
+                    · {USER_ROLE[user.role]}
+                  </span>
                 </span>
               </span>
             </Link>
@@ -60,7 +65,7 @@ export default async function AdminLayout({
         </header>
 
         <main
-          className="mx-auto max-w-6xl overflow-x-clip py-5"
+          className="mx-auto max-w-6xl overflow-x-clip py-4 sm:py-5"
           style={{
             ...gutter,
             paddingBottom: "max(1.5rem, var(--safe-bottom))",

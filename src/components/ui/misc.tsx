@@ -99,7 +99,7 @@ export function StatTile({
   return (
     <div
       className={cn(
-        "stat-tile rounded-card p-3.5 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft",
+        "stat-tile min-w-0 overflow-hidden rounded-card p-3.5 ring-1 ring-inset transition-[transform,box-shadow] duration-300 ease-soft",
         meta.ring,
         className,
       )}
@@ -111,12 +111,12 @@ export function StatTile({
           style={{ "--wash": meta.glow } as React.CSSProperties}
         />
       ) : null}
-      <p className="relative text-[11px] font-medium tracking-wide text-content-muted uppercase">
+      <p className="relative text-[11px] leading-snug font-medium text-content-muted sm:tracking-wide sm:uppercase">
         {label}
       </p>
       <p
         className={cn(
-          "tabular relative mt-1.5 text-lg leading-none font-bold",
+          "tabular relative mt-1.5 break-words text-lg leading-none font-bold",
           meta.value,
         )}
       >
@@ -125,6 +125,38 @@ export function StatTile({
       {hint ? (
         <p className="relative mt-1 text-[11px] text-content-muted">{hint}</p>
       ) : null}
+    </div>
+  );
+}
+
+/** Компактная строка метрики — влезает на любой ширине телефона. */
+export function MetricRow({
+  label,
+  value,
+  hint,
+  className,
+}: {
+  label: string;
+  value: React.ReactNode;
+  hint?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex min-w-0 items-start justify-between gap-3 px-3.5 py-2.5",
+        className,
+      )}
+    >
+      <div className="min-w-0">
+        <p className="text-[13px] leading-snug text-content-secondary">{label}</p>
+        {hint ? (
+          <p className="mt-0.5 text-[11px] leading-snug text-content-muted">{hint}</p>
+        ) : null}
+      </div>
+      <p className="tabular shrink-0 pt-0.5 text-[15px] leading-none font-bold text-content-primary">
+        {value}
+      </p>
     </div>
   );
 }
@@ -157,11 +189,11 @@ export function SectionTitle({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-center justify-between gap-3", className)}>
-      <h2 className="text-[13px] font-semibold tracking-wide text-content-muted uppercase">
+    <div className={cn("flex min-w-0 items-start justify-between gap-2", className)}>
+      <h2 className="min-w-0 text-[12px] font-semibold leading-snug text-content-muted sm:text-[13px] sm:tracking-wide sm:uppercase">
         {children}
       </h2>
-      {action}
+      {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   );
 }

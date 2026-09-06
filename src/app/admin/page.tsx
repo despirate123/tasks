@@ -4,7 +4,7 @@ import { db } from "@/server/db";
 import { formatMoney, formatRelative } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { SectionTitle, StatTile } from "@/components/ui/misc";
+import { MetricRow, SectionTitle, StatTile } from "@/components/ui/misc";
 import { OfferAvatar } from "@/components/domain";
 
 export default async function AdminDashboard() {
@@ -78,25 +78,29 @@ export default async function AdminDashboard() {
     (o) => o.actualEtaMinutes && o.actualEtaMinutes > o.approvalEtaMinutes * 2,
   );
 
+  const dailyCredited = formatMoney(creditedToday._sum.amount ?? 0);
+  const payoutHint = `${formatMoney(payoutSum._sum.amountGross ?? 0)} в обработке`;
+  const reviewHint = overdue > 0 ? `${overdue} просрочено` : "в пределах SLA";
+
   return (
-    <div className="motion-page space-y-5">
+    <div className="motion-page min-w-0 space-y-4 sm:space-y-5">
       <div>
-        <h1 className="text-[22px] leading-tight font-bold sm:text-[24px]">Дашборд</h1>
+        <h1 className="text-[20px] leading-tight font-bold sm:text-[24px]">Дашборд</h1>
         <p className="mt-1 text-[13px] text-content-secondary">
           Что требует внимания прямо сейчас.
         </p>
       </div>
 
       {overdue > 0 ? (
-        <Link href="/admin/moderation?filter=overdue" className="block">
-          <div className="flex items-center gap-3 rounded-card bg-hard/10 p-4 ring-1 ring-inset ring-hard/25 transition-[background,transform] duration-300 ease-soft hover:bg-hard/14 hover:-translate-y-px">
+        <Link href="/admin/moderation?filter=overdue" className="block min-w-0">
+          <div className="flex items-center gap-2.5 rounded-card bg-hard/10 p-3 ring-1 ring-inset ring-hard/25 sm:gap-3 sm:p-4">
             <AlertTriangle className="size-5 shrink-0 text-hard" />
             <div className="min-w-0 flex-1">
               <p className="text-[14px] font-semibold text-hard">
                 Нарушен SLA у {overdue}{" "}
                 {overdue === 1 ? "выполнения" : "выполнений"}
               </p>
-              <p className="mt-0.5 text-[12.5px] text-content-secondary">
+              <p className="mt-0.5 hidden text-[12.5px] leading-relaxed text-content-secondary min-[380px]:block">
                 Заявленное время одобрения истекло — пользователи ждут дольше
                 обещанного.
               </p>
@@ -106,11 +110,21 @@ export default async function AdminDashboard() {
         </Link>
       ) : null}
 
-      <div className="motion-list grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+      <Card className="divide-y divide-border-subtle overflow-hidden sm:hidden">
+        <MetricRow label="На модерации" value={pendingReview} hint={reviewHint} />
+        <MetricRow label="Ожидают выплаты" value={pendingPayout} hint="в холде" />
+        <MetricRow label="Заявок на вывод" value={payoutQueue} hint={payoutHint} />
+        <MetricRow label="Активных офферов" value={activeOffers} />
+        <MetricRow label="Отправлено за сутки" value={submittedToday} />
+        <MetricRow label="Оплачено за сутки" value={paidToday} />
+        <MetricRow label="Начислено за сутки" value={dailyCredited} />
+      </Card>
+
+      <div className="motion-list hidden grid-cols-2 gap-2.5 sm:grid lg:grid-cols-4">
         <StatTile
           label="На модерации"
           value={pendingReview}
-          hint={overdue > 0 ? `${overdue} просрочено` : "в пределах SLA"}
+          hint={reviewHint}
           tone={overdue > 0 ? "warn" : "default"}
         />
         <StatTile
@@ -121,23 +135,16 @@ export default async function AdminDashboard() {
         <StatTile
           label="Заявок на вывод"
           value={payoutQueue}
-          hint={`${formatMoney(payoutSum._sum.amountGross ?? 0)} в обработке`}
+          hint={payoutHint}
           tone={payoutQueue > 0 ? "brand" : "default"}
         />
-        <StatTile
-          label="Активных офферов"
-          value={activeOffers}
-        />
+        <StatTile label="Активных офферов" value={activeOffers} />
       </div>
 
-      <div className="motion-list grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+      <div className="motion-list hidden grid-cols-3 gap-2.5 sm:grid">
         <StatTile label="Отправлено за сутки" value={submittedToday} />
         <StatTile label="Оплачено за сутки" value={paidToday} tone="money" />
-        <StatTile
-          label="Начислено за сутки"
-          value={formatMoney(creditedToday._sum.amount ?? 0)}
-          tone="money"
-        />
+        <StatTile label="Начислено за сутки" value={dailyCredited} tone="money" />
       </div>
 
       {etaMismatch.length > 0 ? (
@@ -191,7 +198,7 @@ export default async function AdminDashboard() {
                 <Link
                   key={submission.id}
                   href={`/admin/moderation/${submission.id}`}
-                  className="flex items-center gap-3 p-3.5 transition-colors duration-300 ease-soft hover:bg-surface-overlay/40"
+                  className="flex min-w-0 items-center gap-2.5 p-3 transition-colors duration-300 ease-soft hover:bg-surface-overlay/40 sm:gap-3 sm:p-3.5"
                 >
                   <OfferAvatar
                     title={submission.offer.brandName ?? submission.offer.title}
@@ -236,7 +243,7 @@ export default async function AdminDashboard() {
                 <Link
                   key={offer.id}
                   href={`/admin/offers/${offer.id}`}
-                  className="flex items-center gap-3 p-3.5 transition-colors duration-300 ease-soft hover:bg-surface-overlay/40"
+                  className="flex min-w-0 items-center gap-2.5 p-3 transition-colors duration-300 ease-soft hover:bg-surface-overlay/40 sm:gap-3 sm:p-3.5"
                 >
                   <OfferAvatar
                     title={offer.brandName ?? offer.title}
