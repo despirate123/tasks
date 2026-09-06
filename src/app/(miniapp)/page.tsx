@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/misc";
 import { OfferCard } from "@/components/domain";
+import { resolveOfferAccent } from "@/server/offer-accent";
 import { ActiveWork } from "@/components/active-work";
 import { HomeHeader } from "@/components/home-header";
 import { ChipScroller } from "@/components/chip-scroller";
@@ -24,7 +25,7 @@ import { ChipDot, chipClass } from "@/lib/chips";
 
 type CatalogOffer = Awaited<ReturnType<typeof listOffers>>[number];
 
-function HybridCatalog({
+async function HybridCatalog({
   offers,
   mineByOffer,
 }: {
@@ -36,6 +37,11 @@ function HybridCatalog({
     offers.find((offer) => offer.isFeatured) ??
     offers[0];
   const rest = offers.filter((offer) => offer.id !== hero.id);
+  const [heroAccent, ...restAccents] = await Promise.all(
+    [hero, ...rest].map((offer) =>
+      resolveOfferAccent(offer.iconUrl, offer.brandName ?? offer.title),
+    ),
+  );
 
   return (
     <div className="motion-list space-y-2">
@@ -43,14 +49,16 @@ function HybridCatalog({
         offer={hero}
         mine={mineByOffer.get(hero.id) ?? null}
         layout="wide"
+        accent={heroAccent.color}
       />
       {rest.length > 0 ? (
         <div className="grid grid-cols-2 items-start gap-2">
-          {rest.map((offer) => (
+          {rest.map((offer, index) => (
             <OfferCard
               key={offer.id}
               offer={offer}
               mine={mineByOffer.get(offer.id) ?? null}
+              accent={restAccents[index]?.color}
             />
           ))}
         </div>
