@@ -16,8 +16,8 @@ export const DIFFICULTY: Record<
 > = {
   EASY: {
     label: "Лёгкое",
-    className: "bg-money-500/12 text-money-400 ring-money-500/25",
-    dot: "bg-money-400",
+    className: "bg-brand-50/12 text-brand-50 ring-brand-50/25",
+    dot: "bg-brand-50",
   },
   MEDIUM: {
     label: "Среднее",

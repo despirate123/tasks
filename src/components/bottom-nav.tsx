@@ -38,7 +38,7 @@ export function BottomNav() {
               opacity: activeIndex >= 0 ? 1 : 0,
             }}
           >
-            <span className="acid-pulse size-9 rounded-full bg-[var(--acid)] shadow-[0_0_22px_rgba(200,255,0,0.45)]" />
+            <span className="acid-pulse size-9 rounded-full bg-[var(--acid)] shadow-[0_0_22px_rgba(239,122,124,0.4)]" />
           </div>
         </div>
 
@@ -55,7 +55,7 @@ export function BottomNav() {
               <span
                 className={cn(
                   "flex size-9 items-center justify-center rounded-full transition-[color,transform] duration-300 ease-soft",
-                  active ? "text-black scale-105" : "text-content-muted",
+                  active ? "text-[var(--ink)] scale-105" : "text-content-muted",
                 )}
               >
                 <Icon

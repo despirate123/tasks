@@ -144,9 +144,9 @@ type OfferCardData = {
 };
 
 const DIFFICULTY_GLOW: Record<Difficulty, string> = {
-  EASY: "rgb(200 255 0 / 0.18)",
-  MEDIUM: "rgb(245 181 68 / 0.16)",
-  HARD: "rgb(255 77 106 / 0.16)",
+  EASY: "rgb(244 168 174 / 0.2)",
+  MEDIUM: "rgb(239 122 124 / 0.2)",
+  HARD: "rgb(196 92 120 / 0.2)",
 };
 
 export function OfferCard({
@@ -196,7 +196,7 @@ export function OfferCard({
                   </p>
                 ) : null}
               </div>
-              <span className="tabular shrink-0 rounded-pill bg-black/40 px-2.5 py-1 text-[13px] font-bold text-[var(--acid)] shadow-[0_0_20px_rgba(200,255,0,0.14)] ring-1 ring-inset ring-[var(--acid)]/28">
+              <span className="tabular shrink-0 rounded-pill bg-black/40 px-2.5 py-1 text-[13px] font-bold text-[var(--acid)] ring-1 ring-inset ring-[var(--acid)]/28">
                 {formatMoney(offer.rewardAmount as number)}
               </span>
             </div>

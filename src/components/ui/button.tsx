@@ -9,9 +9,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-[var(--acid)] text-black shadow-[0_8px_24px_-8px_rgba(200,255,0,0.75)] hover:bg-brand-300",
+          "bg-[var(--acid)] text-[var(--ink)] shadow-[0_8px_24px_-8px_rgba(239,122,124,0.55)] hover:bg-brand-300",
         money:
-          "bg-[var(--acid)] text-black shadow-[0_8px_24px_-8px_rgba(200,255,0,0.75)] hover:bg-brand-300",
+          "bg-[var(--acid)] text-[var(--ink)] shadow-[0_8px_24px_-8px_rgba(239,122,124,0.55)] hover:bg-brand-300",
         secondary:
           "glass-thin text-content-primary ring-1 ring-inset ring-white/12 hover:bg-white/10",
         outline:
@@ -22,7 +22,7 @@ const buttonVariants = cva(
         success:
           "bg-money-500/14 text-money-400 ring-1 ring-inset ring-money-500/30 hover:bg-money-500/22",
         support:
-          "bg-[#7ad4ff] text-[#041018] shadow-[0_8px_24px_-8px_rgba(122,212,255,0.75)] hover:bg-[#9ae0ff]",
+          "bg-brand-50 text-[var(--ink)] shadow-[0_8px_24px_-8px_rgba(248,228,230,0.45)] hover:bg-white",
       },
       size: {
         sm: "h-9 rounded-xl px-3 text-[13px] [&_svg]:size-4",

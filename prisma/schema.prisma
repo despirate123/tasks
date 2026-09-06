@@ -1090,7 +1090,7 @@ model PromoBanner {
   href        String?
   imageUrl    String?
   background  String    @default("#111111")
-  accent      String    @default("#C8FF00")
+  accent      String    @default("#EF7A7C")
   sortOrder   Int       @default(0)
   isActive    Boolean   @default(true)
   startsAt    DateTime?

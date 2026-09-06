@@ -75,8 +75,8 @@ export function EarningsChart({
         <AreaChart data={data} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
           <defs>
             <linearGradient id="refGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#22c97e" stopOpacity={0.5} />
-              <stop offset="100%" stopColor="#22c97e" stopOpacity={0} />
+              <stop offset="0%" stopColor="#ef7a7c" stopOpacity={0.5} />
+              <stop offset="100%" stopColor="#ef7a7c" stopOpacity={0} />
             </linearGradient>
           </defs>
           <XAxis
@@ -105,7 +105,7 @@ export function EarningsChart({
           <Area
             type="monotone"
             dataKey="amount"
-            stroke="#22c97e"
+            stroke="#ef7a7c"
             strokeWidth={2}
             fill="url(#refGradient)"
           />

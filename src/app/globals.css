@@ -1,33 +1,42 @@
 @import "tailwindcss";
 
-/* Acid green + charcoal + liquid glass */
+/* Тест палитры «любовь». Холст прежний (#121212).
+ *
+ * Откат к кислоте:
+ *   brand 50/300/400-500/600/700 = #f4ffc7 #d8ff55 #c8ff00 #a6d400 #7ea300
+ *   money/easy/acid = #c8ff00
+ *   medium #f5b544 · hard #ff4d6a · info #7ad4ff
+ *   borders rgb(198 255 0 / 0.1) и / 0.22
+ *   content #e6e9df #9aa394 #6d7467
+ *   aurora и тени — rgb(200 255 0 / …)
+ */
 
 @theme {
   --color-surface-base: #121212;
   --color-surface-raised: #1c1c1c;
   --color-surface-overlay: #242424;
   --color-surface-input: #191919;
-  --color-border-subtle: rgb(198 255 0 / 0.1);
-  --color-border-strong: rgb(198 255 0 / 0.22);
+  --color-border-subtle: rgb(239 122 124 / 0.14);
+  --color-border-strong: rgb(239 122 124 / 0.28);
 
-  --color-content-primary: #e6e9df;
-  --color-content-secondary: #9aa394;
-  --color-content-muted: #6d7467;
+  --color-content-primary: #f4ecee;
+  --color-content-secondary: #b39aa0;
+  --color-content-muted: #7d6a70;
 
-  --color-brand-50: #f4ffc7;
-  --color-brand-300: #d8ff55;
-  --color-brand-400: #c8ff00;
-  --color-brand-500: #c8ff00;
-  --color-brand-600: #a6d400;
-  --color-brand-700: #7ea300;
+  --color-brand-50: #f8e4e6;
+  --color-brand-300: #f4a8ae;
+  --color-brand-400: #ef7a7c;
+  --color-brand-500: #ef7a7c;
+  --color-brand-600: #572b54;
+  --color-brand-700: #2e1534;
 
-  --color-money-400: #c8ff00;
-  --color-money-500: #c8ff00;
-  --color-money-600: #9ed600;
-  --color-easy: #c8ff00;
-  --color-medium: #f5b544;
-  --color-hard: #ff4d6a;
-  --color-info: #7ad4ff;
+  --color-money-400: #f4a8ae;
+  --color-money-500: #ef7a7c;
+  --color-money-600: #572b54;
+  --color-easy: #f4a8ae;
+  --color-medium: #ef7a7c;
+  --color-hard: #c45c78;
+  --color-info: #f4a8ae;
 
   --radius-card: 1.7rem;
   --radius-pill: 999px;
@@ -62,7 +71,8 @@
   --canvas: #121212;
   --glass-bg: rgb(32 32 32 / 0.55);
   --glass-stroke: rgb(255 255 255 / 0.16);
-  --acid: #c8ff00;
+  --acid: #ef7a7c;
+  --ink: #2e1534;
 }
 
 * {
@@ -109,10 +119,10 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(34rem 22rem at 18% -10%, rgb(200 255 0 / 0.26), transparent 58%),
-    radial-gradient(26rem 20rem at 110% 8%, rgb(200 255 0 / 0.07), transparent 56%),
-    radial-gradient(28rem 24rem at -8% 72%, rgb(200 255 0 / 0.08), transparent 62%),
-    radial-gradient(22rem 18rem at 92% 88%, rgb(255 77 106 / 0.06), transparent 58%),
+    radial-gradient(34rem 22rem at 18% -10%, rgb(239 122 124 / 0.22), transparent 58%),
+    radial-gradient(26rem 20rem at 110% 8%, rgb(244 168 174 / 0.08), transparent 56%),
+    radial-gradient(28rem 24rem at -8% 72%, rgb(87 43 84 / 0.28), transparent 62%),
+    radial-gradient(22rem 18rem at 92% 88%, rgb(46 21 52 / 0.35), transparent 58%),
     linear-gradient(180deg, #191919 0%, #121212 46%, #111111 100%);
   animation: pb-aurora 16s var(--ease-soft) infinite alternate;
 }
@@ -143,7 +153,7 @@ body::after {
 }
 
 .offer-card-featured {
-  box-shadow: 0 0 0 1px rgb(200 255 0 / 0.14);
+  box-shadow: 0 0 0 1px rgb(239 122 124 / 0.22);
 }
 
 .glass {
@@ -213,10 +223,10 @@ body::after {
 
 @keyframes pb-acid-pulse {
   from {
-    box-shadow: 0 0 16px rgb(200 255 0 / 0.32);
+    box-shadow: 0 0 16px rgb(239 122 124 / 0.32);
   }
   to {
-    box-shadow: 0 0 30px rgb(200 255 0 / 0.64);
+    box-shadow: 0 0 30px rgb(239 122 124 / 0.58);
   }
 }
 
@@ -430,7 +440,7 @@ body::after {
   background: linear-gradient(
     90deg,
     transparent,
-    rgb(200 255 0 / 0.08),
+    rgb(239 122 124 / 0.1),
     transparent
   );
   animation: pb-shimmer 1.6s infinite;
