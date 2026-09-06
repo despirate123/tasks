@@ -23,7 +23,6 @@ import {
   submitForReviewAction,
 } from "@/server/actions";
 import { haptic, hapticNotify } from "@/components/telegram-init";
-import { StickyActionBar } from "@/components/sticky-action-bar";
 
 type Proof = {
   id: string;
@@ -345,19 +344,17 @@ export function ProofForm({
         </div>
       ) : null}
 
-      <StickyActionBar>
-        <Button
-          variant={canSubmit && missing.length === 0 ? "money" : "secondary"}
-          size="lg"
-          block
-          onClick={submit}
-          disabled={pending || uploading.length > 0 || missing.length > 0}
-          className={cn(pending && "opacity-70")}
-        >
-          {pending ? <Loader2 className="animate-spin" /> : <Send />}
-          Отправить на проверку
-        </Button>
-      </StickyActionBar>
+      <Button
+        variant={canSubmit && missing.length === 0 ? "money" : "secondary"}
+        size="lg"
+        block
+        onClick={submit}
+        disabled={pending || uploading.length > 0 || missing.length > 0}
+        className={cn(pending && "opacity-70")}
+      >
+        {pending ? <Loader2 className="animate-spin" /> : <Send />}
+        Отправить на проверку
+      </Button>
     </div>
   );
 }

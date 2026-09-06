@@ -28,7 +28,6 @@ import {
 } from "@/server/actions";
 import { haptic, hapticNotify } from "@/components/telegram-init";
 import { CancelWithdrawalButton } from "@/components/cancel-withdrawal-button";
-import { StickyActionBar } from "@/components/sticky-action-bar";
 
 type Method = {
   id: string;
@@ -476,20 +475,18 @@ export function WithdrawForm({
       ) : null}
 
       {selected && !adding ? (
-        <StickyActionBar>
-          <Button
-            variant={canSubmit ? "money" : "secondary"}
-            size="lg"
-            block
-            onClick={submit}
-            disabled={!canSubmit}
-          >
-            {pending ? <Loader2 className="animate-spin" /> : null}
-            {quote.gross > 0
-              ? `Вывести ${isCrypto && quote.crypto != null ? formatCrypto(quote.crypto) : formatMoney(quote.net)}`
-              : "Вывести средства"}
-          </Button>
-        </StickyActionBar>
+        <Button
+          variant={canSubmit ? "money" : "secondary"}
+          size="lg"
+          block
+          onClick={submit}
+          disabled={!canSubmit}
+        >
+          {pending ? <Loader2 className="animate-spin" /> : null}
+          {quote.gross > 0
+            ? `Вывести ${isCrypto && quote.crypto != null ? formatCrypto(quote.crypto) : formatMoney(quote.net)}`
+            : "Вывести средства"}
+        </Button>
       ) : null}
     </div>
   );

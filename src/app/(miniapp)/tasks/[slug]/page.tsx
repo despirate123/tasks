@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DetailRow, SectionTitle, Separator } from "@/components/ui/misc";
 import { DifficultyBadge, OfferAvatar } from "@/components/domain";
-import { StickyActionBar } from "@/components/sticky-action-bar";
 import { TakeOfferButton } from "./take-button";
 
 export default async function TaskPage({
@@ -252,29 +251,27 @@ export default async function TaskPage({
         ) : null}
       </div>
 
-      <StickyActionBar>
-        {activeSubmission ? (
-          <Button variant="secondary" size="lg" block asChild>
-            <Link href={`/submissions/${activeSubmission.id}`}>
-              Продолжить выполнение
-            </Link>
+      {activeSubmission ? (
+        <Button variant="secondary" size="lg" block asChild>
+          <Link href={`/submissions/${activeSubmission.id}`}>
+            Продолжить выполнение
+          </Link>
+        </Button>
+      ) : eligibility.ok ? (
+        <TakeOfferButton
+          offerId={offer.id}
+          reward={formatMoney(offer.rewardAmount)}
+        />
+      ) : (
+        <div className="space-y-2">
+          <Button variant="secondary" size="lg" block disabled>
+            Недоступно
           </Button>
-        ) : eligibility.ok ? (
-          <TakeOfferButton
-            offerId={offer.id}
-            reward={formatMoney(offer.rewardAmount)}
-          />
-        ) : (
-          <div className="space-y-2">
-            <Button variant="secondary" size="lg" block disabled>
-              Недоступно
-            </Button>
-            <p className="text-center text-[12px] text-content-muted">
-              {eligibility.reason}
-            </p>
-          </div>
-        )}
-      </StickyActionBar>
+          <p className="text-center text-[12px] text-content-muted">
+            {eligibility.reason}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

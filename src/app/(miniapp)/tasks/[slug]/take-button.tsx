@@ -48,11 +48,7 @@ export function TakeOfferButton({
       </Button>
       {error ? (
         <p className="text-center text-[12px] text-hard">{error}</p>
-      ) : (
-        <p className="text-center text-[12px] text-content-muted">
-          После взятия у вас будет время на выполнение и загрузку доказательств
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }
