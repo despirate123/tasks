@@ -59,12 +59,14 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ru" className={geist.variable}>
+    <html lang="ru" className={geist.variable} suppressHydrationWarning>
       <head>
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <script dangerouslySetInnerHTML={{ __html: telegramBoot }} />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }
