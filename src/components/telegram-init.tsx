@@ -6,6 +6,7 @@ import { applyTelegramSafeArea } from "@/lib/telegram-safe-area";
 type TelegramWebApp = {
   ready: () => void;
   expand: () => void;
+  isVersionAtLeast?: (version: string) => boolean;
   requestFullscreen?: () => void;
   initData: string;
   themeParams?: Record<string, string>;
@@ -34,17 +35,37 @@ declare global {
  * Вне Telegram (обычный браузер, локальная разработка) молча ничего не делает —
  * приложение остаётся работоспособным, аутентификация идёт через DEV_AUTH_BYPASS.
  */
+function tgSupports(app: TelegramWebApp, version: string) {
+  try {
+    return app.isVersionAtLeast?.(version) === true;
+  } catch {
+    return false;
+  }
+}
+
+function tgTry(fn: () => void) {
+  try {
+    fn();
+  } catch {
+    /* старый WebView или обычный браузер */
+  }
+}
+
 export function TelegramInit({ serverUserId = null }: { serverUserId?: string | null }) {
   useEffect(() => {
     const webApp = window.Telegram?.WebApp;
     if (!webApp) return;
 
-    webApp.ready();
-    webApp.expand();
-    webApp.requestFullscreen?.();
-    webApp.disableVerticalSwipes?.();
-    webApp.setHeaderColor?.("#000000");
-    webApp.setBackgroundColor?.("#000000");
+    tgTry(() => webApp.ready());
+    tgTry(() => webApp.expand());
+    // requestFullscreen — Bot API 8.0. В браузере и старом Telegram
+    // метод есть, но скрипт пишет ошибку в console и Next рисует оверлей.
+    if (tgSupports(webApp, "8.0")) tgTry(() => webApp.requestFullscreen?.());
+    if (tgSupports(webApp, "7.7")) tgTry(() => webApp.disableVerticalSwipes?.());
+    if (tgSupports(webApp, "6.1")) {
+      tgTry(() => webApp.setHeaderColor?.("#000000"));
+      tgTry(() => webApp.setBackgroundColor?.("#000000"));
+    }
 
     const applyViewport = () => applyTelegramSafeArea(webApp);
     applyViewport();

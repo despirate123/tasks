@@ -25,13 +25,16 @@ const telegramBoot = `
   function apply() {
     var app = window.Telegram && window.Telegram.WebApp;
     if (!app) return false;
+    function atLeast(v) {
+      try { return app.isVersionAtLeast && app.isVersionAtLeast(v); } catch (e) { return false; }
+    }
     try { app.ready(); } catch (e) {}
     try { app.expand(); } catch (e) {}
-    try { if (app.requestFullscreen) app.requestFullscreen(); } catch (e) {}
-    try { if (app.disableVerticalSwipes) app.disableVerticalSwipes(); } catch (e) {}
+    try { if (atLeast("8.0") && app.requestFullscreen) app.requestFullscreen(); } catch (e) {}
+    try { if (atLeast("7.7") && app.disableVerticalSwipes) app.disableVerticalSwipes(); } catch (e) {}
     try {
-      if (app.setHeaderColor) app.setHeaderColor("#000000");
-      if (app.setBackgroundColor) app.setBackgroundColor("#000000");
+      if (atLeast("6.1") && app.setHeaderColor) app.setHeaderColor("#000000");
+      if (atLeast("6.1") && app.setBackgroundColor) app.setBackgroundColor("#000000");
     } catch (e) {}
     try {
       var s = app.safeAreaInset || {};
