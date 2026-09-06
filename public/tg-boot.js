@@ -33,8 +33,8 @@
       /* no-op */
     }
     try {
-      if (app.setHeaderColor) app.setHeaderColor("#0b0f1a");
-      if (app.setBackgroundColor) app.setBackgroundColor("#0b0f1a");
+      if (app.setHeaderColor) app.setHeaderColor("#000000");
+      if (app.setBackgroundColor) app.setBackgroundColor("#000000");
     } catch (error) {
       /* no-op */
     }

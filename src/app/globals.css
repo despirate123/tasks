@@ -1,47 +1,37 @@
 @import "tailwindcss";
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Дизайн-токены ProfiBux.
-   Значения соответствуют макету и одновременно подхватывают тему Telegram
-   через переменные --tg-theme-*, которые SDK пишет в :root.
-   ───────────────────────────────────────────────────────────────────────── */
+/* Acid green + black + liquid glass */
 
 @theme {
-  /* Поверхности */
-  --color-surface-base: #0b0f1a;
-  --color-surface-raised: #131a2a;
-  --color-surface-overlay: #1a2336;
-  --color-surface-input: #0f1524;
-  --color-border-subtle: #212b40;
-  --color-border-strong: #2d3a55;
+  --color-surface-base: #000000;
+  --color-surface-raised: #0c0c0c;
+  --color-surface-overlay: #141414;
+  --color-surface-input: #0a0a0a;
+  --color-border-subtle: rgb(198 255 0 / 0.1);
+  --color-border-strong: rgb(198 255 0 / 0.22);
 
-  /* Текст */
-  --color-content-primary: #f1f5fb;
-  --color-content-secondary: #97a3bd;
-  --color-content-muted: #64708a;
+  --color-content-primary: #f3f6ee;
+  --color-content-secondary: #a7b39a;
+  --color-content-muted: #6a7363;
 
-  /* Бренд */
-  --color-brand-50: #eef0ff;
-  --color-brand-300: #a3a8ff;
-  --color-brand-400: #8b8fff;
-  --color-brand-500: #6c6cf5;
-  --color-brand-600: #5a4fe0;
-  --color-brand-700: #4a3fc4;
+  --color-brand-50: #f4ffc7;
+  --color-brand-300: #d8ff55;
+  --color-brand-400: #c8ff00;
+  --color-brand-500: #c8ff00;
+  --color-brand-600: #a6d400;
+  --color-brand-700: #7ea300;
 
-  /* Деньги и статусы */
-  --color-money-400: #4ade9a;
-  --color-money-500: #22c97e;
-  --color-money-600: #15a866;
-  --color-easy: #22c97e;
+  --color-money-400: #c8ff00;
+  --color-money-500: #c8ff00;
+  --color-money-600: #9ed600;
+  --color-easy: #c8ff00;
   --color-medium: #f5b544;
-  --color-hard: #f4646a;
-  --color-info: #4aa8f5;
+  --color-hard: #ff4d6a;
+  --color-info: #7ad4ff;
 
-  /* Радиусы */
-  --radius-card: 1.125rem;
+  --radius-card: 1.35rem;
   --radius-pill: 999px;
 
-  /* Шрифты */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, sans-serif;
 }
@@ -49,12 +39,7 @@
 :root {
   color-scheme: dark;
   --app-max-width: 30rem;
-  /* Высота видимой области Telegram WebView; переопределяется из JS */
   --tg-viewport-stable-height: 100dvh;
-  /*
-    Telegram: contentSafeArea нужно ПРИБАВЛЯТЬ к system safe area,
-    а не брать max. Иначе на iPhone 16 Pro шапка уезжает под Dynamic Island.
-  */
   --safe-top: calc(
     max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px)) +
       var(--tg-content-safe-area-inset-top, 0px)
@@ -71,8 +56,11 @@
     max(env(safe-area-inset-right, 0px), var(--tg-safe-area-inset-right, 0px)) +
       var(--tg-content-safe-area-inset-right, 0px)
   );
-  --nav-bar-height: 3.75rem;
+  --nav-bar-height: 5.5rem;
   --nav-height: calc(var(--nav-bar-height) + var(--safe-bottom));
+  --glass-bg: rgb(18 18 18 / 0.52);
+  --glass-stroke: rgb(255 255 255 / 0.16);
+  --acid: #c8ff00;
 }
 
 * {
@@ -82,7 +70,7 @@
 html,
 body {
   min-height: var(--tg-viewport-stable-height, 100dvh);
-  background: var(--color-surface-base);
+  background: #000;
   color: var(--color-content-primary);
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
@@ -94,7 +82,6 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Фоновое свечение — как в макете */
 body::before {
   content: "";
   position: fixed;
@@ -102,19 +89,33 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(
-      52rem 34rem at 50% -14rem,
-      rgb(108 108 245 / 0.24),
-      transparent 70%
-    ),
-    radial-gradient(
-      34rem 26rem at 92% 6%,
-      rgb(34 201 126 / 0.09),
-      transparent 72%
-    );
+    radial-gradient(42rem 28rem at 50% -12rem, rgb(200 255 0 / 0.16), transparent 68%),
+    radial-gradient(28rem 22rem at 100% 8%, rgb(200 255 0 / 0.07), transparent 70%),
+    radial-gradient(24rem 20rem at 0% 70%, rgb(200 255 0 / 0.05), transparent 70%),
+    #000;
 }
 
-/* Скрываем скроллбары внутри WebView, оставляя прокрутку */
+.glass {
+  background: var(--glass-bg);
+  background-image:
+    linear-gradient(180deg, rgb(255 255 255 / 0.1), transparent 42%),
+    linear-gradient(180deg, rgb(200 255 0 / 0.05), transparent 55%);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(0 0 0 / 0.45),
+    0 10px 40px rgb(0 0 0 / 0.45);
+}
+
+.glass-thin {
+  background: rgb(10 10 10 / 0.45);
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.08), transparent 50%);
+  backdrop-filter: blur(22px) saturate(170%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14);
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -156,13 +157,12 @@ body::before {
   background: linear-gradient(
     90deg,
     transparent,
-    rgb(255 255 255 / 0.05),
+    rgb(200 255 0 / 0.08),
     transparent
   );
   animation: pb-shimmer 1.6s infinite;
 }
 
-/* Числа в таблицах и суммах — табличные цифры, чтобы не «прыгали» */
 .tabular {
   font-variant-numeric: tabular-nums;
 }

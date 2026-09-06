@@ -345,7 +345,7 @@ export function ProofForm({
       ) : null}
 
       <div
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-surface-base/94 px-4 pt-3 backdrop-blur-xl"
+        className="fixed inset-x-0 bottom-0 z-40 glass-thin px-4 pt-3"
         style={{
           paddingBottom: "calc(var(--safe-bottom) + 0.75rem)",
           paddingLeft: "max(1rem, var(--safe-left))",

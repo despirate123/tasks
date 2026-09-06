@@ -30,7 +30,7 @@ export default async function MiniAppLayout({
           </div>
         ) : null}
         <header
-          className="sticky top-0 z-40 border-b border-border-subtle/70 bg-surface-base/85 backdrop-blur-xl"
+          className="sticky top-0 z-40 glass-thin"
           style={{
             paddingTop: "var(--safe-top)",
             paddingLeft: "max(1rem, var(--safe-left))",
@@ -59,7 +59,7 @@ export default async function MiniAppLayout({
                 <Link
                   href="/admin"
                   aria-label="Админ-панель"
-                  className="flex size-10 items-center justify-center rounded-xl bg-surface-raised/80 ring-1 ring-inset ring-border-subtle transition active:scale-95"
+                  className="flex size-10 items-center justify-center rounded-full glass-thin ring-1 ring-inset ring-white/12 transition active:scale-95"
                 >
                   <ShieldCheck className="size-[18px] text-content-secondary" />
                 </Link>

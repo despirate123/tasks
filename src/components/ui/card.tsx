@@ -9,9 +9,9 @@ function Card({
   return (
     <div
       className={cn(
-        "relative rounded-card bg-surface-raised/80 ring-1 ring-inset ring-border-subtle backdrop-blur-sm",
+        "relative rounded-card glass-thin ring-1 ring-inset ring-white/10",
         interactive &&
-          "transition-[transform,box-shadow,background] duration-150 hover:bg-surface-raised active:scale-[0.99]",
+          "transition-[transform,box-shadow] duration-150 hover:ring-white/18 active:scale-[0.99]",
         className,
       )}
       {...props}

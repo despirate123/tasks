@@ -129,9 +129,9 @@ export default async function CatalogPage({
       {wallet ? (
         <Link
           href="/profile"
-          className="flex items-center gap-3 rounded-card bg-surface-raised/70 p-3.5 ring-1 ring-inset ring-border-subtle transition active:scale-[0.99]"
+          className="flex items-center gap-3 rounded-card glass-thin p-3.5 ring-1 ring-inset ring-[var(--acid)]/20 transition active:scale-[0.99]"
         >
-          <span className="flex size-10 items-center justify-center rounded-xl bg-money-500/12 text-money-400">
+          <span className="flex size-10 items-center justify-center rounded-full bg-[var(--acid)]/12 text-[var(--acid)]">
             <Wallet2 className="size-[18px]" />
           </span>
           <span className="min-w-0 flex-1">
@@ -187,7 +187,7 @@ export default async function CatalogPage({
                 "inline-flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
                 active
                   ? meta.className
-                  : "bg-surface-raised/70 text-content-secondary ring-border-subtle",
+                  : "glass-thin text-content-secondary ring-white/10",
               )}
             >
               <span className={cn("size-1.5 rounded-full", meta.dot)} />
@@ -206,7 +206,7 @@ export default async function CatalogPage({
               "inline-flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
               (params.sort ?? "") === sort.key
                 ? "bg-brand-500/14 text-brand-300 ring-brand-500/28"
-                : "bg-surface-raised/70 text-content-secondary ring-border-subtle",
+                : "glass-thin text-content-secondary ring-white/10",
             )}
           >
             {sort.key === "" ? <SlidersHorizontal className="size-3" /> : null}
@@ -222,8 +222,8 @@ export default async function CatalogPage({
             className={cn(
               "inline-flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
               !params.category
-                ? "bg-surface-overlay text-content-primary ring-border-strong"
-                : "bg-surface-raised/70 text-content-secondary ring-border-subtle",
+                ? "bg-[var(--acid)] text-black ring-[var(--acid)]"
+                : "glass-thin text-content-secondary ring-white/10",
             )}
           >
             Все категории
@@ -235,8 +235,8 @@ export default async function CatalogPage({
               className={cn(
                 "inline-flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-inset transition",
                 params.category === category.slug
-                  ? "bg-surface-overlay text-content-primary ring-border-strong"
-                  : "bg-surface-raised/70 text-content-secondary ring-border-subtle",
+                  ? "bg-[var(--acid)] text-black ring-[var(--acid)]"
+                  : "glass-thin text-content-secondary ring-white/10",
               )}
             >
               {category.icon ? <span>{category.icon}</span> : null}

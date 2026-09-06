@@ -6,7 +6,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
     <input
       type={type}
       className={cn(
-        "h-11 w-full rounded-2xl bg-surface-input px-3.5 text-sm text-content-primary ring-1 ring-inset ring-border-strong outline-none transition placeholder:text-content-muted focus-visible:ring-2 focus-visible:ring-brand-400/70 disabled:opacity-50",
+        "h-11 w-full rounded-2xl glass-thin px-3.5 text-sm text-content-primary ring-1 ring-inset ring-white/12 outline-none transition placeholder:text-content-muted focus-visible:ring-2 focus-visible:ring-[var(--acid)]/70 disabled:opacity-50",
         className,
       )}
       {...props}
@@ -18,7 +18,7 @@ function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
     <textarea
       className={cn(
-        "min-h-24 w-full resize-none rounded-2xl bg-surface-input p-3.5 text-sm leading-relaxed text-content-primary ring-1 ring-inset ring-border-strong outline-none transition placeholder:text-content-muted focus-visible:ring-2 focus-visible:ring-brand-400/70 disabled:opacity-50",
+        "min-h-24 w-full resize-none rounded-2xl glass-thin p-3.5 text-sm leading-relaxed text-content-primary ring-1 ring-inset ring-white/12 outline-none transition placeholder:text-content-muted focus-visible:ring-2 focus-visible:ring-[var(--acid)]/70 disabled:opacity-50",
         className,
       )}
       {...props}

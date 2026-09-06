@@ -230,13 +230,13 @@ export function BalanceCard({
   const hasFrozen = Number(pending) > 0 || Number(hold) > 0;
 
   return (
-    <div className="relative overflow-hidden rounded-card bg-gradient-to-br from-brand-600 via-brand-500 to-brand-700 p-5 ring-1 ring-inset ring-white/10">
-      <div className="absolute -top-16 -right-10 size-44 rounded-full bg-white/12 blur-2xl" />
+    <div className="relative overflow-hidden rounded-card glass p-5 ring-1 ring-inset ring-[var(--acid)]/25">
+      <div className="absolute -top-16 -right-10 size-44 rounded-full bg-[var(--acid)]/18 blur-2xl" />
       <div className="relative">
-        <p className="text-[12px] font-medium tracking-wide text-white/70 uppercase">
+        <p className="text-[12px] font-medium tracking-wide text-content-secondary uppercase">
           Доступно к выводу
         </p>
-        <p className="tabular mt-1.5 text-[34px] leading-none font-bold text-white">
+        <p className="tabular mt-1.5 text-[34px] leading-none font-bold text-[var(--acid)]">
           {formatMoney(available as number)}
         </p>
 

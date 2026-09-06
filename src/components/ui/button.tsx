@@ -9,13 +9,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-gradient-to-b from-brand-500 to-brand-600 text-white shadow-[0_6px_20px_-6px_rgba(108,108,245,0.7)] hover:from-brand-400 hover:to-brand-500",
+          "bg-[var(--acid)] text-black shadow-[0_8px_24px_-8px_rgba(200,255,0,0.75)] hover:bg-brand-300",
         money:
-          "bg-gradient-to-b from-money-500 to-money-600 text-[#04140c] shadow-[0_6px_20px_-6px_rgba(34,201,126,0.6)] hover:from-money-400 hover:to-money-500",
+          "bg-[var(--acid)] text-black shadow-[0_8px_24px_-8px_rgba(200,255,0,0.75)] hover:bg-brand-300",
         secondary:
-          "bg-surface-overlay text-content-primary ring-1 ring-inset ring-border-strong hover:bg-surface-overlay/70",
+          "glass-thin text-content-primary ring-1 ring-inset ring-white/12 hover:bg-white/8",
         outline:
-          "bg-transparent text-content-primary ring-1 ring-inset ring-border-strong hover:bg-surface-raised",
+          "bg-transparent text-content-primary ring-1 ring-inset ring-white/14 hover:bg-white/6",
         ghost: "bg-transparent text-content-secondary hover:bg-surface-raised hover:text-content-primary",
         danger:
           "bg-hard/14 text-hard ring-1 ring-inset ring-hard/30 hover:bg-hard/22",

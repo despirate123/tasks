@@ -2,28 +2,33 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, ListChecks, Users, Wallet } from "lucide-react";
+import { Compass, ClipboardCheck, Handshake, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/components/telegram-init";
 
 const ITEMS = [
-  { href: "/", label: "Задания", icon: LayoutGrid, match: (p: string) => p === "/" || p.startsWith("/tasks") },
+  {
+    href: "/",
+    label: "Задания",
+    icon: Compass,
+    match: (p: string) => p === "/" || p.startsWith("/tasks"),
+  },
   {
     href: "/my-tasks",
     label: "Мои",
-    icon: ListChecks,
+    icon: ClipboardCheck,
     match: (p: string) => p.startsWith("/my-tasks") || p.startsWith("/submissions"),
   },
   {
     href: "/referrals",
     label: "Друзья",
-    icon: Users,
+    icon: Handshake,
     match: (p: string) => p.startsWith("/referrals"),
   },
   {
     href: "/profile",
     label: "Профиль",
-    icon: Wallet,
+    icon: UserRound,
     match: (p: string) => p.startsWith("/profile"),
   },
 ];
@@ -32,15 +37,15 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border-subtle bg-surface-base/92 backdrop-blur-xl">
-      <div
-        className="mx-auto flex max-w-[var(--app-max-width)] items-stretch"
-        style={{
-          paddingBottom: "var(--safe-bottom)",
-          paddingLeft: "var(--safe-left)",
-          paddingRight: "var(--safe-right)",
-        }}
-      >
+    <nav
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3"
+      style={{
+        paddingBottom: "calc(var(--safe-bottom) + 0.55rem)",
+        paddingLeft: "max(0.75rem, var(--safe-left))",
+        paddingRight: "max(0.75rem, var(--safe-right))",
+      }}
+    >
+      <div className="pointer-events-auto glass mx-auto flex max-w-[var(--app-max-width)] items-center justify-between rounded-[28px] px-1.5 py-1.5 ring-1 ring-inset ring-white/15">
         {ITEMS.map((item) => {
           const active = item.match(pathname);
           const Icon = item.icon;
@@ -48,26 +53,29 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => haptic("light")}
-              className="flex flex-1 flex-col items-center gap-1 py-2.5 transition"
+              onClick={() => haptic(active ? "medium" : "light")}
+              className={cn(
+                "relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-[22px] px-1 py-1.5 transition-transform duration-200 active:scale-95",
+              )}
             >
               <span
                 className={cn(
-                  "flex h-7 items-center justify-center rounded-pill px-4 transition",
-                  active ? "bg-brand-500/16" : "bg-transparent",
+                  "flex size-9 items-center justify-center rounded-full transition-all duration-300",
+                  active
+                    ? "bg-[var(--acid)] text-black shadow-[0_0_22px_rgba(200,255,0,0.45)]"
+                    : "text-content-muted",
                 )}
               >
                 <Icon
-                  className={cn(
-                    "size-[18px] transition",
-                    active ? "text-brand-300" : "text-content-muted",
-                  )}
+                  className="size-[19px]"
+                  strokeWidth={active ? 2.25 : 1.75}
+                  absoluteStrokeWidth
                 />
               </span>
               <span
                 className={cn(
-                  "text-[10.5px] font-medium transition",
-                  active ? "text-brand-300" : "text-content-muted",
+                  "text-[10px] font-semibold tracking-wide transition-colors",
+                  active ? "text-[var(--acid)]" : "text-content-muted",
                 )}
               >
                 {item.label}

@@ -43,8 +43,8 @@ export function TelegramInit({ serverUserId = null }: { serverUserId?: string | 
     webApp.expand();
     webApp.requestFullscreen?.();
     webApp.disableVerticalSwipes?.();
-    webApp.setHeaderColor?.("#0b0f1a");
-    webApp.setBackgroundColor?.("#0b0f1a");
+    webApp.setHeaderColor?.("#000000");
+    webApp.setBackgroundColor?.("#000000");
 
     const applyViewport = () => applyTelegramSafeArea(webApp);
     applyViewport();
