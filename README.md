@@ -55,65 +55,77 @@ Telegram Mini App + бот для выполнения рекламных зад
 
 ## Запуск локально
 
-### 1. Зависимости
+Нужен только **Node.js 20+** и **PostgreSQL** (или Docker).
+Telegram, S3 и Redis для локального просмотра не требуются.
 
 ```bash
 npm install
-```
-
-### 2. Инфраструктура
-
-С Docker:
-
-```bash
-docker compose up -d
-```
-
-Без Docker достаточно локального PostgreSQL:
-
-```bash
-sudo -u postgres psql -c "CREATE USER profibux WITH PASSWORD 'profibux' SUPERUSER;"
-sudo -u postgres psql -c "CREATE DATABASE profibux OWNER profibux;"
-```
-
-### 3. Окружение
-
-```bash
-cp .env.example .env
-```
-
-Минимум для локального запуска — только `DATABASE_URL`. Флаг
-`DEV_AUTH_BYPASS=true` подставляет демо-пользователя, поэтому приложение
-открывается в обычном браузере без Telegram.
-
-### 4. Схема и данные
-
-```bash
-npm run db:push
-npm run db:seed
-```
-
-Сиды создают 13 офферов из четырёх источников, шесть пользователей,
-выполнения на всех стадиях жизненного цикла, реферальное дерево,
-заявку на вывод и уведомления.
-
-### 5. Приложение
-
-```bash
+npm run setup
 npm run dev
 ```
 
 - Mini App — http://localhost:43117
 - Админ-панель — http://localhost:43117/admin
 
-### 6. Воркеры и бот (опционально)
+`npm run setup` делает всё сам: создаёт `.env` со сгенерированными секретами,
+проверяет PostgreSQL (при отсутствии поднимает контейнер из
+`docker-compose.yml`), создаёт роль и базу, если их нет, накатывает схему
+и заливает демо-данные. Скрипт идемпотентен — повторный запуск ничего
+не ломает и не перезатирает существующий `.env`.
+
+Сиды создают 13 офферов из четырёх источников, шесть пользователей,
+выполнения на всех стадиях жизненного цикла, доказательства с картинками,
+флаги антифрода, реферальное дерево, заявку на вывод и уведомления.
+
+### Если PostgreSQL ещё не установлен
+
+Проще всего через Docker — тогда `npm run setup` поднимет базу сам:
 
 ```bash
-npm run workers          # фоновые задачи
-npm run workers -- --once  # один прогон и выход
-
-npm run bot              # требует TELEGRAM_BOT_TOKEN
+docker compose up -d
 ```
+
+Либо нативно:
+
+```bash
+# macOS
+brew install postgresql@16 && brew services start postgresql@16
+
+# Ubuntu / Debian
+sudo apt install postgresql && sudo systemctl start postgresql
+
+# Windows — установщик с postgresql.org/download/windows
+```
+
+Если PostgreSQL у вас уже есть со своими логином и паролем — просто
+поправьте `DATABASE_URL` в `.env` и запустите `npm run setup` снова.
+
+### Воркеры и бот (необязательно)
+
+Фоновые задачи — снятие холда, автоодобрение, истечение сроков, сверка
+леджера. Без них приложение работает, но деньги не будут автоматически
+выходить из холда:
+
+```bash
+npm run workers            # постоянно, в отдельном терминале
+npm run workers -- --once  # один прогон и выход
+```
+
+Бот требует токен от [@BotFather](https://t.me/BotFather) в `TELEGRAM_BOT_TOKEN`:
+
+```bash
+npm run bot
+```
+
+### Возможные проблемы
+
+| Симптом | Что делать |
+|---|---|
+| `Нужен Node.js 20 или новее` | `nvm install 22 && nvm use 22` |
+| `PostgreSQL недоступен, и Docker не найден` | Установите PostgreSQL или Docker (см. выше) |
+| `Не принимает логин и пароль` | Поправьте `DATABASE_URL` в `.env` под свои креды |
+| Порт 43117 занят | Смените порт в скриптах `dev`/`start` в `package.json` |
+| Пустые страницы после смены схемы | `npm run db:reset` — пересоздаёт схему и данные |
 
 ## Демо-доступ
 
