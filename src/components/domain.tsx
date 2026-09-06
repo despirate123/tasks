@@ -158,7 +158,7 @@ function OfferMark({
   size?: "sm" | "md" | "lg";
 }) {
   return (
-    <span className="relative shrink-0 overflow-hidden rounded-2xl">
+    <span className="clip-frame clip-soft relative shrink-0 overflow-hidden rounded-2xl">
       <OfferAvatar
         title={title}
         iconUrl={iconUrl}
@@ -309,15 +309,8 @@ export function BalanceCard({
   const hasFrozen = Number(pending) > 0 || Number(hold) > 0;
 
   return (
-    <div className="clip-frame relative overflow-hidden rounded-card glass p-5 ring-1 ring-inset ring-[var(--acid)]/25">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-16 -right-10 size-44 rounded-full"
-        style={{
-          background:
-            "radial-gradient(circle, rgb(247 241 106 / 0.22) 0%, transparent 70%)",
-        }}
-      />
+    <div className="clip-frame relative overflow-hidden rounded-card bg-surface-raised p-5 ring-1 ring-inset ring-[var(--acid)]/25">
+      <div aria-hidden className="corner-wash" />
       <div className="relative">
         <p className="text-[12px] font-medium tracking-wide text-content-secondary uppercase">
           Доступно к выводу

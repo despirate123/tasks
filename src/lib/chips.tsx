@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 const chipBase =
-  "liquid-glass inline-flex shrink-0 items-center gap-1.5 rounded-pill px-3.5 py-[7px] text-[12.5px] font-medium tracking-[-0.02em] transition-[color,background,box-shadow] duration-300 ease-soft active:scale-[0.97]";
+  "clip-frame clip-pill liquid-glass inline-flex shrink-0 items-center gap-1.5 overflow-hidden rounded-pill px-3.5 py-[7px] text-[12.5px] font-medium tracking-[-0.02em] transition-[color,background,box-shadow] duration-300 ease-soft active:scale-[0.97]";
 
 const chipOff =
   "glass-thin text-content-secondary";

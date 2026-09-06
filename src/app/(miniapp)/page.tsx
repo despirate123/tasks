@@ -113,7 +113,7 @@ async function HomeWalletAndWork() {
     <>
       <Link
         href="/profile"
-        className="flex items-center gap-3 rounded-card glass-thin px-3 py-2.5 ring-1 ring-inset ring-[var(--acid)]/20 transition-[transform,box-shadow,background] duration-300 ease-soft hover:-translate-y-px active:scale-[0.99]"
+        className="clip-frame flex items-center gap-3 overflow-hidden rounded-card glass-thin px-3 py-2.5 ring-1 ring-inset ring-[var(--acid)]/20 transition-[background] duration-300 ease-soft active:scale-[0.99]"
       >
         <span className="flex size-9 items-center justify-center rounded-full bg-[var(--acid)]/12 text-[var(--acid)]">
           <Wallet2 className="size-4" />

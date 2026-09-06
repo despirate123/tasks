@@ -36,7 +36,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-card glass-thin px-6 py-12 text-center ring-1 ring-inset ring-white/[0.07]",
+        "clip-frame flex flex-col items-center justify-center gap-3 rounded-card glass-thin px-6 py-12 text-center ring-1 ring-inset ring-white/[0.07]",
         className,
       )}
     >
@@ -104,15 +104,13 @@ export function StatTile({
         className,
       )}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-10 -right-8 size-24 rounded-full"
-        style={{
-          background: meta.glow === "transparent"
-            ? "transparent"
-            : `radial-gradient(circle, ${meta.glow} 0%, transparent 70%)`,
-        }}
-      />
+      {meta.glow !== "transparent" ? (
+        <div
+          aria-hidden
+          className="corner-wash"
+          style={{ "--wash": meta.glow } as React.CSSProperties}
+        />
+      ) : null}
       <p className="relative text-[11px] font-medium tracking-wide text-content-muted uppercase">
         {label}
       </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,7 @@ export function PromoBannerCard({
   return (
     <div
       className={cn(
-        "clip-frame relative overflow-hidden rounded-[22px] px-4 py-3.5 ring-1 ring-inset ring-white/12",
+        "clip-frame clip-banner relative overflow-hidden rounded-[22px] px-4 py-3.5 ring-1 ring-inset ring-white/12",
         className,
       )}
       style={{ background: banner.background }}
@@ -42,11 +42,14 @@ export function PromoBannerCard({
         />
       ) : (
         <div
-          className="pointer-events-none absolute -top-10 -right-8 size-28 rounded-full"
-          style={{
-            background: `radial-gradient(circle, ${banner.accent} 0%, transparent 70%)`,
-            opacity: 0.4,
-          }}
+          aria-hidden
+          className="corner-wash"
+          style={
+            {
+              "--wash": banner.accent,
+              opacity: 0.35,
+            } as CSSProperties
+          }
         />
       )}
       <div className="relative flex items-start gap-3">

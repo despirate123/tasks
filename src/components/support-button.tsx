@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { Headset } from "lucide-react";
 import { haptic, openTelegramLink } from "@/components/telegram-init";
 
@@ -13,14 +14,11 @@ export function SupportButton({ href }: { href: string }) {
       }}
       className="group w-full text-left"
     >
-      <div className="clip-frame relative overflow-hidden rounded-card p-4 ring-1 ring-inset ring-support/30 transition-[box-shadow] duration-300 ease-soft active:scale-[0.985]">
+      <div className="clip-frame relative overflow-hidden rounded-card bg-surface-raised p-4 ring-1 ring-inset ring-support/30 transition-[box-shadow] duration-300 ease-soft active:scale-[0.985]">
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-16 -right-10 size-40 rounded-full"
-          style={{
-            background:
-              "radial-gradient(circle, rgb(122 212 255 / 0.28) 0%, transparent 70%)",
-          }}
+          className="corner-wash"
+          style={{ "--wash": "rgb(122 212 255 / 0.2)" } as CSSProperties}
         />
         <div className="relative flex items-center gap-3.5">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-support/16 text-support ring-1 ring-inset ring-support/35">
@@ -34,7 +32,7 @@ export function SupportButton({ href }: { href: string }) {
               Вопросы по заданиям и выплатам
             </span>
           </span>
-          <span className="liquid-glass inline-flex h-10 shrink-0 items-center rounded-2xl bg-support px-3.5 text-[13px] font-semibold text-[#0d1a20] transition-transform duration-300 ease-soft group-hover:scale-[1.03] group-active:scale-[0.98]">
+          <span className="clip-frame clip-soft liquid-glass inline-flex h-10 shrink-0 items-center overflow-hidden rounded-2xl bg-support px-3.5 text-[13px] font-semibold text-[#0d1a20] transition-transform duration-300 ease-soft group-active:scale-[0.98]">
             Написать
           </span>
         </div>

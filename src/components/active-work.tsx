@@ -48,7 +48,7 @@ export function ActiveWork({ items }: { items: ActiveWorkItem[] }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-card glass-thin px-3 py-2.5 ring-1 ring-inset ring-white/10 transition-[transform,background] duration-300 ease-soft hover:-translate-y-px active:scale-[0.99]"
+      className="clip-frame flex items-center gap-3 overflow-hidden rounded-card glass-thin px-3 py-2.5 ring-1 ring-inset ring-white/10 transition-[background] duration-300 ease-soft active:scale-[0.99]"
     >
       <span className="flex shrink-0">
         {preview.map((item, index) => (
