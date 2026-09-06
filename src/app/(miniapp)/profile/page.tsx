@@ -212,7 +212,14 @@ export default async function ProfilePage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13.5px] font-medium">
-                    {entry.submission?.offer.title ?? LEDGER_TYPE[entry.type]}
+                    {/* Название оффера показываем только для собственного
+                        вознаграждения. У реферального бонуса тот же
+                        submissionId, но задание выполнял другой участник —
+                        подпись «за задание X» выглядела бы как двойное
+                        начисление. */}
+                    {entry.type === "TASK_REWARD" && entry.submission
+                      ? entry.submission.offer.title
+                      : LEDGER_TYPE[entry.type]}
                   </p>
                   <p className="mt-0.5 text-[11.5px] text-content-muted">
                     {formatRelative(entry.createdAt)}

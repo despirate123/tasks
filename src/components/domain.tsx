@@ -132,10 +132,11 @@ type OfferCardData = {
 
 export function OfferCard({
   offer,
-  taken,
+  mine,
 }: {
   offer: OfferCardData;
-  taken?: boolean;
+  /** Состояние собственного выполнения участника по этому офферу, если оно есть. */
+  mine?: "active" | "done" | null;
 }) {
   return (
     <Link href={`/tasks/${offer.slug}`} className="block">
@@ -187,7 +188,8 @@ export function OfferCard({
                   Топ
                 </Badge>
               ) : null}
-              {taken ? <Badge tone="info">В работе</Badge> : null}
+              {mine === "active" ? <Badge tone="info">В работе</Badge> : null}
+              {mine === "done" ? <Badge tone="money">Выполнено</Badge> : null}
             </div>
           </div>
         </div>

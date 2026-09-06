@@ -177,7 +177,9 @@ export async function resetOfferAuto(
   const offer = await db.offer.findUnique({ where: { id: offerId } });
   if (!offer) throw new Error("OFFER_NOT_FOUND");
 
-  const data: Prisma.OfferUpdateInput = { updatedById: actorId };
+  const data: Prisma.OfferUpdateInput = {
+    updatedBy: { connect: { id: actorId } },
+  };
 
   if (field === "difficulty") {
     data.difficultySource = "AUTO";

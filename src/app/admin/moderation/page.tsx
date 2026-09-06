@@ -2,7 +2,13 @@ import Link from "next/link";
 import { AlertTriangle, Clock, ImageIcon, ShieldCheck } from "lucide-react";
 import { requireRole, displayName } from "@/server/auth";
 import { getModerationQueue } from "@/server/modules/submissions";
-import { formatCountdown, formatMoney, formatPercent, formatRelative } from "@/lib/format";
+import {
+  formatCountdown,
+  formatMoney,
+  formatPercent,
+  formatRelative,
+  plural,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -120,8 +126,7 @@ export default async function ModerationQueuePage({
                         <RiskBadge score={item.riskScore} />
                         {item._count.fraudFlags > 0 ? (
                           <Badge tone="warn">
-                            {item._count.fraudFlags} флаг
-                            {item._count.fraudFlags > 1 ? "а" : ""}
+                            {`${item._count.fraudFlags} ${plural(item._count.fraudFlags, "флаг", "флага", "флагов")}`}
                           </Badge>
                         ) : null}
                         {item.status === "IN_REVIEW" && item.reviewer ? (

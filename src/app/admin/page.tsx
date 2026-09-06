@@ -5,11 +5,11 @@ import { formatMoney, formatRelative } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { SectionTitle, StatTile } from "@/components/ui/misc";
-import { OfferAvatar, SubmissionStatusBadge } from "@/components/domain";
+import { OfferAvatar } from "@/components/domain";
 
 export default async function AdminDashboard() {
   const now = new Date();
-  const dayAgo = new Date(Date.now() - 86_400_000);
+  const dayAgo = new Date(now.getTime() - 86_400_000);
 
   const [
     pendingReview,

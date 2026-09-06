@@ -6,10 +6,14 @@
  * Демо-пользователи и офферы создаются только когда SEED_DEMO !== "false".
  */
 
+import path from "node:path";
 import { PrismaClient, Prisma } from "../src/generated/prisma";
+import { writeProofFile } from "./demo-media";
 
 const db = new PrismaClient();
 const D = Prisma.Decimal;
+
+const UPLOAD_DIR = path.join(process.cwd(), ".uploads");
 
 const REFERRAL_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 
@@ -952,6 +956,8 @@ async function seedSubmissions(users: Record<string, string>) {
     submittedAgoMin?: number;
     comment?: string;
     riskScore?: number;
+    /** Сколько PNG-заглушек приложить как фото-доказательства. */
+    photos?: number;
   }[] = [
     {
       userId: owner,
@@ -959,27 +965,32 @@ async function seedSubmissions(users: Record<string, string>) {
       status: "PAID",
       submittedAgoMin: 60 * 30,
       comment: "Заказ №WB-88421 оформлен, промокод применён, скидка 450 ₽.",
+      photos: 2,
     },
     {
       userId: owner,
       offerIndex: 2,
       status: "PAID",
       submittedAgoMin: 60 * 52,
-      comment: "Заказ доставлен, промокод сработал.",
+      comment: "Заявка одобрена, карту выдали в отделении.",
+      photos: 1,
     },
     {
       userId: owner,
       offerIndex: 5,
       status: "PENDING_PAYOUT",
       submittedAgoMin: 90,
-      comment: "Опрос завершён, код завершения RS-40912.",
+      comment: "Подписку активировал, скриншот раздела «Моя подписка» приложил.",
+      photos: 1,
     },
     {
       userId: owner,
       offerIndex: 1,
       status: "PENDING_REVIEW",
       submittedAgoMin: 25,
-      comment: "Заявка на карту одобрена, скриншот из приложения банка приложил.",
+      comment:
+        "Счёт открыт, верификация пройдена, внесено 10 000 ₽. Скриншоты пополнения и баланса приложил.",
+      photos: 3,
     },
     { userId: owner, offerIndex: 3, status: "DRAFT" },
     {
@@ -988,13 +999,23 @@ async function seedSubmissions(users: Record<string, string>) {
       status: "PAID",
       submittedAgoMin: 60 * 70,
       comment: "Первый заказ на 1340 ₽, скриншоты приложены.",
+      photos: 2,
     },
     {
       userId: maria,
-      offerIndex: 6,
+      offerIndex: 2,
+      status: "PAID",
+      submittedAgoMin: 60 * 96,
+      comment: "Карта одобрена и получена, скриншот из приложения банка.",
+      photos: 2,
+    },
+    {
+      userId: maria,
+      offerIndex: 7,
       status: "PENDING_REVIEW",
       submittedAgoMin: 200,
       comment: "10 уровень, ник MariaQ. Скриншот профиля во вложении.",
+      photos: 2,
     },
     {
       userId: maria,
@@ -1002,45 +1023,51 @@ async function seedSubmissions(users: Record<string, string>) {
       status: "PENDING_REVIEW",
       // Просрочено относительно заявленного ETA — попадёт в начало очереди.
       submittedAgoMin: 60 * 130,
-      comment: "Счёт открыт, внесено 10 000 ₽. Видео с балансом приложил.",
+      comment: "Заказ доставлен, промокод сработал. Скриншот заказа приложила.",
+      photos: 2,
     },
     {
       userId: dmitry,
-      offerIndex: 2,
+      offerIndex: 6,
       status: "REJECTED",
       submittedAgoMin: 60 * 20,
       comment: "Заказ сделан.",
       riskScore: 35,
+      photos: 1,
     },
     {
       userId: dmitry,
-      offerIndex: 5,
+      offerIndex: 9,
       status: "PENDING_REVIEW",
       submittedAgoMin: 40,
       comment: "Опрос пройден.",
       riskScore: 35,
+      photos: 1,
     },
     {
       userId: olga,
-      offerIndex: 3,
+      offerIndex: 5,
       status: "NEEDS_REVISION",
       submittedAgoMin: 300,
       comment: "Подписку подключила.",
+      photos: 1,
     },
     {
       userId: olga,
-      offerIndex: 7,
+      offerIndex: 8,
       status: "PENDING_REVIEW",
       submittedAgoMin: 15,
-      comment: "Premium активирован на 30 дней.",
+      comment: "Premium активирован на 30 дней, скриншот подписки приложила.",
+      photos: 1,
     },
     {
       userId: igor,
-      offerIndex: 4,
+      offerIndex: 3,
       status: "PENDING_REVIEW",
       submittedAgoMin: 8,
       comment: "Всё сделал.",
       riskScore: 55,
+      photos: 1,
     },
   ];
 
@@ -1112,6 +1139,38 @@ async function seedSubmissions(users: Record<string, string>) {
             kind: "TEXT",
             text: item.comment,
             order: 0,
+          },
+        });
+      }
+
+      // Фото-заглушки: без них экран модератора выглядит пустым,
+      // а именно он — узкое место продукта и главное, что стоит смотреть.
+      for (let i = 0; i < (item.photos ?? 0); i += 1) {
+        const media = await writeProofFile(
+          UPLOAD_DIR,
+          submission.id,
+          `${submission.id}:${i}`,
+        );
+        const asset = await db.mediaAsset.create({
+          data: {
+            storageKey: media.storageKey,
+            bucket: "local",
+            mimeType: media.mimeType,
+            sizeBytes: media.sizeBytes,
+            width: media.width,
+            height: media.height,
+            checksum: media.checksum,
+            status: "READY",
+            uploadedById: item.userId,
+            meta: { demo: true },
+          },
+        });
+        await db.submissionProof.create({
+          data: {
+            submissionId: submission.id,
+            kind: "PHOTO",
+            mediaId: asset.id,
+            order: i + 1,
           },
         });
       }
@@ -1360,6 +1419,59 @@ async function seedSubmissions(users: Record<string, string>) {
   }
 }
 
+/**
+ * Флаги антифрода на рискованных выполнениях.
+ *
+ * Скор не решает за модератора — он сортирует очередь и объясняет, на что
+ * смотреть. Без флагов в демо-данных не видно, как это работает на практике.
+ */
+async function seedFraudFlags(users: Record<string, string>) {
+  console.log("→ Флаги антифрода");
+
+  const rules = await db.fraudRule.findMany();
+  const ruleByCode = new Map(rules.map((r) => [r.code, r]));
+
+  const risky = await db.taskSubmission.findMany({
+    where: { riskScore: { gte: 30 }, status: { in: ["PENDING_REVIEW", "REJECTED"] } },
+    select: { id: true, userId: true, riskScore: true },
+  });
+
+  for (const submission of risky) {
+    const existing = await db.fraudFlag.count({
+      where: { submissionId: submission.id },
+    });
+    if (existing > 0) continue;
+
+    const codes =
+      submission.userId === users["777000005"]
+        ? ["FRESH_ACCOUNT_HIGH_REWARD", "TOO_FAST"]
+        : ["REJECT_STREAK", "SHARED_IP"];
+
+    for (const code of codes) {
+      const rule = ruleByCode.get(code);
+      if (!rule) continue;
+      await db.fraudFlag.create({
+        data: {
+          ruleId: rule.id,
+          userId: submission.userId,
+          submissionId: submission.id,
+          points: rule.points,
+          details: {
+            note:
+              code === "TOO_FAST"
+                ? "Между взятием задания и отправкой доказательств прошло 3 минуты при заявленном сроке выполнения в несколько дней."
+                : code === "FRESH_ACCOUNT_HIGH_REWARD"
+                  ? "Аккаунт зарегистрирован 9 часов назад и сразу взял задание с наградой 4500 ₽."
+                  : code === "SHARED_IP"
+                    ? "С этого IP выполняют задания ещё 2 аккаунта."
+                    : "Два отклонённых выполнения подряд.",
+          },
+        },
+      });
+    }
+  }
+}
+
 async function seedReferralEarnings(users: Record<string, string>) {
   console.log("→ Реферальные начисления");
 
@@ -1559,6 +1671,7 @@ async function main() {
   await seedOffers();
   const users = await seedUsers();
   await seedSubmissions(users);
+  await seedFraudFlags(users);
   await seedReferralEarnings(users);
   await seedWithdrawal(users);
 

@@ -48,7 +48,7 @@ export default async function HistoryPage() {
                   <p className="text-[13.5px] font-medium">
                     {LEDGER_TYPE[entry.type]}
                   </p>
-                  {entry.submission?.offer.title ? (
+                  {entry.type === "TASK_REWARD" && entry.submission?.offer.title ? (
                     <p className="mt-0.5 truncate text-[12px] text-content-secondary">
                       {entry.submission.offer.title}
                     </p>

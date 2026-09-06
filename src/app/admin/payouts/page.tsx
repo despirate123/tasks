@@ -2,7 +2,13 @@ import Link from "next/link";
 import { AlertTriangle, Banknote } from "lucide-react";
 import { displayName, requireRole } from "@/server/auth";
 import { getPayoutQueue } from "@/server/modules/withdrawals";
-import { formatCrypto, formatDate, formatMoney, formatRelative } from "@/lib/format";
+import {
+  formatCrypto,
+  formatDate,
+  formatMoney,
+  formatRelative,
+  plural,
+} from "@/lib/format";
 import { PAYOUT_METHOD } from "@/lib/labels";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -110,7 +116,7 @@ function PayoutRow({ withdrawal: w }: { withdrawal: QueueItem }) {
             {flags.length > 0 ? (
               <Badge tone="warn">
                 <AlertTriangle className="size-3" />
-                {flags.length} флаг{flags.length > 1 ? "а" : ""}
+                {`${flags.length} ${plural(flags.length, "флаг", "флага", "флагов")}`}
               </Badge>
             ) : null}
           </div>

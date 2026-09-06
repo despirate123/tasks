@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Loader2, Send, X } from "lucide-react";
 import type { WithdrawalStatus } from "@/generated/prisma";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -149,18 +148,14 @@ export function PayoutActions({
             disabled={pending || !reason.trim()}
             onClick={() => run(() => rejectPayoutAction(withdrawalId, reason))}
           >
-            Отклонить и вернуть {formatHint()}
+            Отклонить и вернуть средства
           </Button>
         </div>
       ) : null}
 
       {error ? (
-        <p className={cn("text-[11.5px] leading-relaxed text-hard")}>{error}</p>
+        <p className="text-[11.5px] leading-relaxed text-hard">{error}</p>
       ) : null}
     </div>
   );
-}
-
-function formatHint() {
-  return "средства";
 }

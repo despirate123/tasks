@@ -6,7 +6,11 @@ import { getCategoriesWithCounts, listOffers } from "@/server/modules/offers";
 import { getWallet } from "@/server/modules/wallet";
 import { db } from "@/server/db";
 import { formatMoney } from "@/lib/format";
-import { DIFFICULTY, DIFFICULTY_ORDER } from "@/lib/labels";
+import {
+  ACTIVE_SUBMISSION_STATUSES,
+  DIFFICULTY,
+  DIFFICULTY_ORDER,
+} from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,20 +67,30 @@ export default async function CatalogPage({
       : 0,
   ]);
 
-  const takenOfferIds = user
-    ? new Set(
-        (
-          await db.taskSubmission.findMany({
-            where: {
-              userId: user.id,
-              offerId: { in: offers.map((o) => o.id) },
-              status: { notIn: ["CANCELLED", "EXPIRED"] },
-            },
-            select: { offerId: true },
-          })
-        ).map((s) => s.offerId),
-      )
-    : new Set<string>();
+  // Помечаем в каталоге офферы, по которым у участника уже есть выполнение.
+  // «В работе» и «Выполнено» — разные вещи: первое требует действия,
+  // второе просто объясняет, почему задание нельзя взять снова.
+  const mineByOffer = new Map<string, "active" | "done">();
+  if (user) {
+    const own = await db.taskSubmission.findMany({
+      where: {
+        userId: user.id,
+        offerId: { in: offers.map((o) => o.id) },
+        status: { notIn: ["CANCELLED", "EXPIRED", "REJECTED"] },
+      },
+      select: { offerId: true, status: true },
+    });
+    for (const submission of own) {
+      const state = ACTIVE_SUBMISSION_STATUSES.includes(submission.status)
+        ? "active"
+        : "done";
+      // «В работе» приоритетнее: если по офферу есть и активное выполнение,
+      // и завершённое, участнику важнее первое.
+      if (state === "active" || !mineByOffer.has(submission.offerId)) {
+        mineByOffer.set(submission.offerId, state);
+      }
+    }
+  }
 
   const hasFilters = Boolean(
     difficulty.length || params.category || params.q || params.sort,
@@ -261,7 +275,7 @@ export default async function CatalogPage({
           </p>
           {offers.map((offer) => (
             <div key={offer.id} className="animate-fade-up">
-              <OfferCard offer={offer} taken={takenOfferIds.has(offer.id)} />
+              <OfferCard offer={offer} mine={mineByOffer.get(offer.id) ?? null} />
             </div>
           ))}
         </div>
