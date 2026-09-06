@@ -46,8 +46,7 @@ export function PromoBannerCard({
           className="corner-wash"
           style={
             {
-              "--wash": banner.accent,
-              opacity: 0.35,
+              "--wash": `color-mix(in srgb, ${banner.accent} 28%, transparent)`,
             } as CSSProperties
           }
         />

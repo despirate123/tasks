@@ -257,7 +257,7 @@ export function WithdrawForm({
                     haptic("light");
                   }}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-card p-3.5 text-left ring-1 ring-inset transition-[background,box-shadow,transform,color] duration-300 ease-soft active:scale-[0.99]",
+                    "clip-frame flex w-full items-center gap-3 overflow-hidden rounded-card p-3.5 text-left ring-1 ring-inset transition-[background,color] duration-300 ease-soft active:scale-[0.99]",
                     active
                       ? "bg-brand-500/10 ring-brand-500/35"
                       : "bg-surface-raised/70 ring-border-subtle",
