@@ -346,7 +346,11 @@ export function ProofForm({
 
       <div
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-surface-base/94 px-4 pt-3 backdrop-blur-xl"
-        style={{ paddingBottom: "calc(var(--safe-bottom) + 0.75rem)" }}
+        style={{
+          paddingBottom: "calc(var(--safe-bottom) + 0.75rem)",
+          paddingLeft: "max(1rem, var(--safe-left))",
+          paddingRight: "max(1rem, var(--safe-right))",
+        }}
       >
         <div className="mx-auto max-w-[var(--app-max-width)]">
           <Button

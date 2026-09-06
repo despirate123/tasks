@@ -50,16 +50,29 @@
   color-scheme: dark;
   --app-max-width: 30rem;
   /* Высота видимой области Telegram WebView; переопределяется из JS */
-  --tg-viewport-stable-height: 100vh;
-  --safe-bottom: max(
-    env(safe-area-inset-bottom, 0px),
-    var(--tg-safe-area-inset-bottom, 0px)
+  --tg-viewport-stable-height: 100dvh;
+  /*
+    Telegram: contentSafeArea нужно ПРИБАВЛЯТЬ к system safe area,
+    а не брать max. Иначе на iPhone 16 Pro шапка уезжает под Dynamic Island.
+  */
+  --safe-top: calc(
+    max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px)) +
+      var(--tg-content-safe-area-inset-top, 0px)
   );
-  --safe-top: max(
-    env(safe-area-inset-top, 0px),
-    var(--tg-safe-area-inset-top, 0px),
-    var(--tg-content-safe-area-inset-top, 0px)
+  --safe-bottom: calc(
+    max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px)) +
+      var(--tg-content-safe-area-inset-bottom, 0px)
   );
+  --safe-left: calc(
+    max(env(safe-area-inset-left, 0px), var(--tg-safe-area-inset-left, 0px)) +
+      var(--tg-content-safe-area-inset-left, 0px)
+  );
+  --safe-right: calc(
+    max(env(safe-area-inset-right, 0px), var(--tg-safe-area-inset-right, 0px)) +
+      var(--tg-content-safe-area-inset-right, 0px)
+  );
+  --nav-bar-height: 3.75rem;
+  --nav-height: calc(var(--nav-bar-height) + var(--safe-bottom));
 }
 
 * {
@@ -68,6 +81,7 @@
 
 html,
 body {
+  min-height: var(--tg-viewport-stable-height, 100dvh);
   background: var(--color-surface-base);
   color: var(--color-content-primary);
   -webkit-tap-highlight-color: transparent;

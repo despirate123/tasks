@@ -18,7 +18,10 @@ export default async function AdminLayout({
     <>
       <TelegramInit />
       <div className="relative z-10 min-h-dvh">
-        <header className="sticky top-0 z-40 border-b border-border-subtle bg-surface-base/88 backdrop-blur-xl">
+        <header
+          className="sticky top-0 z-40 border-b border-border-subtle bg-surface-base/88 backdrop-blur-xl"
+          style={{ paddingTop: "var(--safe-top)" }}
+        >
           <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
             <Link href="/admin" className="flex items-center gap-2.5">
               <span className="flex size-9 items-center justify-center rounded-xl bg-brand-500/16 text-brand-300">

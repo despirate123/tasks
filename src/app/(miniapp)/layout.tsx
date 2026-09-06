@@ -21,12 +21,16 @@ export default async function MiniAppLayout({
   return (
     <>
       <TelegramInit serverUserId={user?.id ?? null} />
-      <div className="relative z-10 mx-auto flex min-h-dvh max-w-[var(--app-max-width)] flex-col">
+      <div className="relative z-10 mx-auto flex min-h-[var(--tg-viewport-stable-height,100dvh)] max-w-[var(--app-max-width)] flex-col">
         <header
           className="sticky top-0 z-40 border-b border-border-subtle/70 bg-surface-base/85 backdrop-blur-xl"
-          style={{ paddingTop: "var(--safe-top)" }}
+          style={{
+            paddingTop: "var(--safe-top)",
+            paddingLeft: "max(1rem, var(--safe-left))",
+            paddingRight: "max(1rem, var(--safe-right))",
+          }}
         >
-          <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex items-center gap-3 py-3">
             <Link href="/profile" className="flex min-w-0 items-center gap-2.5">
               <OfferAvatar
                 title={user ? displayName(user) : "PB"}
@@ -58,7 +62,16 @@ export default async function MiniAppLayout({
           </div>
         </header>
 
-        <main className="flex-1 px-4 pt-4 pb-28">{children}</main>
+        <main
+          className="flex-1 px-4 pt-4"
+          style={{
+            paddingBottom: "calc(var(--nav-height) + 1rem)",
+            paddingLeft: "max(1rem, var(--safe-left))",
+            paddingRight: "max(1rem, var(--safe-right))",
+          }}
+        >
+          {children}
+        </main>
 
         <BottomNav />
       </div>

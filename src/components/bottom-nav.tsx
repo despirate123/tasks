@@ -35,7 +35,11 @@ export function BottomNav() {
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border-subtle bg-surface-base/92 backdrop-blur-xl">
       <div
         className="mx-auto flex max-w-[var(--app-max-width)] items-stretch"
-        style={{ paddingBottom: "var(--safe-bottom)" }}
+        style={{
+          paddingBottom: "var(--safe-bottom)",
+          paddingLeft: "var(--safe-left)",
+          paddingRight: "var(--safe-right)",
+        }}
       >
         {ITEMS.map((item) => {
           const active = item.match(pathname);

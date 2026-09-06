@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { applyTelegramSafeArea } from "@/lib/telegram-safe-area";
 
 type TelegramWebApp = {
   ready: () => void;
@@ -9,8 +10,8 @@ type TelegramWebApp = {
   initData: string;
   themeParams?: Record<string, string>;
   viewportStableHeight?: number;
-  safeAreaInset?: { top?: number };
-  contentSafeAreaInset?: { top?: number };
+  safeAreaInset?: { top?: number; bottom?: number; left?: number; right?: number };
+  contentSafeAreaInset?: { top?: number; bottom?: number; left?: number; right?: number };
   onEvent?: (event: string, handler: () => void) => void;
   setHeaderColor?: (color: string) => void;
   setBackgroundColor?: (color: string) => void;
@@ -45,23 +46,7 @@ export function TelegramInit({ serverUserId = null }: { serverUserId?: string | 
     webApp.setHeaderColor?.("#0b0f1a");
     webApp.setBackgroundColor?.("#0b0f1a");
 
-    // Safe area и высота вьюпорта — иначе контент уезжает под системные элементы
-    // и нижняя навигация оказывается за пределами экрана.
-    const applyViewport = () => {
-      if (webApp.viewportStableHeight) {
-        document.documentElement.style.setProperty(
-          "--tg-viewport-stable-height",
-          `${webApp.viewportStableHeight}px`,
-        );
-      }
-      const top = Math.max(
-        webApp.safeAreaInset?.top ?? 0,
-        webApp.contentSafeAreaInset?.top ?? 0,
-      );
-      if (top) {
-        document.documentElement.style.setProperty("--safe-top", `${top}px`);
-      }
-    };
+    const applyViewport = () => applyTelegramSafeArea(webApp);
     applyViewport();
     webApp.onEvent?.("viewportChanged", applyViewport);
     webApp.onEvent?.("fullscreenChanged", applyViewport);

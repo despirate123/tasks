@@ -38,6 +38,34 @@
     } catch (error) {
       /* no-op */
     }
+    try {
+      var sys = app.safeAreaInset || {};
+      var content = app.contentSafeAreaInset || {};
+      var root = document.documentElement;
+      function set(name, value) {
+        if (value > 0) root.style.setProperty(name, value + "px");
+      }
+      function num(obj, key) {
+        var n = Number(obj[key]);
+        return n > 0 ? n : 0;
+      }
+      set("--tg-safe-area-inset-top", num(sys, "top"));
+      set("--tg-safe-area-inset-bottom", num(sys, "bottom"));
+      set("--tg-safe-area-inset-left", num(sys, "left"));
+      set("--tg-safe-area-inset-right", num(sys, "right"));
+      set("--tg-content-safe-area-inset-top", num(content, "top"));
+      set("--tg-content-safe-area-inset-bottom", num(content, "bottom"));
+      set("--safe-top", num(sys, "top") + num(content, "top"));
+      set("--safe-bottom", num(sys, "bottom") + num(content, "bottom"));
+      if (app.viewportStableHeight) {
+        root.style.setProperty(
+          "--tg-viewport-stable-height",
+          app.viewportStableHeight + "px",
+        );
+      }
+    } catch (error) {
+      /* no-op */
+    }
     return true;
   }
 

@@ -16,6 +16,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
   themeColor: "#0b0f1a",
 };
 
@@ -31,6 +32,18 @@ const telegramBoot = `
     try {
       if (app.setHeaderColor) app.setHeaderColor("#0b0f1a");
       if (app.setBackgroundColor) app.setBackgroundColor("#0b0f1a");
+    } catch (e) {}
+    try {
+      var s = app.safeAreaInset || {};
+      var c = app.contentSafeAreaInset || {};
+      var r = document.documentElement;
+      function n(o, k) { var v = Number(o[k]); return v > 0 ? v : 0; }
+      function set(name, v) { if (v > 0) r.style.setProperty(name, v + "px"); }
+      set("--tg-safe-area-inset-top", n(s, "top"));
+      set("--tg-safe-area-inset-bottom", n(s, "bottom"));
+      set("--tg-content-safe-area-inset-top", n(c, "top"));
+      set("--safe-top", n(s, "top") + n(c, "top"));
+      set("--safe-bottom", n(s, "bottom") + n(c, "bottom"));
     } catch (e) {}
     return true;
   }
