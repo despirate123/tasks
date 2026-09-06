@@ -89,6 +89,16 @@ export const SUBMISSION_STATUS: Record<
   },
 };
 
+/** Что сделать дальше — короткая подпись в списках выполнений. */
+export function submissionNextAction(status: SubmissionStatus): string {
+  if (status === "DRAFT") return "Загрузить пруфы";
+  if (status === "NEEDS_REVISION") return "Доработать";
+  if (status === "PENDING_REVIEW" || status === "IN_REVIEW") {
+    return "Статус проверки";
+  }
+  return "Подробнее";
+}
+
 export const WITHDRAWAL_STATUS: Record<
   WithdrawalStatus,
   { label: string; className: string }

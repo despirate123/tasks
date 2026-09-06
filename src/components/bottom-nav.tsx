@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, ClipboardCheck, Handshake, UserRound } from "lucide-react";
+import { Compass, Handshake, UserRound } from "lucide-react";
 import { APP_TABS, appTabIndex } from "@/lib/app-tabs";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/components/telegram-init";
 
 const ICONS = {
   "/": Compass,
-  "/my-tasks": ClipboardCheck,
   "/referrals": Handshake,
   "/profile": UserRound,
 } as const;
@@ -30,7 +29,7 @@ export function BottomNav() {
       <div className="pointer-events-auto relative mx-auto flex max-w-[var(--app-max-width)] items-start rounded-[28px] bg-black/72 px-2 py-2 glass ring-1 ring-inset ring-white/15">
         <div
           aria-hidden
-          className="pointer-events-none absolute top-2 right-2 left-2 grid h-9 grid-cols-4"
+          className="pointer-events-none absolute top-2 right-2 left-2 grid h-9 grid-cols-3"
         >
           <div
             className="flex justify-center transition-transform duration-[420ms] ease-soft"

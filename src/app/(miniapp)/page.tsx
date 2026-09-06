@@ -4,6 +4,7 @@ import type { Difficulty } from "@/generated/prisma";
 import { getCurrentUser } from "@/server/auth";
 import { getCategoriesWithCounts, listOffers } from "@/server/modules/offers";
 import { getWallet } from "@/server/modules/wallet";
+import { getUserSubmissions } from "@/server/modules/submissions";
 import { db } from "@/server/db";
 import { formatMoney } from "@/lib/format";
 import {
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/misc";
 import { OfferCard } from "@/components/domain";
+import { ActiveWork } from "@/components/active-work";
 import { HomeHeader } from "@/components/home-header";
 import { ChipScroller } from "@/components/chip-scroller";
 import { chipClass } from "@/lib/chips";
@@ -51,7 +53,7 @@ export default async function CatalogPage({
 
   const user = await getCurrentUser();
 
-  const [offers, categories, wallet, activeCount] = await Promise.all([
+  const [offers, categories, wallet, activeWork] = await Promise.all([
     listOffers({
       difficulty: difficulty.length ? difficulty : undefined,
       categorySlug: params.category,
@@ -60,14 +62,7 @@ export default async function CatalogPage({
     }),
     getCategoriesWithCounts(),
     user ? getWallet(user.id) : null,
-    user
-      ? db.taskSubmission.count({
-          where: {
-            userId: user.id,
-            status: { in: ["DRAFT", "PENDING_REVIEW", "IN_REVIEW", "NEEDS_REVISION"] },
-          },
-        })
-      : 0,
+    user ? getUserSubmissions(user.id, ACTIVE_SUBMISSION_STATUSES) : [],
   ]);
 
   // Помечаем в каталоге офферы, по которым у участника уже есть выполнение.
@@ -147,15 +142,11 @@ export default async function CatalogPage({
               {formatMoney(wallet.available)}
             </span>
           </span>
-          {activeCount > 0 ? (
-            <span className="rounded-pill bg-brand-500/14 px-3 py-1.5 text-[12px] font-medium text-brand-300 ring-1 ring-inset ring-brand-500/28">
-              {activeCount} в работе
-            </span>
-          ) : (
-            <span className="text-[12px] font-medium text-content-muted">Вывести →</span>
-          )}
+          <span className="text-[12px] font-medium text-content-muted">Вывести →</span>
         </Link>
       ) : null}
+
+      <ActiveWork items={activeWork} />
 
       <div>
         <h1 className="text-[22px] leading-tight font-bold">Задания</h1>

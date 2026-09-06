@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ChevronRight, ListChecks } from "lucide-react";
+import { ArrowLeft, ChevronRight, ListChecks } from "lucide-react";
 import type { SubmissionStatus } from "@/generated/prisma";
 import { getCurrentUser } from "@/server/auth";
 import { getUserSubmissions } from "@/server/modules/submissions";
 import { formatCountdown, formatMoney, formatRelative } from "@/lib/format";
+import { submissionNextAction } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/misc";
@@ -53,6 +54,11 @@ export default async function MyTasksPage({
 
   return (
     <div className="space-y-4">
+      <Link href="/" className="back-nav">
+        <ArrowLeft className="size-4" />
+        Задания
+      </Link>
+
       <div>
         <h1 className="text-[22px] leading-tight font-bold">Мои задания</h1>
         <p className="mt-1 text-[13px] text-content-secondary">
@@ -142,11 +148,7 @@ export default async function MyTasksPage({
                               )}
                       </span>
                       <span className="inline-flex items-center gap-0.5">
-                        {submission.status === "DRAFT"
-                          ? "Загрузить пруфы"
-                          : submission.status === "NEEDS_REVISION"
-                            ? "Доработать"
-                            : "Подробнее"}
+                        {submissionNextAction(submission.status)}
                         <ChevronRight className="size-3.5" />
                       </span>
                     </div>

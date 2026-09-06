@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Handshake,
   History,
+  ListChecks,
   ShieldCheck,
   Wallet2,
 } from "lucide-react";
@@ -13,7 +14,7 @@ import { getTransactions, getWallet } from "@/server/modules/wallet";
 import { getUserWithdrawals } from "@/server/modules/withdrawals";
 import { db } from "@/server/db";
 import { formatDate, formatMoney, formatPercent, formatRelative } from "@/lib/format";
-import { LEDGER_TYPE, USER_STATUS } from "@/lib/labels";
+import { ACTIVE_SUBMISSION_STATUSES, LEDGER_TYPE, USER_STATUS } from "@/lib/labels";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -42,12 +43,19 @@ export default async function ProfilePage() {
     );
   }
 
-  const [wallet, transactions, withdrawals, stats] = await Promise.all([
-    getWallet(user.id),
-    getTransactions(user.id, { take: 8 }),
-    getUserWithdrawals(user.id),
-    db.userStats.findUnique({ where: { userId: user.id } }),
-  ]);
+  const [wallet, transactions, withdrawals, stats, activeWorkCount] =
+    await Promise.all([
+      getWallet(user.id),
+      getTransactions(user.id, { take: 8 }),
+      getUserWithdrawals(user.id),
+      db.userStats.findUnique({ where: { userId: user.id } }),
+      db.taskSubmission.count({
+        where: {
+          userId: user.id,
+          status: { in: [...ACTIVE_SUBMISSION_STATUSES] },
+        },
+      }),
+    ]);
 
   const activeWithdrawals = withdrawals.filter((w) =>
     ["PENDING_REVIEW", "APPROVED", "PROCESSING", "SENT"].includes(w.status),
@@ -248,6 +256,16 @@ export default async function ProfilePage() {
       </div>
 
       <Card className="motion-list divide-y divide-border-subtle overflow-hidden">
+        <LinkRow
+          href="/my-tasks"
+          icon={<ListChecks />}
+          title="Мои задания"
+          subtitle={
+            activeWorkCount > 0
+              ? `${activeWorkCount} в работе`
+              : "История выполнений"
+          }
+        />
         <LinkRow
           href="/profile/withdraw"
           icon={<Wallet2 />}
