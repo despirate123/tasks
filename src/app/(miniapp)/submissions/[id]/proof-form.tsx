@@ -345,7 +345,7 @@ export function ProofForm({
         </div>
       ) : null}
 
-      <StickyActionBar spacerClassName="h-28">
+      <StickyActionBar>
         <Button
           variant={canSubmit && missing.length === 0 ? "money" : "secondary"}
           size="lg"

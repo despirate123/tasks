@@ -476,7 +476,7 @@ export function WithdrawForm({
       ) : null}
 
       {selected && !adding ? (
-        <StickyActionBar spacerClassName="h-28">
+        <StickyActionBar>
           <Button
             variant={canSubmit ? "money" : "secondary"}
             size="lg"
