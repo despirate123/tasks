@@ -67,7 +67,7 @@ export function TintedOfferCard({
   iconUrl?: string | null;
   fallback: string;
   className?: string;
-  children: ReactNode | ((accent: string) => ReactNode);
+  children: ReactNode;
 }) {
   const accent = useLogoAccent(iconUrl, fallback);
   return (
@@ -75,7 +75,7 @@ export function TintedOfferCard({
       className={className}
       style={{ "--offer-accent": accent } as CSSProperties}
     >
-      {typeof children === "function" ? children(accent) : children}
+      {children}
     </article>
   );
 }
