@@ -7,7 +7,7 @@ const chipOff =
   "glass-thin text-content-secondary ring-1 ring-inset ring-white/[0.07]";
 
 const chipOn =
-  "bg-[var(--acid)]/22 text-brand-300 ring-1 ring-inset ring-[var(--acid)]/70";
+  "bg-[var(--acid)]/[0.08] text-brand-300 ring-1 ring-inset ring-[var(--acid)]/45";
 
 export function chipClass(active: boolean, extra?: string) {
   return cn(chipBase, active ? chipOn : chipOff, extra);

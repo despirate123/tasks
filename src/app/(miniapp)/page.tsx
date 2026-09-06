@@ -142,7 +142,7 @@ export default async function CatalogPage({
               {formatMoney(wallet.available)}
             </span>
           </span>
-          <span className="text-[12px] font-medium text-[var(--acid)]">Вывести →</span>
+          <span className="text-[12px] font-medium text-content-muted">Вывести →</span>
         </Link>
       ) : null}
 

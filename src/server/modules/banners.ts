@@ -52,7 +52,7 @@ export async function upsertBanner(
     href: clean(input.href),
     imageUrl: clean(input.imageUrl),
     background: input.background?.trim() || "#111111",
-    accent: input.accent?.trim() || "#7B92C6",
+    accent: input.accent?.trim() || "#F7F16A",
     sortOrder: Number.isFinite(input.sortOrder) ? Number(input.sortOrder) : 0,
     isActive: input.isActive ?? true,
     startsAt: input.startsAt ?? null,
