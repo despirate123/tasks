@@ -22,6 +22,43 @@ import { HomeHeader } from "@/components/home-header";
 import { ChipScroller } from "@/components/chip-scroller";
 import { ChipDot, chipClass } from "@/lib/chips";
 
+type CatalogOffer = Awaited<ReturnType<typeof listOffers>>[number];
+
+function HybridCatalog({
+  offers,
+  mineByOffer,
+}: {
+  offers: CatalogOffer[];
+  mineByOffer: Map<string, "active" | "done">;
+}) {
+  const hero =
+    offers.find((offer) => offer.isHot) ??
+    offers.find((offer) => offer.isFeatured) ??
+    offers[0];
+  const rest = offers.filter((offer) => offer.id !== hero.id);
+
+  return (
+    <div className="motion-list space-y-2">
+      <OfferCard
+        offer={hero}
+        mine={mineByOffer.get(hero.id) ?? null}
+        layout="wide"
+      />
+      {rest.length > 0 ? (
+        <div className="grid grid-cols-2 items-start gap-2">
+          {rest.map((offer) => (
+            <OfferCard
+              key={offer.id}
+              offer={offer}
+              mine={mineByOffer.get(offer.id) ?? null}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 const SORTS = [
   { key: "", label: "Рекомендуем" },
   { key: "reward", label: "Дороже" },
@@ -262,15 +299,7 @@ export default async function CatalogPage({
           }
         />
       ) : (
-        <div className="motion-list grid grid-cols-2 items-start gap-2">
-          {offers.map((offer) => (
-            <OfferCard
-              key={offer.id}
-              offer={offer}
-              mine={mineByOffer.get(offer.id) ?? null}
-            />
-          ))}
-        </div>
+        <HybridCatalog offers={offers} mineByOffer={mineByOffer} />
       )}
     </div>
   );
