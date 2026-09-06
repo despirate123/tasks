@@ -469,8 +469,8 @@ export function WithdrawForm({
       ) : null}
 
       {success ? (
-        <div className="rounded-card bg-money-500/8 p-3.5 ring-1 ring-inset ring-money-500/20">
-          <p className="text-[12.5px] leading-relaxed text-money-400">{success}</p>
+        <div className="rounded-card bg-brand-500/8 p-3.5 ring-1 ring-inset ring-brand-500/20">
+          <p className="text-[12.5px] leading-relaxed text-brand-300">{success}</p>
         </div>
       ) : null}
 

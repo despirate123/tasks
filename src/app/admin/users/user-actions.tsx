@@ -121,7 +121,7 @@ export function UserActions({
         <p
           className={cn(
             "text-[11.5px] leading-relaxed",
-            feedback.ok ? "text-money-400" : "text-hard",
+            feedback.ok ? "text-brand-300" : "text-hard",
           )}
         >
           {feedback.text}

@@ -217,7 +217,7 @@ export function OfferControls({
           className={cn(
             "rounded-card p-3.5 text-[12.5px] ring-1 ring-inset",
             toast.ok
-              ? "bg-money-500/8 text-money-400 ring-money-500/20"
+              ? "bg-brand-500/8 text-brand-300 ring-brand-500/20"
               : "bg-hard/8 text-hard ring-hard/20",
           )}
         >

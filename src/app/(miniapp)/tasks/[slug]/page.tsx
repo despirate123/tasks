@@ -102,7 +102,7 @@ export default async function TaskPage({
 
         <div className="mt-4 flex items-end justify-between rounded-2xl bg-money-500/8 p-3.5 ring-1 ring-inset ring-money-500/20">
           <div>
-            <p className="text-[11px] tracking-wide text-money-400/80 uppercase">
+            <p className="text-[11px] tracking-wide text-content-muted uppercase">
               Вознаграждение
             </p>
             <p className="tabular mt-0.5 text-2xl leading-none font-bold text-money-400">

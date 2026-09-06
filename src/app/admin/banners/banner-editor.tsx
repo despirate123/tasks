@@ -214,7 +214,7 @@ export function BannerEditor({
         {feedback ? (
           <p
             className={
-              feedback.ok ? "text-[12.5px] text-money-400" : "text-[12.5px] text-hard"
+              feedback.ok ? "text-[12.5px] text-brand-300" : "text-[12.5px] text-hard"
             }
           >
             {feedback.text}

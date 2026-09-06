@@ -227,7 +227,7 @@ export default async function ProfilePage() {
                 <span
                   className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
                     entry.direction === "CREDIT"
-                      ? "bg-money-500/12 text-money-400"
+                      ? "bg-brand-500/12 text-brand-300"
                       : "bg-surface-overlay text-content-secondary"
                   }`}
                 >

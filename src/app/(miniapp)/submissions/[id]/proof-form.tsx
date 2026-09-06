@@ -315,7 +315,7 @@ export function ProofForm({
           </Field>
 
           {saved ? (
-            <p className="inline-flex items-center gap-1.5 text-[12px] text-money-400">
+            <p className="inline-flex items-center gap-1.5 text-[12px] text-brand-300">
               <Check className="size-3.5" />
               Комментарий сохранён
             </p>

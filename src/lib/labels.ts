@@ -69,7 +69,7 @@ export const SUBMISSION_STATUS: Record<
   },
   PAID: {
     label: "Выплачено",
-    className: "bg-money-500/12 text-money-400 ring-money-500/25",
+    className: "bg-brand-500/12 text-brand-300 ring-brand-500/25",
     hint: "Вознаграждение зачислено на баланс.",
   },
   REJECTED: {
@@ -121,7 +121,7 @@ export const WITHDRAWAL_STATUS: Record<
   },
   COMPLETED: {
     label: "Выплачена",
-    className: "bg-money-500/12 text-money-400 ring-money-500/25",
+    className: "bg-brand-500/12 text-brand-300 ring-brand-500/25",
   },
   FAILED: {
     label: "Ошибка",
@@ -221,7 +221,7 @@ export const USER_ROLE: Record<UserRole, string> = {
 export const USER_STATUS: Record<UserStatus, { label: string; className: string }> = {
   ACTIVE: {
     label: "Активен",
-    className: "bg-money-500/12 text-money-400 ring-money-500/25",
+    className: "bg-brand-500/12 text-brand-300 ring-brand-500/25",
   },
   LIMITED: {
     label: "Ограничен",

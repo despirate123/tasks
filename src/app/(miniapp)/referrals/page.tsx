@@ -114,7 +114,7 @@ export default async function ReferralsPage() {
           <Card className="motion-list divide-y divide-border-subtle">
             {overview.earnings.map((earning) => (
               <div key={earning.id} className="flex items-center gap-3 p-3.5">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-money-500/12 text-money-400">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/12 text-brand-300">
                   <Gift className="size-4" />
                 </span>
                 <div className="min-w-0 flex-1">

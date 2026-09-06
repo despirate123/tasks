@@ -223,7 +223,7 @@ export default async function ModerationDetailPage({
                     <span
                       className={`flex size-5 shrink-0 items-center justify-center rounded-md ${
                         req.met
-                          ? "bg-money-500/14 text-money-400"
+                          ? "bg-brand-500/14 text-brand-300"
                           : "bg-hard/14 text-hard"
                       }`}
                     >

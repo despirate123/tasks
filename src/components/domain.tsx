@@ -145,7 +145,7 @@ type OfferCardData = {
 
 const DIFFICULTY_GLOW: Record<Difficulty, string> = {
   EASY: "rgb(251 248 228 / 0.16)",
-  MEDIUM: "rgb(163 196 212 / 0.18)",
+  MEDIUM: "rgb(224 181 106 / 0.18)",
   HARD: "rgb(224 112 112 / 0.18)",
 };
 

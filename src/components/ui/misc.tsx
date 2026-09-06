@@ -72,7 +72,7 @@ const STAT_TONE = {
   brand: {
     value: "text-content-primary",
     ring: "ring-brand-500/22",
-    glow: "rgb(212 232 246 / 0.14)",
+    glow: "rgb(247 241 106 / 0.16)",
   },
   warn: {
     value: "text-content-primary",

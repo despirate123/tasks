@@ -59,11 +59,11 @@ const ICONS: Record<NotificationType, React.ComponentType<{ className?: string }
 };
 
 const TONES: Partial<Record<NotificationType, string>> = {
-  SUBMISSION_APPROVED: "bg-money-500/12 text-money-400",
-  SUBMISSION_PAID: "bg-money-500/12 text-money-400",
-  BALANCE_CREDITED: "bg-money-500/12 text-money-400",
-  WITHDRAWAL_COMPLETED: "bg-money-500/12 text-money-400",
-  REFERRAL_EARNING: "bg-money-500/12 text-money-400",
+  SUBMISSION_APPROVED: "bg-brand-500/12 text-brand-300",
+  SUBMISSION_PAID: "bg-brand-500/12 text-brand-300",
+  BALANCE_CREDITED: "bg-brand-500/12 text-brand-300",
+  WITHDRAWAL_COMPLETED: "bg-brand-500/12 text-brand-300",
+  REFERRAL_EARNING: "bg-brand-500/12 text-brand-300",
   SUBMISSION_REJECTED: "bg-hard/12 text-hard",
   WITHDRAWAL_FAILED: "bg-hard/12 text-hard",
   ACCOUNT_LIMITED: "bg-hard/12 text-hard",
