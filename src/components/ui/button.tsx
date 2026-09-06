@@ -22,7 +22,7 @@ const buttonVariants = cva(
         success:
           "bg-brand-500/14 text-brand-300 ring-1 ring-inset ring-brand-500/30 hover:bg-brand-500/22",
         support:
-          "bg-brand-50 text-[var(--ink)] shadow-[0_8px_24px_-8px_rgba(251,248,228,0.45)] hover:bg-white",
+          "bg-support text-[#0d1a20] shadow-[0_8px_24px_-8px_rgba(122,212,255,0.45)] hover:bg-[#9ae0ff]",
       },
       size: {
         sm: "h-9 rounded-xl px-3 text-[13px] [&_svg]:size-4",
