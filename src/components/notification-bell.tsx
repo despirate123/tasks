@@ -20,14 +20,20 @@ const POLL_INTERVAL_MS = 20_000;
  */
 export function NotificationBell({ initialCount }: { initialCount: number }) {
   const [count, setCount] = useState(initialCount);
+  const [seenServerCount, setSeenServerCount] = useState(initialCount);
 
   // У счётчика два источника: опрос и серверный рендер. После отметки
-  // уведомлений прочитанными роут ревалидируется и в проп приходит свежее
-  // число — без этой синхронизации бейдж продолжал бы висеть до следующего
-  // тика опроса, то есть до 20 секунд после действия пользователя.
-  useEffect(() => {
+  // уведомлений прочитанными роут ревалидируется и в пропе приходит свежее
+  // число — без этой сверки бейдж висел бы до следующего тика опроса,
+  // то есть до 20 секунд после действия пользователя.
+  //
+  // Сравнение с предыдущим значением пропа — документированный способ
+  // подстроить состояние под изменившийся проп; эффект здесь дал бы лишний
+  // рендер и мигание бейджа.
+  if (initialCount !== seenServerCount) {
+    setSeenServerCount(initialCount);
     setCount(initialCount);
-  }, [initialCount]);
+  }
 
   const refresh = useCallback(async () => {
     try {
