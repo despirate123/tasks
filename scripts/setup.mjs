@@ -53,12 +53,27 @@ function fail(title, lines = []) {
   process.exit(1);
 }
 
+/**
+ * Windows не запускает `npx`/`prisma` через execFileSync: это .cmd-файлы.
+ * Берём локальный бинарник из node_modules/.bin, иначе имя с суффиксом .cmd.
+ */
+function resolveCommand(command) {
+  if (process.platform !== "win32") return command;
+  if (/[\\/]/.test(command) || path.extname(command)) return command;
+
+  const localCmd = path.join(root, "node_modules", ".bin", `${command}.cmd`);
+  if (existsSync(localCmd)) return localCmd;
+
+  return `${command}.cmd`;
+}
+
 function run(command, args, options = {}) {
-  return execFileSync(command, args, {
+  return execFileSync(resolveCommand(command), args, {
     cwd: root,
     stdio: options.quiet ? "pipe" : "inherit",
     encoding: "utf8",
     env: process.env,
+    shell: process.platform === "win32",
   });
 }
 
@@ -250,7 +265,7 @@ heading("Схема базы и демо-данные");
 
 info("Генерирую клиент Prisma…");
 try {
-  run("npx", ["prisma", "generate"], { quiet: true });
+  run("prisma", ["generate"], { quiet: true });
   ok("Клиент Prisma сгенерирован");
 } catch (error) {
   fail("Не удалось сгенерировать клиент Prisma", [
@@ -328,7 +343,7 @@ function provisionDatabase() {
 }
 
 function pushSchema() {
-  run("npx", ["prisma", "db", "push", "--skip-generate", "--accept-data-loss"], {
+  run("prisma", ["db", "push", "--skip-generate", "--accept-data-loss"], {
     quiet: true,
   });
 }
@@ -381,7 +396,7 @@ try {
 
 info("Заливаю демо-данные…");
 try {
-  run("npx", ["tsx", "prisma/seed.ts"], { quiet: true });
+  run("tsx", ["prisma/seed.ts"], { quiet: true });
   ok("Демо-данные готовы");
 } catch (error) {
   fail("Не удалось залить демо-данные", [
