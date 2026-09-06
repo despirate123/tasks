@@ -17,7 +17,7 @@ export default async function MiniAppLayout({
     <>
       <TelegramInit serverUserId={user?.id ?? null} />
       <div
-        className="relative z-10 mx-auto flex min-h-[var(--tg-viewport-stable-height,100dvh)] max-w-[var(--app-max-width)] flex-col"
+        className="relative z-10 mx-auto flex min-h-[var(--tg-viewport-stable-height,100dvh)] max-w-[var(--app-max-width)] flex-col overflow-x-hidden"
         style={{ paddingTop: "var(--safe-top)" }}
       >
         {demoBypass ? (

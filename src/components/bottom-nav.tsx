@@ -27,16 +27,21 @@ export function BottomNav() {
         paddingRight: "max(0.75rem, var(--safe-right))",
       }}
     >
-      <div className="pointer-events-auto relative mx-auto grid max-w-[var(--app-max-width)] grid-cols-4 rounded-[28px] px-1.5 py-1.5 glass ring-1 ring-inset ring-white/15">
-        {activeIndex >= 0 ? (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute top-1.5 left-1.5 flex w-[calc((100%-0.75rem)/4)] justify-center transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-            style={{ transform: `translateX(${activeIndex * 100}%)` }}
+      <div className="pointer-events-auto relative mx-auto flex max-w-[var(--app-max-width)] items-start rounded-[28px] bg-black/72 px-2 py-2 glass ring-1 ring-inset ring-white/15">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-2 right-2 left-2 grid h-9 grid-cols-4"
+        >
+          <div
+            className="flex justify-center transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            style={{
+              transform: `translate3d(${Math.max(activeIndex, 0) * 100}%, 0, 0)`,
+              opacity: activeIndex >= 0 ? 1 : 0,
+            }}
           >
             <span className="size-9 rounded-full bg-[var(--acid)] shadow-[0_0_22px_rgba(200,255,0,0.45)]" />
-          </span>
-        ) : null}
+          </div>
+        </div>
 
         {APP_TABS.map((item, index) => {
           const active = index === activeIndex;
@@ -46,7 +51,7 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               onClick={() => haptic(active ? "medium" : "light")}
-              className="relative z-10 flex min-w-0 flex-col items-center gap-0.5 rounded-[22px] px-1 py-1.5 transition-transform duration-200 active:scale-95"
+              className="relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 transition-transform duration-200 active:scale-95"
             >
               <span
                 className={cn(
@@ -62,7 +67,7 @@ export function BottomNav() {
               </span>
               <span
                 className={cn(
-                  "text-[10px] font-semibold tracking-wide transition-colors duration-300",
+                  "pb-0.5 text-[10px] font-semibold tracking-wide transition-colors duration-300",
                   active ? "text-[var(--acid)]" : "text-content-muted",
                 )}
               >
