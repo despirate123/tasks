@@ -222,6 +222,13 @@ bot.catch((err) => {
 
 async function start() {
   const me = await bot.api.getMe();
+  await bot.api.setChatMenuButton({
+    menu_button: {
+      type: "web_app",
+      text: "Задания",
+      web_app: { url: MINIAPP_URL },
+    },
+  });
   console.log(`Бот @${me.username} запущен. Mini App: ${MINIAPP_URL}`);
   await bot.start();
 }

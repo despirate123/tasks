@@ -7,6 +7,10 @@ import type { User, UserRole } from "@/generated/prisma";
 const SESSION_COOKIE = "pb_session";
 const INIT_DATA_MAX_AGE_S = 86_400;
 
+console.info(
+  `[profibux] DEV_AUTH_BYPASS=${process.env.DEV_AUTH_BYPASS === "true" ? "ON (демо-Алексей)" : "OFF"}`,
+);
+
 export type TelegramUser = {
   id: number;
   first_name?: string;
