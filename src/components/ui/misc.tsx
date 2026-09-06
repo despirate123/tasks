@@ -62,7 +62,7 @@ const STAT_TONE = {
   default: {
     value: "text-content-primary",
     ring: "ring-white/10",
-    glow: "rgb(255 255 255 / 0.08)",
+    glow: "transparent",
   },
   money: {
     value: "text-[var(--acid)]",
