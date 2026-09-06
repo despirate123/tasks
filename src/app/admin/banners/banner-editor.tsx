@@ -28,7 +28,7 @@ function emptyValues(): BannerEditorValues {
     href: "",
     imageUrl: "",
     background: "#111111",
-    accent: "#F7F16A",
+    accent: "#7B92C6",
     sortOrder: 0,
     isActive: true,
     startsAt: "",
@@ -101,7 +101,7 @@ export function BannerEditor({
           href: values.href,
           imageUrl: values.imageUrl,
           background: values.background || "#111111",
-          accent: values.accent || "#F7F16A",
+          accent: values.accent || "#7B92C6",
         }}
       />
 
