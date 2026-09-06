@@ -16,7 +16,7 @@ export default async function AdminLayout({
 
   return (
     <>
-      <TelegramInit />
+      <TelegramInit serverUserId={user.id} />
       <div className="relative z-10 min-h-dvh">
         <header
           className="sticky top-0 z-40 border-b border-border-subtle bg-surface-base/88 backdrop-blur-xl"

@@ -65,9 +65,12 @@ export function TelegramInit({ serverUserId = null }: { serverUserId?: string | 
         .then(async (response) => {
           if (!response.ok) return;
           const data = (await response.json()) as { user?: { id?: string } };
-          if (data.user?.id && data.user.id !== serverUserId) {
-            window.location.reload();
-          }
+          if (!data.user?.id || data.user.id === serverUserId) return;
+          // Если cookie не записалась, reload зациклится и WebView сыпет ошибками.
+          const key = "pb-auth-reloaded";
+          if (sessionStorage.getItem(key) === data.user.id) return;
+          sessionStorage.setItem(key, data.user.id);
+          window.location.reload();
         })
         .catch(() => {
           /* сеть туннеля могла моргнуть */

@@ -13,7 +13,7 @@ const buttonVariants = cva(
         money:
           "bg-[var(--acid)] text-black shadow-[0_8px_24px_-8px_rgba(200,255,0,0.75)] hover:bg-brand-300",
         secondary:
-          "glass-thin text-content-primary ring-1 ring-inset ring-white/12 hover:bg-white/8",
+          "glass-thin text-content-primary ring-1 ring-inset ring-white/12 hover:bg-white/10",
         outline:
           "bg-transparent text-content-primary ring-1 ring-inset ring-white/14 hover:bg-white/6",
         ghost: "bg-transparent text-content-secondary hover:bg-surface-raised hover:text-content-primary",
