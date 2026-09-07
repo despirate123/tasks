@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
+import { refresh, revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 import { requireRole, requireUser } from "@/server/auth";
@@ -55,9 +55,11 @@ function bumpCatalog() {
 }
 
 function bumpBanners() {
-  updateTag(CACHE_TAGS.banners);
   revalidatePath("/");
   revalidatePath("/admin/banners");
+  // Client Router Cache (staleTimes.dynamic) иначе держит старую главную
+  // даже после записи в БД. refresh() сбрасывает её в этой сессии.
+  refresh();
 }
 
 function fail(error: unknown): ActionResult {

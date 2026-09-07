@@ -1,7 +1,5 @@
-import { unstable_cache } from "next/cache";
 import { db } from "@/server/db";
-import { sanitizeHttpUrl } from "@/lib/urls";
-import { CACHE_TAGS } from "@/server/cache-tags";
+import { requireSanitizedUrl } from "@/lib/urls";
 
 export type PromoBannerInput = {
   title: string;
@@ -21,7 +19,8 @@ function clean(value?: string | null) {
   return trimmed.length ? trimmed : null;
 }
 
-async function loadActiveBanners() {
+/** Без Data Cache: 3 строки, а 30-секундный unstable_cache оставлял старый слайд после правки. */
+export async function listActiveBanners() {
   const now = new Date();
   return db.promoBanner.findMany({
     where: {
@@ -44,13 +43,6 @@ async function loadActiveBanners() {
   });
 }
 
-export async function listActiveBanners() {
-  return unstable_cache(loadActiveBanners, ["active-banners"], {
-    revalidate: 30,
-    tags: [CACHE_TAGS.banners],
-  })();
-}
-
 export async function listAdminBanners() {
   return db.promoBanner.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
@@ -68,8 +60,8 @@ export async function upsertBanner(
   const data = {
     title,
     subtitle: clean(input.subtitle),
-    href: sanitizeHttpUrl(input.href),
-    imageUrl: sanitizeHttpUrl(input.imageUrl),
+    href: requireSanitizedUrl(input.href, "href"),
+    imageUrl: requireSanitizedUrl(input.imageUrl, "image"),
     background: input.background?.trim() || "#111111",
     accent: input.accent?.trim() || "#F7F16A",
     sortOrder: Number.isFinite(input.sortOrder) ? Number(input.sortOrder) : 0,

@@ -9,6 +9,7 @@ import {
   upsertBannerAction,
 } from "@/server/actions";
 import { PromoBannerCard, type PromoBannerSlide } from "@/components/promo-banner";
+import { sanitizeHttpUrl } from "@/lib/urls";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/input";
@@ -75,6 +76,15 @@ export function BannerEditor({
     });
   };
 
+  const hrefError =
+    (values.href ?? "").trim() && !sanitizeHttpUrl(values.href)
+      ? "Нужен путь вроде /referrals или адрес https://"
+      : undefined;
+  const imageError =
+    (values.imageUrl ?? "").trim() && !sanitizeHttpUrl(values.imageUrl)
+      ? "Нужна прямая ссылка http:// или https:// на изображение"
+      : undefined;
+
   const save = () => {
     const data = new FormData();
     if (values.id) data.set("id", values.id);
@@ -120,14 +130,22 @@ export function BannerEditor({
             placeholder="Коротко, что изменилось или куда нажать"
           />
         </Field>
-        <Field label="Ссылка" hint="Внутренний путь (/referrals) или https://">
+        <Field
+          label="Ссылка"
+          hint="Внутренний путь (/referrals) или https://"
+          error={hrefError}
+        >
           <Input
             value={values.href ?? ""}
             onChange={set("href")}
             placeholder="/referrals"
           />
         </Field>
-        <Field label="Картинка (URL)">
+        <Field
+          label="Картинка (URL)"
+          hint="Только прямая http(s)-ссылка. Файл из Telegram или проводника Windows не подойдёт."
+          error={imageError}
+        >
           <Input
             value={values.imageUrl ?? ""}
             onChange={set("imageUrl")}
@@ -183,7 +201,11 @@ export function BannerEditor({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" onClick={save} disabled={pending || !values.title.trim()}>
+        <Button
+          type="button"
+          onClick={save}
+          disabled={pending || !values.title.trim() || Boolean(hrefError || imageError)}
+        >
           {pending ? <Loader2 className="animate-spin" /> : null}
           {mode === "create" ? "Добавить баннер" : "Сохранить"}
         </Button>

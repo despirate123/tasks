@@ -77,7 +77,67 @@ export function PromoBannerCard({
   );
 }
 
-export function PromoBannerRail({ banners }: { banners: PromoBannerSlide[] }) {
+function isBannerSlide(value: unknown): value is PromoBannerSlide {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Record<string, unknown>;
+  return (
+    typeof item.id === "string" &&
+    typeof item.title === "string" &&
+    typeof item.background === "string" &&
+    typeof item.accent === "string"
+  );
+}
+
+function bannerSignature(banners: PromoBannerSlide[]) {
+  return banners
+    .map(
+      (banner) =>
+        `${banner.id}:${banner.title}:${banner.subtitle ?? ""}:${banner.href ?? ""}:${banner.imageUrl ?? ""}:${banner.background}:${banner.accent}`,
+    )
+    .join("|");
+}
+
+function useLiveBanners(initial: PromoBannerSlide[]) {
+  const [banners, setBanners] = useState(initial);
+  const initialKey = bannerSignature(initial);
+
+  useEffect(() => {
+    setBanners(initial);
+    // Серверный payload сравниваем по содержимому, не по ссылке на массив.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const apply = (data: unknown) => {
+      if (cancelled || !Array.isArray(data) || !data.every(isBannerSlide)) return;
+      setBanners(data);
+    };
+
+    const load = () => {
+      fetch("/api/banners", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then(apply)
+        .catch(() => undefined);
+    };
+
+    load();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+
+  return banners;
+}
+
+export function PromoBannerRail({ banners: initial }: { banners: PromoBannerSlide[] }) {
+  const banners = useLiveBanners(initial);
   const viewportRef = useRef<HTMLDivElement>(null);
   const drag = useRef({
     active: false,
@@ -214,7 +274,7 @@ export function PromoBannerRail({ banners }: { banners: PromoBannerSlide[] }) {
 
             return (
               <div
-                key={banner.id}
+                key={`${banner.id}:${banner.title}:${banner.imageUrl ?? ""}:${banner.subtitle ?? ""}`}
                 className="w-full min-w-full shrink-0 basis-full"
                 aria-hidden={i !== index}
               >

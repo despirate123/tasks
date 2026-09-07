@@ -43,8 +43,10 @@ export default async function AdminBannersPage() {
       <div>
         <h1 className="text-[24px] leading-tight font-bold">Баннеры</h1>
         <p className="mt-1 text-[13px] leading-relaxed text-content-secondary">
-          Карусель под аватаром в Mini App. Слайды меняются каждые 5 секунд.
-          Здесь можно добавить объявление, акцию или ссылку на раздел.
+          Карусель под аватаром в Mini App. Слайды меняются каждые 5 секунд —
+          если правите второй или третий, на главной сначала виден первый.
+          После сохранения главная сама подтягивает свежие слайды. Картинка —
+          только прямая https-ссылка на изображение, не файл из Telegram.
         </p>
       </div>
 
