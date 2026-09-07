@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, ListChecks } from "lucide-react";
+import { ChevronRight, ListChecks } from "lucide-react";
 import type { SubmissionStatus } from "@/generated/prisma";
 import { getCurrentUser } from "@/server/auth";
 import { getUserSubmissions } from "@/server/modules/submissions";
@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/misc";
 import { DifficultyBadge, OfferAvatar, SubmissionStatusBadge } from "@/components/domain";
 import { ChipScroller } from "@/components/chip-scroller";
 import { ChipDot, chipClass } from "@/lib/chips";
+import { CatalogBackLink, CatalogHomeLink } from "@/components/catalog-home-link";
 
 const TABS: { key: string; label: string; statuses: SubmissionStatus[] }[] = [
   {
@@ -55,10 +56,7 @@ export default async function MyTasksPage({
 
   return (
     <div className="space-y-4">
-      <Link href="/" className="back-nav">
-        <ArrowLeft className="size-4" />
-        Задания
-      </Link>
+      <CatalogBackLink>Задания</CatalogBackLink>
 
       <div>
         <h1 className="text-[22px] leading-tight font-bold">Мои задания</h1>
@@ -103,7 +101,7 @@ export default async function MyTasksPage({
           }
           action={
             <Button variant="secondary" size="sm" asChild>
-              <Link href="/">Смотреть задания</Link>
+              <CatalogHomeLink>Смотреть задания</CatalogHomeLink>
             </Button>
           }
         />

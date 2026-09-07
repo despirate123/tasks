@@ -10,6 +10,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { rememberCatalogHref } from "@/lib/catalog-memory";
 import { cn } from "@/lib/utils";
 
 type CatalogNav = {
@@ -28,6 +29,7 @@ export function CatalogNavProvider({ children }: { children: ReactNode }) {
 
   const navigate = useCallback(
     (href: string) => {
+      rememberCatalogHref(href);
       startTransition(() => {
         router.replace(href, { scroll: false });
       });

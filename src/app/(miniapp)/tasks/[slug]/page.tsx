@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   AlertTriangle,
-  ArrowLeft,
   Camera,
   CheckCircle2,
   Clock,
@@ -11,6 +10,7 @@ import {
   Users,
   Video,
 } from "lucide-react";
+import { CatalogBackLink } from "@/components/catalog-home-link";
 import { getCurrentUser } from "@/server/auth";
 import { getOfferBySlug } from "@/server/modules/offers";
 import { checkEligibility } from "@/server/modules/submissions";
@@ -68,13 +68,7 @@ export default async function TaskPage({
 
   return (
     <div className="space-y-4">
-      <Link
-        href="/"
-        className="back-nav"
-      >
-        <ArrowLeft className="size-4" />
-        Все задания
-      </Link>
+      <CatalogBackLink>Все задания</CatalogBackLink>
 
       <Card className="p-4">
         <div className="flex gap-3.5">

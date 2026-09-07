@@ -19,6 +19,7 @@ import { CancelSubmissionButton } from "@/components/cancel-submission-button";
 import { ProofForm } from "./proof-form";
 import { TakeOfferButton } from "@/app/(miniapp)/tasks/[slug]/take-button";
 import { resolveOfferAccent } from "@/server/offer-accent";
+import { CatalogHomeLink } from "@/components/catalog-home-link";
 
 export default async function SubmissionPage({
   params,
@@ -308,7 +309,7 @@ export default async function SubmissionPage({
             />
           ) : (
             <Button variant="secondary" size="lg" block asChild>
-              <Link href="/">Другие задания</Link>
+              <CatalogHomeLink>Другие задания</CatalogHomeLink>
             </Button>
           )}
           {similar.length > 0 ? (

@@ -7,6 +7,7 @@ import { Compass, Handshake, UserRound } from "lucide-react";
 import { APP_TABS, appTabIndex } from "@/lib/app-tabs";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/components/telegram-init";
+import { useRememberedCatalogHref } from "@/components/catalog-home-link";
 
 const ICONS = {
   "/": Compass,
@@ -18,12 +19,13 @@ export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const activeIndex = appTabIndex(pathname);
+  const catalogHref = useRememberedCatalogHref();
 
   useEffect(() => {
     for (const tab of APP_TABS) {
-      router.prefetch(tab.href);
+      router.prefetch(tab.href === "/" ? catalogHref : tab.href);
     }
-  }, [router]);
+  }, [router, catalogHref]);
 
   return (
     <nav
@@ -53,10 +55,11 @@ export function BottomNav() {
           {APP_TABS.map((item, index) => {
             const active = index === activeIndex;
             const Icon = ICONS[item.href];
+            const href = item.href === "/" ? catalogHref : item.href;
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={href}
                 prefetch
                 onClick={() => haptic(active ? "medium" : "light")}
                 className="relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 transition-transform duration-300 ease-soft active:scale-95"

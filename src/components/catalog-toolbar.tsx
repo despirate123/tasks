@@ -17,6 +17,7 @@ import {
   isRewardChipActive,
   toggleDifficultyList,
 } from "@/lib/catalog-filters";
+import { rememberCatalogHref } from "@/lib/catalog-memory";
 
 const SORTS = [
   { key: "", label: "Рекомендуем" },
@@ -58,9 +59,15 @@ export function CatalogToolbar({
   const [query, setQuery] = useState(state.q ?? "");
   const howto = useSearchParams().get("howto") === "1";
 
+  const catalogPath = catalogHref(state);
+
   useEffect(() => {
     setQuery(state.q ?? "");
   }, [state.q]);
+
+  useEffect(() => {
+    rememberCatalogHref(catalogPath);
+  }, [catalogPath]);
 
   return (
     <div className="space-y-2">
