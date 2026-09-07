@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,8 @@ export type PromoBannerSlide = {
 };
 
 const INTERVAL_MS = 5000;
+const SWIPE_RATIO = 0.2;
+const AXIS_LOCK_PX = 8;
 
 export function PromoBannerCard({
   banner,
@@ -74,77 +76,160 @@ export function PromoBannerCard({
 }
 
 export function PromoBannerRail({ banners }: { banners: PromoBannerSlide[] }) {
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const drag = useRef({
+    active: false,
+    axis: null as "h" | "v" | null,
+    startX: 0,
+    startY: 0,
+    dx: 0,
+    width: 1,
+    swiped: false,
+  });
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
+  const count = banners.length;
 
   useEffect(() => {
-    if (banners.length < 2 || paused) return;
+    if (index < count) return;
+    setIndex(0);
+  }, [count, index]);
+
+  useEffect(() => {
+    if (count < 2 || dragging) return;
     const timer = window.setInterval(() => {
-      setIndex((current) => (current + 1) % banners.length);
+      setIndex((current) => (current + 1) % count);
     }, INTERVAL_MS);
     return () => window.clearInterval(timer);
-  }, [banners.length, paused]);
+  }, [count, dragging, index]);
 
   useEffect(() => {
-    if (index < banners.length) return;
-    setIndex(0);
-  }, [banners.length, index]);
+    const root = viewportRef.current;
+    if (!root || count < 2) return;
 
-  if (banners.length === 0) return null;
+    const onStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      drag.current = {
+        active: true,
+        axis: null,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        dx: 0,
+        width: root.offsetWidth || 1,
+        swiped: false,
+      };
+      setDragging(true);
+    };
+
+    const onMove = (event: TouchEvent) => {
+      const session = drag.current;
+      const touch = event.touches[0];
+      if (!session.active || !touch) return;
+      const dx = touch.clientX - session.startX;
+      const dy = touch.clientY - session.startY;
+      if (session.axis == null && (Math.abs(dx) > AXIS_LOCK_PX || Math.abs(dy) > AXIS_LOCK_PX)) {
+        session.axis = Math.abs(dx) > Math.abs(dy) ? "h" : "v";
+      }
+      if (session.axis !== "h") return;
+      event.preventDefault();
+      session.dx = dx;
+      session.swiped = Math.abs(dx) > 10;
+      setDragX(dx);
+    };
+
+    const onEnd = () => {
+      const session = drag.current;
+      if (!session.active) return;
+      const threshold = session.width * SWIPE_RATIO;
+      if (session.axis === "h" && Math.abs(session.dx) > threshold) {
+        const step = session.dx < 0 ? 1 : -1;
+        setIndex((current) => (current + step + count) % count);
+        haptic("light");
+      }
+      session.active = false;
+      session.axis = null;
+      session.dx = 0;
+      setDragX(0);
+      setDragging(false);
+    };
+
+    root.addEventListener("touchstart", onStart, { passive: true });
+    root.addEventListener("touchmove", onMove, { passive: false });
+    root.addEventListener("touchend", onEnd);
+    root.addEventListener("touchcancel", onEnd);
+    return () => {
+      root.removeEventListener("touchstart", onStart);
+      root.removeEventListener("touchmove", onMove);
+      root.removeEventListener("touchend", onEnd);
+      root.removeEventListener("touchcancel", onEnd);
+    };
+  }, [count]);
+
+  if (count === 0) return null;
+
+  const goTo = (next: number) => {
+    setIndex(((next % count) + count) % count);
+    haptic("light");
+  };
 
   return (
-    <div
-      className="pt-1 pb-3"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={() => setPaused(true)}
-      onTouchEnd={() => setPaused(false)}
-    >
-      <div className="relative">
-        {banners.map((banner, i) => {
-          const active = i === index;
-          const inner = <PromoBannerCard banner={banner} />;
-          const body = banner.href ? (
-            <Link
-              href={banner.href}
-              onClick={() => haptic("light")}
-              className="block"
-              tabIndex={active ? 0 : -1}
-            >
-              {inner}
-            </Link>
-          ) : (
-            inner
-          );
+    <div className="pt-1 pb-3">
+      <div
+        ref={viewportRef}
+        className="relative overflow-hidden rounded-[22px] [touch-action:pan-y]"
+        onClickCapture={(event) => {
+          if (!drag.current.swiped) return;
+          event.preventDefault();
+          event.stopPropagation();
+          drag.current.swiped = false;
+        }}
+      >
+        <div
+          className="flex w-full min-w-0"
+          style={{
+            transform: `translate3d(calc(${-index * 100}% + ${dragX}px), 0, 0)`,
+            transition: dragging ? "none" : "transform 0.42s var(--ease-soft)",
+          }}
+        >
+          {banners.map((banner, i) => {
+            const inner = <PromoBannerCard banner={banner} />;
+            const body = banner.href ? (
+              <Link
+                href={banner.href}
+                onClick={() => haptic("light")}
+                className="block"
+                tabIndex={i === index ? 0 : -1}
+              >
+                {inner}
+              </Link>
+            ) : (
+              inner
+            );
 
-          return (
-            <div
-              key={banner.id}
-              className={cn(
-                "transition-[opacity,transform] duration-700 ease-soft",
-                active
-                  ? "relative z-10 translate-y-0 opacity-100"
-                  : "pointer-events-none absolute inset-x-0 top-0 z-0 translate-y-1.5 opacity-0",
-              )}
-              aria-hidden={!active}
-            >
-              {body}
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={banner.id}
+                className="w-full min-w-full shrink-0 basis-full"
+                aria-hidden={i !== index}
+              >
+                {body}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {banners.length > 1 ? (
+      {count > 1 ? (
         <div className="mt-2 flex justify-center gap-1.5">
           {banners.map((banner, i) => (
             <button
               key={banner.id}
               type="button"
               aria-label={`Баннер ${i + 1}`}
-              onClick={() => {
-                haptic("light");
-                setIndex(i);
-              }}
+              onClick={() => goTo(i)}
               className={cn(
                 "h-1 rounded-full transition-all duration-300 ease-soft",
                 i === index ? "w-4 bg-white" : "w-1.5 bg-white/35",
