@@ -4,6 +4,7 @@ import { ArrowLeftRight, ShieldCheck } from "lucide-react";
 import { displayName, getCurrentUser, hasRole } from "@/server/auth";
 import { USER_ROLE } from "@/lib/labels";
 import { TelegramInit } from "@/components/telegram-init";
+import { AdminRootClass } from "./admin-root-class";
 import { AdminNav } from "./admin-nav";
 
 export default async function AdminLayout({
@@ -22,9 +23,10 @@ export default async function AdminLayout({
   return (
     <>
       <TelegramInit serverUserId={user.id} />
-      <div className="relative z-10 min-h-dvh overflow-x-clip">
+      <AdminRootClass />
+      <div className="admin-shell relative z-10 min-h-[100svh]">
         <header
-          className="sticky top-0 z-40 border-b border-border-subtle bg-surface-base/90 backdrop-blur-xl"
+          className="sticky top-0 z-40 border-b border-border-subtle bg-surface-base"
           style={{ paddingTop: "var(--safe-top)" }}
         >
           <div
@@ -52,7 +54,7 @@ export default async function AdminLayout({
 
             <Link
               href="/"
-              className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-surface-raised px-3 py-2 text-[12.5px] font-medium text-content-secondary ring-1 ring-inset ring-border-subtle transition-[background,color,transform] duration-300 ease-soft hover:bg-white/5 hover:text-content-primary active:scale-[0.98]"
+              className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-surface-raised px-3 py-2 text-[12.5px] font-medium text-content-secondary ring-1 ring-inset ring-border-subtle transition-[background,color] duration-300 ease-soft hover:bg-white/5 hover:text-content-primary"
             >
               <ArrowLeftRight className="size-3.5" />
               В прилу

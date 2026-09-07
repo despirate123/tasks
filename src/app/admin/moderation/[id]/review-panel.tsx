@@ -238,7 +238,7 @@ export function ReviewPanel({
       </Card>
 
       <div
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 gap-2 border-t border-border-subtle bg-surface-base/92 px-3 pt-2 backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 gap-2 border-t border-border-subtle bg-surface-base px-3 pt-2 lg:hidden"
         style={{
           paddingBottom: "max(0.65rem, var(--safe-bottom))",
           paddingLeft: "max(0.75rem, var(--safe-left))",

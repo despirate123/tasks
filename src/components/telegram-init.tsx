@@ -13,7 +13,14 @@ type TelegramWebApp = {
   viewportStableHeight?: number;
   safeAreaInset?: { top?: number; bottom?: number; left?: number; right?: number };
   contentSafeAreaInset?: { top?: number; bottom?: number; left?: number; right?: number };
-  onEvent?: (event: string, handler: () => void) => void;
+  onEvent?: (
+    event: string,
+    handler: (payload?: { isStateStable?: boolean }) => void,
+  ) => void;
+  offEvent?: (
+    event: string,
+    handler: (payload?: { isStateStable?: boolean }) => void,
+  ) => void;
   setHeaderColor?: (color: string) => void;
   setBackgroundColor?: (color: string) => void;
   HapticFeedback?: {
@@ -68,12 +75,33 @@ export function TelegramInit({ serverUserId = null }: { serverUserId?: string | 
       tgTry(() => webApp.setBackgroundColor?.("#121212"));
     }
 
-    const applyViewport = () => applyTelegramSafeArea(webApp);
-    applyViewport();
-    webApp.onEvent?.("viewportChanged", applyViewport);
-    webApp.onEvent?.("fullscreenChanged", applyViewport);
-    webApp.onEvent?.("safeAreaChanged", applyViewport);
-    webApp.onEvent?.("contentSafeAreaChanged", applyViewport);
+    const applyNow = (
+      payload?: { isStateStable?: boolean },
+      force = false,
+    ) => {
+      applyTelegramSafeArea(webApp, {
+        force,
+        isStateStable: payload?.isStateStable !== false,
+      });
+    };
+
+    // viewportChanged во время скролла приходит с isStateStable=false —
+    // игнор. Остальные события дебаунсим, чтобы не дёргать CSS mid-gesture.
+    let scheduled: number | null = null;
+    const scheduleStable = () => {
+      if (scheduled != null) window.clearTimeout(scheduled);
+      scheduled = window.setTimeout(() => applyNow({ isStateStable: true }), 80);
+    };
+    const onViewportChanged = (payload?: { isStateStable?: boolean }) => {
+      if (payload?.isStateStable === false) return;
+      scheduleStable();
+    };
+
+    applyNow(undefined, true);
+    webApp.onEvent?.("viewportChanged", onViewportChanged);
+    webApp.onEvent?.("fullscreenChanged", scheduleStable);
+    webApp.onEvent?.("safeAreaChanged", scheduleStable);
+    webApp.onEvent?.("contentSafeAreaChanged", scheduleStable);
 
     // Обмен initData на серверную сессию. Если сервер ещё рисует демо-Алексея,
     // после успешного входа перезагружаем страницу уже под реальным аккаунтом.
@@ -98,6 +126,14 @@ export function TelegramInit({ serverUserId = null }: { serverUserId?: string | 
           /* сеть туннеля могла моргнуть */
         });
     }
+
+    return () => {
+      if (scheduled != null) window.clearTimeout(scheduled);
+      webApp.offEvent?.("viewportChanged", onViewportChanged);
+      webApp.offEvent?.("fullscreenChanged", scheduleStable);
+      webApp.offEvent?.("safeAreaChanged", scheduleStable);
+      webApp.offEvent?.("contentSafeAreaChanged", scheduleStable);
+    };
   }, [serverUserId]);
 
   return null;

@@ -23,10 +23,13 @@ export function ChipScroller({
 
     const sync = () => {
       const max = node.scrollWidth - node.clientWidth;
-      setEdge({
+      const next = {
         left: node.scrollLeft > 6,
         right: max > 6 && node.scrollLeft < max - 6,
-      });
+      };
+      setEdge((prev) =>
+        prev.left === next.left && prev.right === next.right ? prev : next,
+      );
     };
 
     sync();

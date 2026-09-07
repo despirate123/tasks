@@ -10,8 +10,7 @@ function Card({
     <div
       className={cn(
         "relative rounded-card glass-thin ring-1 ring-inset ring-white/[0.07]",
-        interactive &&
-          "transition-[transform,box-shadow] duration-300 ease-soft hover:-translate-y-px hover:ring-white/16 active:scale-[0.985]",
+        interactive && "card-interactive",
         className,
       )}
       {...props}
