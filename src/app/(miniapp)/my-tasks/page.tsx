@@ -3,7 +3,8 @@ import { ArrowLeft, ChevronRight, ListChecks } from "lucide-react";
 import type { SubmissionStatus } from "@/generated/prisma";
 import { getCurrentUser } from "@/server/auth";
 import { getUserSubmissions } from "@/server/modules/submissions";
-import { formatCountdown, formatMoney, formatRelative } from "@/lib/format";
+import { formatCountdown, formatRelative } from "@/lib/format";
+import { Money } from "@/components/money";
 import { submissionNextAction } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -74,6 +75,7 @@ export default async function MyTasksPage({
             <Link
               key={item.key}
               href={`/my-tasks?tab=${item.key}`}
+              data-chip-active={active || undefined}
               className={chipClass(active)}
             >
               {active ? <ChipDot /> : null}
@@ -121,11 +123,11 @@ export default async function MyTasksPage({
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="min-w-0 truncate text-[14.5px] leading-snug font-semibold">
+                      <p className="min-w-0 [overflow-wrap:anywhere] line-clamp-2 text-[14.5px] leading-snug font-semibold">
                         {submission.offer.title}
                       </p>
-                      <p className="tabular shrink-0 text-[14.5px] font-bold text-money-400">
-                        {formatMoney(submission.rewardAmount)}
+                      <p className="shrink-0 text-[14.5px] font-bold text-content-primary">
+                        <Money value={submission.rewardAmount} />
                       </p>
                     </div>
 

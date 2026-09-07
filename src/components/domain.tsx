@@ -210,7 +210,7 @@ export function OfferCard({
           iconUrl={offer.iconUrl}
           fallback={fallback}
           className={cn(
-            "offer-card flex min-w-0 items-center gap-3 rounded-card p-3 ring-1 ring-inset transition-[box-shadow] duration-300 ease-soft active:scale-[0.99] sm:gap-3.5 sm:p-3.5",
+            "offer-card flex min-w-0 items-center gap-2.5 rounded-card p-3 ring-1 ring-inset transition-[box-shadow] duration-300 ease-soft active:scale-[0.99] sm:gap-3.5 sm:p-3.5",
             offer.isHot
               ? "offer-card-featured ring-white/12"
               : "offer-card-featured ring-[var(--acid)]/22",
@@ -224,7 +224,7 @@ export function OfferCard({
                 <HighlightBadge kind={highlight} />
               </p>
             ) : null}
-            <p className="line-clamp-2 break-words text-[14px] leading-snug font-semibold tracking-[-0.015em] sm:text-[15px]">
+            <p className="line-clamp-2 [overflow-wrap:anywhere] text-[14px] leading-snug font-semibold tracking-[-0.015em] sm:text-[15px]">
               {offer.title}
             </p>
             <p className="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] text-content-muted">
@@ -232,13 +232,15 @@ export function OfferCard({
               <span className="truncate">{offerMeta(offer, mine)}</span>
             </p>
           </div>
-          <div className="w-[4.75rem] shrink-0 rounded-2xl bg-black/25 px-2 py-2 text-right ring-1 ring-inset ring-white/[0.06] sm:w-auto sm:px-2.5">
+          <div className="min-w-[4.25rem] shrink-0 rounded-2xl bg-black/25 px-2 py-2 text-right ring-1 ring-inset ring-white/[0.06] sm:px-2.5">
             <p className="text-[15px] font-bold text-content-primary sm:text-[16px]">
               <Money value={offer.rewardAmount as number} />
             </p>
             <p className="mt-1.5 flex items-center justify-end gap-1 text-[10.5px] text-content-muted">
               <Clock className="size-3 shrink-0" />
-              <span className="truncate">{formatEta(offer.approvalEtaMinutes)}</span>
+              <span className="max-w-[4.5rem] truncate sm:max-w-none">
+                {formatEta(offer.approvalEtaMinutes)}
+              </span>
             </p>
           </div>
         </TintedOfferCard>
@@ -252,7 +254,7 @@ export function OfferCard({
         iconUrl={offer.iconUrl}
         fallback={fallback}
         className={cn(
-          "offer-card flex min-h-[11.25rem] w-full min-w-0 flex-col overflow-hidden rounded-card p-2.5 ring-1 ring-inset transition-[box-shadow] duration-300 ease-soft active:scale-[0.99] sm:aspect-square sm:min-h-0 sm:p-3",
+          "offer-card flex min-h-[12rem] w-full min-w-0 flex-col overflow-hidden rounded-card p-2.5 ring-1 ring-inset transition-[box-shadow] duration-300 ease-soft active:scale-[0.99] sm:aspect-square sm:min-h-0 sm:p-3",
           offer.isHot
             ? "offer-card-featured ring-white/12"
             : offer.isFeatured
@@ -272,7 +274,7 @@ export function OfferCard({
             {difficulty.label}
           </span>
         </div>
-        <p className="mt-2.5 line-clamp-2 min-w-0 break-words text-[13px] leading-snug font-semibold tracking-[-0.015em] sm:mt-3 sm:text-[13.5px]">
+        <p className="mt-2.5 line-clamp-2 min-w-0 [overflow-wrap:anywhere] text-[13px] leading-snug font-semibold tracking-[-0.015em] sm:mt-3 sm:text-[13.5px]">
           {offer.title}
         </p>
         <p className="mt-1 min-w-0 truncate text-[11px] text-content-muted sm:text-[11.5px]">
@@ -288,7 +290,7 @@ export function OfferCard({
 
 export function OfferCardSkeleton() {
   return (
-    <div className="offer-card flex aspect-square flex-col rounded-card p-3 ring-1 ring-inset ring-white/[0.07]">
+    <div className="offer-card flex min-h-[12rem] flex-col rounded-card p-3 ring-1 ring-inset ring-white/[0.07] sm:aspect-square sm:min-h-0">
       <div className="shimmer size-16 shrink-0 rounded-2xl bg-surface-overlay/60" />
       <div className="shimmer mt-3 h-3.5 w-full rounded bg-surface-overlay/60" />
       <div className="shimmer mt-1.5 h-3 w-1/2 rounded bg-surface-overlay/60" />

@@ -16,6 +16,7 @@ import { getOfferBySlug } from "@/server/modules/offers";
 import { checkEligibility } from "@/server/modules/submissions";
 import { db } from "@/server/db";
 import { formatEta, formatMoney, formatPercent } from "@/lib/format";
+import { Money } from "@/components/money";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -83,7 +84,7 @@ export default async function TaskPage({
             size="lg"
           />
           <div className="min-w-0 flex-1">
-            <h1 className="break-words text-[19px] leading-tight font-bold">{offer.title}</h1>
+            <h1 className="[overflow-wrap:anywhere] text-[19px] leading-tight font-bold">{offer.title}</h1>
             {offer.brandName ? (
               <p className="mt-1 text-[13px] text-content-muted">
                 {offer.brandName}
@@ -105,8 +106,8 @@ export default async function TaskPage({
             <p className="text-[11px] tracking-wide text-content-muted uppercase">
               Вознаграждение
             </p>
-            <p className="tabular mt-0.5 text-2xl leading-none font-bold text-money-400">
-              {formatMoney(offer.rewardAmount)}
+            <p className="mt-0.5 text-2xl leading-none font-bold text-content-primary">
+              <Money value={offer.rewardAmount} />
             </p>
           </div>
           <div className="text-right text-[11.5px] text-content-muted">

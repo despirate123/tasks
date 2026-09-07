@@ -122,8 +122,18 @@ const {
   isValidCardNumber,
   isValidCryptoAddress,
 } = await import("../src/server/modules/withdrawals");
-const { setOfferDifficulty, setOfferApprovalEta, upsertOfferFromNetwork, resetOfferAuto } =
-  await import("../src/server/modules/offers");
+const {
+  setOfferDifficulty,
+  setOfferApprovalEta,
+  upsertOfferFromNetwork,
+  resetOfferAuto,
+  listOffers,
+  createManualOffer,
+} = await import("../src/server/modules/offers");
+const { expireStaleSubmissions } = await import("../src/server/modules/jobs");
+const { parseRewardFilter, matchesRewardFilter } = await import(
+  "../src/lib/catalog-filters"
+);
 
 async function main() {
   // ── Подготовка ─────────────────────────────────────────────────────────────
@@ -772,6 +782,115 @@ async function main() {
 
   const outbox = await db.outboxEvent.count();
   check("события для доставки в бот легли в outbox", outbox > 0);
+
+  // ── 13. Фильтры каталога, ручной оффер, истечение ──────────────────────────
+
+  section("Каталог, ручной оффер, истечение");
+
+  check(
+    "«до 150 ₽» включает и 120, и 150",
+    matchesRewardFilter(120, parseRewardFilter("to150")) &&
+      matchesRewardFilter(150, parseRewardFilter("to150")) &&
+      matchesRewardFilter(150, parseRewardFilter("0-150")) &&
+      !matchesRewardFilter(151, parseRewardFilter("to150")),
+  );
+  check(
+    "«150–400 ₽» не отрезает нижнюю границу",
+    matchesRewardFilter(150, parseRewardFilter("150to400")) &&
+      matchesRewardFilter(400, parseRewardFilter("150to400")) &&
+      !matchesRewardFilter(120, parseRewardFilter("150to400")),
+  );
+  check(
+    "«от 400 ₽» не захватывает 380",
+    matchesRewardFilter(400, parseRewardFilter("from400")) &&
+      !matchesRewardFilter(380, parseRewardFilter("from400")),
+  );
+
+  const cheapOffer = await db.offer.create({
+    data: {
+      sourceId: source.id,
+      slug: "filter-120",
+      title: "Опрос за 120",
+      description: "Описание задания для фильтра",
+      rewardAmount: new D("120"),
+      status: "ACTIVE",
+    },
+  });
+  const edgeOffer = await db.offer.create({
+    data: {
+      sourceId: source.id,
+      slug: "filter-150",
+      title: "Калькулятор за 150",
+      description: "Описание задания для фильтра",
+      rewardAmount: new D("150"),
+      status: "ACTIVE",
+    },
+  });
+  await db.offer.create({
+    data: {
+      sourceId: source.id,
+      slug: "filter-380",
+      title: "Заказ за 380",
+      description: "Описание задания для фильтра",
+      rewardAmount: new D("380"),
+      status: "ACTIVE",
+    },
+  });
+
+  const low = await listOffers({ maxReward: 150, take: 50 });
+  const lowIds = new Set(low.items.map((item) => item.id));
+  check(
+    "listOffers(до 150) возвращает 120 и 150",
+    lowIds.has(cheapOffer.id) && lowIds.has(edgeOffer.id),
+  );
+  check(
+    "listOffers(до 150) не возвращает 380",
+    !lowIds.has(
+      (await db.offer.findUniqueOrThrow({ where: { slug: "filter-380" } })).id,
+    ),
+  );
+
+  const mid = await listOffers({ minReward: 150, maxReward: 400, take: 50 });
+  const midIds = new Set(mid.items.map((item) => item.id));
+  check(
+    "listOffers(150–400) держит границу 150",
+    midIds.has(edgeOffer.id),
+  );
+
+  const manual = await createManualOffer(referrer.id, {
+    title: "Ручное задание для запуска",
+    description: "Скачать приложение и прислать скриншот главного экрана",
+    rewardAmount: 90,
+    status: "ACTIVE",
+    requirePhoto: true,
+    requireComment: false,
+    steps: [{ title: "Открыть ссылку" }],
+  });
+  const published = await listOffers({ maxReward: 150, take: 80 });
+  check(
+    "созданный вручную ACTIVE-оффер сразу в каталоге",
+    published.items.some((item) => item.id === manual.id),
+  );
+
+  const ttlOffer = await makeOffer("expire-ttl", 0, "80");
+  const ttlTake = await takeOffer(worker, ttlOffer.id);
+  const beforeExpire = await db.offer.findUniqueOrThrow({ where: { id: ttlOffer.id } });
+  await db.taskSubmission.update({
+    where: { id: ttlTake.submissionId },
+    data: { expiresAt: new Date(Date.now() - 1000) },
+  });
+  const expiredCount = await expireStaleSubmissions();
+  const ttlRow = await db.taskSubmission.findUniqueOrThrow({
+    where: { id: ttlTake.submissionId },
+  });
+  const afterExpire = await db.offer.findUniqueOrThrow({ where: { id: ttlOffer.id } });
+  check("истёкший черновик переходит в EXPIRED", ttlRow.status === "EXPIRED");
+  check("expire уменьшает takenCount", expiredCount >= 1);
+  check(
+    "после истечения слот в оффере освобождён",
+    afterExpire.takenCount === beforeExpire.takenCount - 1,
+    `было ${beforeExpire.takenCount}, стало ${afterExpire.takenCount}`,
+  );
 }
 
 main()

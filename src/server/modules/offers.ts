@@ -29,8 +29,12 @@ export async function listOffers(filters: OfferFilters = {}) {
     ...(filters.minReward != null || filters.maxReward != null
       ? {
           rewardAmount: {
-            ...(filters.minReward != null ? { gte: filters.minReward } : {}),
-            ...(filters.maxReward != null ? { lte: filters.maxReward } : {}),
+            ...(filters.minReward != null
+              ? { gte: new Prisma.Decimal(filters.minReward) }
+              : {}),
+            ...(filters.maxReward != null
+              ? { lte: new Prisma.Decimal(filters.maxReward) }
+              : {}),
           },
         }
       : {}),

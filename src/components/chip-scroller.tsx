@@ -33,6 +33,12 @@ export function ChipScroller({
     };
 
     sync();
+    const active = node.querySelector<HTMLElement>("[data-chip-active='true']");
+    if (active) {
+      const left =
+        active.offsetLeft - node.clientWidth / 2 + active.offsetWidth / 2;
+      node.scrollTo({ left: Math.max(0, left) });
+    }
     node.addEventListener("scroll", sync, { passive: true });
     const observer = new ResizeObserver(sync);
     observer.observe(node);

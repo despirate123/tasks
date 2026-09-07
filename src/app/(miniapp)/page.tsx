@@ -29,41 +29,55 @@ import {
   HomeHeaderSkeleton,
   HomeWalletSkeleton,
 } from "@/components/page-skeleton";
+import {
+  REWARD_CHIPS,
+  firstSearchParam,
+  parseRewardFilter,
+} from "@/lib/catalog-filters";
 
 type CatalogOffer = Awaited<ReturnType<typeof listOffers>>["items"][number];
 
 const CATALOG_PAGE = 12;
-const REWARD_CHIPS = [
-  { key: "", label: "Любая сумма" },
-  { key: "0-150", label: "до 150\u00A0₽" },
-  { key: "150-400", label: "150–400\u00A0₽" },
-  { key: "400", label: "от 400\u00A0₽" },
-] as const;
 
-function parseReward(raw?: string): { minReward?: number; maxReward?: number } {
-  if (raw === "0-150") return { minReward: 0, maxReward: 150 };
-  if (raw === "150-400") return { minReward: 150, maxReward: 400 };
-  if (raw === "400") return { minReward: 400 };
-  return {};
-}
-
-async function HybridCatalog({
+async function CatalogResults({
   offers,
   mineByOffer,
+  layout,
 }: {
   offers: CatalogOffer[];
   mineByOffer: Map<string, "active" | "done">;
+  layout: "hybrid" | "list";
 }) {
-  const hero =
-    offers.find((offer) => offer.isHot) ??
-    offers.find((offer) => offer.isFeatured) ??
-    offers[0];
-  const rest = offers.filter((offer) => offer.id !== hero.id);
-  const [heroAccent, ...restAccents] = await Promise.all(
-    [hero, ...rest].map((offer) =>
+  const accents = await Promise.all(
+    offers.map((offer) =>
       resolveOfferAccent(offer.iconUrl, offer.brandName ?? offer.title),
     ),
   );
+
+  if (layout === "list") {
+    return (
+      <div className="motion-list space-y-2">
+        {offers.map((offer, index) => (
+          <OfferCard
+            key={offer.id}
+            offer={offer}
+            mine={mineByOffer.get(offer.id) ?? null}
+            layout="wide"
+            accent={accents[index]?.color}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  const heroIndex = Math.max(
+    0,
+    offers.findIndex((offer) => offer.isHot) >= 0
+      ? offers.findIndex((offer) => offer.isHot)
+      : offers.findIndex((offer) => offer.isFeatured),
+  );
+  const hero = offers[heroIndex];
+  const rest = offers.filter((offer) => offer.id !== hero.id);
 
   return (
     <div className="motion-list space-y-2">
@@ -71,18 +85,21 @@ async function HybridCatalog({
         offer={hero}
         mine={mineByOffer.get(hero.id) ?? null}
         layout="wide"
-        accent={heroAccent.color}
+        accent={accents[heroIndex]?.color}
       />
       {rest.length > 0 ? (
         <div className="grid grid-cols-2 items-start gap-2">
-          {rest.map((offer, index) => (
-            <OfferCard
-              key={offer.id}
-              offer={offer}
-              mine={mineByOffer.get(offer.id) ?? null}
-              accent={restAccents[index]?.color}
-            />
-          ))}
+          {rest.map((offer) => {
+            const index = offers.findIndex((item) => item.id === offer.id);
+            return (
+              <OfferCard
+                key={offer.id}
+                offer={offer}
+                mine={mineByOffer.get(offer.id) ?? null}
+                accent={accents[index]?.color}
+              />
+            );
+          })}
         </div>
       ) : null}
     </div>
@@ -99,12 +116,12 @@ const SORTS = [
 
 type SearchParams = Promise<{
   difficulty?: string | string[];
-  category?: string;
-  sort?: string;
-  q?: string;
-  reward?: string;
-  take?: string;
-  howto?: string;
+  category?: string | string[];
+  sort?: string | string[];
+  q?: string | string[];
+  reward?: string | string[];
+  take?: string | string[];
+  howto?: string | string[];
 }>;
 
 type CatalogQuery = Awaited<SearchParams>;
@@ -178,18 +195,23 @@ export default async function CatalogPage({
 async function HomeCatalog({ params }: { params: CatalogQuery }) {
   const difficulty = parseDifficulty(params);
   const user = await getCurrentUser();
-  const reward = parseReward(params.reward);
+  const rewardKey = firstSearchParam(params.reward);
+  const category = firstSearchParam(params.category);
+  const sort = firstSearchParam(params.sort);
+  const query = firstSearchParam(params.q);
+  const howto = firstSearchParam(params.howto);
+  const reward = parseRewardFilter(rewardKey);
   const take = Math.min(
-    Math.max(Number(params.take) || CATALOG_PAGE, CATALOG_PAGE),
+    Math.max(Number(firstSearchParam(params.take)) || CATALOG_PAGE, CATALOG_PAGE),
     80,
   );
 
   const [catalog, categories, own] = await Promise.all([
     listOffers({
       difficulty: difficulty.length ? difficulty : undefined,
-      categorySlug: params.category,
-      search: params.q,
-      sort: params.sort as "reward" | "eta" | "new" | "popular" | undefined,
+      categorySlug: category,
+      search: query,
+      sort: sort as "reward" | "eta" | "new" | "popular" | undefined,
       take,
       ...reward,
     }),
@@ -222,17 +244,20 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
 
   const offers = catalog.items;
   const hasFilters = Boolean(
-    difficulty.length || params.category || params.q || params.sort || params.reward,
+    difficulty.length || category || query || sort || rewardKey,
   );
+
+  const writeBase = (next: URLSearchParams) => {
+    if (query) next.set("q", query);
+    if (sort) next.set("sort", sort);
+    if (category) next.set("category", category);
+    if (rewardKey) next.set("reward", rewardKey);
+    for (const d of difficulty) next.append("difficulty", d);
+  };
 
   const buildHref = (patch: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
-    if (params.q) next.set("q", params.q);
-    if (params.sort) next.set("sort", params.sort);
-    if (params.category) next.set("category", params.category);
-    if (params.reward) next.set("reward", params.reward);
-    for (const d of difficulty) next.append("difficulty", d);
-
+    writeBase(next);
     for (const [key, value] of Object.entries(patch)) {
       next.delete(key);
       if (value) next.set(key, value);
@@ -244,10 +269,10 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
 
   const toggleDifficultyHref = (value: Difficulty) => {
     const next = new URLSearchParams();
-    if (params.q) next.set("q", params.q);
-    if (params.sort) next.set("sort", params.sort);
-    if (params.category) next.set("category", params.category);
-    if (params.reward) next.set("reward", params.reward);
+    if (query) next.set("q", query);
+    if (sort) next.set("sort", sort);
+    if (category) next.set("category", category);
+    if (rewardKey) next.set("reward", rewardKey);
     const set = new Set(difficulty);
     if (set.has(value)) set.delete(value);
     else set.add(value);
@@ -258,11 +283,7 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
 
   const moreHref = (() => {
     const next = new URLSearchParams();
-    if (params.q) next.set("q", params.q);
-    if (params.sort) next.set("sort", params.sort);
-    if (params.category) next.set("category", params.category);
-    if (params.reward) next.set("reward", params.reward);
-    for (const d of difficulty) next.append("difficulty", d);
+    writeBase(next);
     next.set("take", String(take + CATALOG_PAGE));
     return `/?${next.toString()}`;
   })();
@@ -270,7 +291,7 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
   return (
     <>
       <div className="space-y-2">
-        <HowItWorksAutoOpen active={params.howto === "1"} />
+        <HowItWorksAutoOpen active={howto === "1"} />
         <div className="flex items-center justify-between gap-2">
           <h1 className="min-w-0 text-[17px] leading-tight font-bold">
             Задания
@@ -287,17 +308,13 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
           <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-content-muted" />
           <Input
             name="q"
-            defaultValue={params.q ?? ""}
+            defaultValue={query ?? ""}
             placeholder="Название или бренд"
             className="h-10 pl-10"
           />
-          {params.sort ? <input type="hidden" name="sort" value={params.sort} /> : null}
-          {params.category ? (
-            <input type="hidden" name="category" value={params.category} />
-          ) : null}
-          {params.reward ? (
-            <input type="hidden" name="reward" value={params.reward} />
-          ) : null}
+          {sort ? <input type="hidden" name="sort" value={sort} /> : null}
+          {category ? <input type="hidden" name="category" value={category} /> : null}
+          {rewardKey ? <input type="hidden" name="reward" value={rewardKey} /> : null}
           {difficulty.map((value) => (
             <input key={value} type="hidden" name="difficulty" value={value} />
           ))}
@@ -311,6 +328,7 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
               <Link
                 key={value}
                 href={toggleDifficultyHref(value)}
+                data-chip-active={active || undefined}
                 className={chipClass(active, active ? meta.className : undefined)}
               >
                 <span className={cn("size-1.5 rounded-full", meta.dot)} />
@@ -321,31 +339,37 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
 
           <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
 
-          {SORTS.map((sort) => {
-            const active = (params.sort ?? "") === sort.key;
+          {SORTS.map((item) => {
+            const active = (sort ?? "") === item.key;
             return (
               <Link
-                key={sort.key || "default"}
-                href={buildHref({ sort: sort.key || undefined })}
+                key={item.key || "default"}
+                href={buildHref({ sort: item.key || undefined })}
+                data-chip-active={active || undefined}
                 className={chipClass(active)}
               >
                 {active ? (
                   <ChipDot />
-                ) : sort.key === "" ? (
+                ) : item.key === "" ? (
                   <SlidersHorizontal className="size-3" />
                 ) : null}
-                {sort.label}
+                {item.label}
               </Link>
             );
           })}
 
           <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
           {REWARD_CHIPS.map((chip) => {
-            const active = (params.reward ?? "") === chip.key;
+            const active =
+              (rewardKey ?? "") === chip.key ||
+              (chip.key === "to150" && (rewardKey === "0-150" || rewardKey === "lte150")) ||
+              (chip.key === "150to400" && rewardKey === "150-400") ||
+              (chip.key === "from400" && (rewardKey === "400" || rewardKey === "gte400"));
             return (
               <Link
                 key={chip.key || "any-reward"}
                 href={buildHref({ reward: chip.key || undefined })}
+                data-chip-active={active || undefined}
                 className={chipClass(active)}
               >
                 {active ? <ChipDot /> : null}
@@ -359,28 +383,37 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
               <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
               <Link
                 href={buildHref({ category: undefined })}
-                className={chipClass(!params.category)}
+                data-chip-active={!category || undefined}
+                className={chipClass(!category)}
               >
-                {!params.category ? <ChipDot /> : null}
+                {!category ? <ChipDot /> : null}
                 Все категории
               </Link>
-              {categories.map((category) => {
-                const active = params.category === category.slug;
+              {categories.map((item) => {
+                const active = category === item.slug;
                 return (
                   <Link
-                    key={category.slug}
-                    href={buildHref({ category: category.slug })}
+                    key={item.slug}
+                    href={buildHref({ category: item.slug })}
+                    data-chip-active={active || undefined}
                     className={chipClass(active)}
                   >
                     {active ? <ChipDot /> : null}
-                    {category.icon ? <span>{category.icon}</span> : null}
-                    {category.name}
+                    {item.icon ? <span>{item.icon}</span> : null}
+                    {item.name}
                   </Link>
                 );
               })}
             </>
           ) : null}
         </ChipScroller>
+        {hasFilters ? (
+          <p className="text-[12px]">
+            <Link href="/" className="font-medium text-[var(--acid)]">
+              Сбросить фильтры
+            </Link>
+          </p>
+        ) : null}
       </div>
 
       {offers.length === 0 ? (
@@ -406,7 +439,11 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
         />
       ) : (
         <>
-          <HybridCatalog offers={offers} mineByOffer={mineByOffer} />
+          <CatalogResults
+            offers={offers}
+            mineByOffer={mineByOffer}
+            layout={hasFilters || offers.length <= 3 ? "list" : "hybrid"}
+          />
           {catalog.hasMore ? (
             <div className="pt-1">
               <Button variant="secondary" size="md" block asChild>
