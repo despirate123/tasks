@@ -1,5 +1,7 @@
+import { unstable_cache } from "next/cache";
 import { db } from "@/server/db";
 import { sanitizeHttpUrl } from "@/lib/urls";
+import { CACHE_TAGS } from "@/server/cache-tags";
 
 export type PromoBannerInput = {
   title: string;
@@ -19,7 +21,7 @@ function clean(value?: string | null) {
   return trimmed.length ? trimmed : null;
 }
 
-export async function listActiveBanners() {
+async function loadActiveBanners() {
   const now = new Date();
   return db.promoBanner.findMany({
     where: {
@@ -30,7 +32,23 @@ export async function listActiveBanners() {
       ],
     },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      title: true,
+      subtitle: true,
+      href: true,
+      imageUrl: true,
+      background: true,
+      accent: true,
+    },
   });
+}
+
+export async function listActiveBanners() {
+  return unstable_cache(loadActiveBanners, ["active-banners"], {
+    revalidate: 30,
+    tags: [CACHE_TAGS.banners],
+  })();
 }
 
 export async function listAdminBanners() {

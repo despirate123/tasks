@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 import { requireRole, requireUser } from "@/server/auth";
@@ -45,8 +45,20 @@ import { postLedgerEntry } from "@/server/modules/wallet";
 import { maskCard, maskCryptoAddress } from "@/lib/format";
 import { PAYOUT_METHOD } from "@/lib/labels";
 import type { Difficulty, PayoutMethodKind } from "@/generated/prisma";
+import { CACHE_TAGS } from "@/server/cache-tags";
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
+
+function bumpCatalog() {
+  updateTag(CACHE_TAGS.catalog);
+  revalidatePath("/");
+}
+
+function bumpBanners() {
+  updateTag(CACHE_TAGS.banners);
+  revalidatePath("/");
+  revalidatePath("/admin/banners");
+}
 
 function fail(error: unknown): ActionResult {
   if (error instanceof Error) {
@@ -380,6 +392,7 @@ export async function setDifficultyAction(
     await setOfferDifficulty(admin.id, offerId, difficulty);
     revalidatePath("/admin/offers");
     revalidatePath(`/admin/offers/${offerId}`);
+    bumpCatalog();
     return { ok: true, message: "Сложность обновлена вручную" };
   } catch (error) {
     return fail(error);
@@ -395,6 +408,7 @@ export async function setApprovalEtaAction(
     await setOfferApprovalEta(admin.id, offerId, minutes);
     revalidatePath("/admin/offers");
     revalidatePath(`/admin/offers/${offerId}`);
+    bumpCatalog();
     return { ok: true, message: "Время одобрения обновлено вручную" };
   } catch (error) {
     return fail(error);
@@ -410,6 +424,7 @@ export async function resetAutoAction(
     await resetOfferAuto(admin.id, offerId, field);
     revalidatePath("/admin/offers");
     revalidatePath(`/admin/offers/${offerId}`);
+    bumpCatalog();
     return { ok: true, message: "Возвращён автоматический расчёт" };
   } catch (error) {
     return fail(error);
@@ -441,7 +456,7 @@ export async function setOfferStatusAction(
       },
     });
     revalidatePath("/admin/offers");
-    revalidatePath("/");
+    bumpCatalog();
     return { ok: true, message: "Статус задания обновлён" };
   } catch (error) {
     return fail(error);
@@ -458,7 +473,7 @@ export async function saveOfferAction(
       ? await updateManualOffer(admin.id, id, input)
       : await createManualOffer(admin.id, input);
     revalidatePath("/admin/offers");
-    revalidatePath("/");
+    bumpCatalog();
     if (id) revalidatePath(`/admin/offers/${id}`);
     return {
       ok: true,
@@ -494,7 +509,7 @@ export async function updateOfferLinksAction(
     });
     revalidatePath("/admin/offers");
     revalidatePath(`/admin/offers/${offerId}`);
-    revalidatePath("/");
+    bumpCatalog();
     return { ok: true, message: "Ссылка и промокод обновлены" };
   } catch (error) {
     return fail(error);
@@ -748,8 +763,7 @@ export async function upsertBannerAction(formData: FormData): Promise<ActionResu
       startsAt: parseOptionalDate(String(formData.get("startsAt") ?? "")),
       endsAt: parseOptionalDate(String(formData.get("endsAt") ?? "")),
     }, admin.id);
-    revalidatePath("/");
-    revalidatePath("/admin/banners");
+    bumpBanners();
     return { ok: true, message: id ? "Баннер обновлён" : "Баннер создан" };
   } catch (error) {
     return fail(error);
@@ -760,8 +774,7 @@ export async function toggleBannerAction(id: string, isActive: boolean): Promise
   try {
     await requireRole("ADMIN");
     await toggleBanner(id, isActive);
-    revalidatePath("/");
-    revalidatePath("/admin/banners");
+    bumpBanners();
     return { ok: true, message: isActive ? "Баннер включён" : "Баннер скрыт" };
   } catch (error) {
     return fail(error);
@@ -772,8 +785,7 @@ export async function deleteBannerAction(id: string): Promise<ActionResult> {
   try {
     await requireRole("ADMIN");
     await deleteBanner(id);
-    revalidatePath("/");
-    revalidatePath("/admin/banners");
+    bumpBanners();
     return { ok: true, message: "Баннер удалён" };
   } catch (error) {
     return fail(error);

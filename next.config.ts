@@ -9,12 +9,16 @@ const miniappHost = (() => {
 })();
 
 const nextConfig: NextConfig = {
-  // Фильтры каталога — часть URL. Кэш на 30 с показывал бы прошлую выборку.
+  // standalone — удобный артефакт для сервера (node .next/standalone).
+  output: "standalone",
   experimental: {
+    // Клиентский кэш App Router. Ключ — полный URL, поэтому
+    // `/?reward=to150` не подменяет `/`. Prefetch дока без этого бесполезен.
     staleTimes: {
-      dynamic: 0,
+      dynamic: 30,
       static: 180,
     },
+    optimizePackageImports: ["lucide-react"],
   },
   // Индикатор Next.js сидит в углу и на телефоне выглядит как четвёртая
   // иконка дока. В проде его нет, в dev тоже не нужен рядом с Mini App.

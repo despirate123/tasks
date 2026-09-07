@@ -3,9 +3,9 @@ import Link from "next/link";
 import { Search, SlidersHorizontal, Wallet2 } from "lucide-react";
 import type { Difficulty } from "@/generated/prisma";
 import { getCurrentUser } from "@/server/auth";
-import { getCategoriesWithCounts, listOffers } from "@/server/modules/offers";
+import { getCategoriesWithCounts, listCatalogOffers } from "@/server/modules/offers";
 import { getWallet } from "@/server/modules/wallet";
-import { getUserSubmissions } from "@/server/modules/submissions";
+import { getActiveWork } from "@/server/modules/submissions";
 import { db } from "@/server/db";
 import { Money } from "@/components/money";
 import {
@@ -38,9 +38,8 @@ import {
 } from "@/lib/catalog-filters";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
-type CatalogOffer = Awaited<ReturnType<typeof listOffers>>["items"][number];
+type CatalogOffer = Awaited<ReturnType<typeof listCatalogOffers>>["items"][number];
 
 const CATALOG_PAGE = 12;
 
@@ -148,7 +147,7 @@ async function HomeWalletAndWork() {
 
   const [wallet, activeWork] = await Promise.all([
     getWallet(user.id),
-    getUserSubmissions(user.id, ACTIVE_SUBMISSION_STATUSES),
+    getActiveWork(user.id),
   ]);
 
   return (
@@ -212,7 +211,7 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
   );
 
   const [catalog, categories, own] = await Promise.all([
-    listOffers({
+    listCatalogOffers({
       difficulty: difficulty.length ? difficulty : undefined,
       categorySlug: category,
       search: query,
@@ -332,7 +331,6 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
               <Link
                 key={chip.key || "any-reward"}
                 href={buildHref({ reward: chip.key || undefined })}
-                prefetch={false}
                 data-chip-active={active || undefined}
                 className={chipClass(active)}
               >
@@ -351,7 +349,6 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
               <Link
                 key={value}
                 href={toggleDifficultyHref(value)}
-                prefetch={false}
                 data-chip-active={active || undefined}
                 className={chipClass(active, active ? meta.className : undefined)}
               >
@@ -369,7 +366,6 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
               <Link
                 key={item.key || "default"}
                 href={buildHref({ sort: item.key || undefined })}
-                prefetch={false}
                 data-chip-active={active || undefined}
                 className={chipClass(active)}
               >
@@ -390,7 +386,6 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
               <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
               <Link
                 href={buildHref({ category: undefined })}
-                prefetch={false}
                 data-chip-active={!category || undefined}
                 className={chipClass(!category)}
               >
@@ -403,7 +398,6 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
                   <Link
                     key={item.slug}
                     href={buildHref({ category: item.slug })}
-                    prefetch={false}
                     data-chip-active={active || undefined}
                     className={chipClass(active)}
                   >
@@ -431,7 +425,7 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
                 : ""}
               {query ? ` · «${query}»` : ""}
             </span>
-            <Link href="/" prefetch={false} className="font-medium text-[var(--acid)]">
+            <Link href="/" className="font-medium text-[var(--acid)]">
               Сбросить
             </Link>
           </p>

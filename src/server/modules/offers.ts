@@ -1,9 +1,27 @@
+import { unstable_cache } from "next/cache";
 import { Prisma } from "@/generated/prisma";
 import type { Difficulty, Offer, OfferStatus, User } from "@/generated/prisma";
 import { db } from "@/server/db";
 import { slugify } from "@/lib/utils";
 import { sanitizeHttpUrl } from "@/lib/urls";
 import { matchesRewardFilter } from "@/lib/catalog-filters";
+import { CACHE_TAGS } from "@/server/cache-tags";
+
+const catalogOfferSelect = {
+  id: true,
+  slug: true,
+  title: true,
+  subtitle: true,
+  brandName: true,
+  iconUrl: true,
+  difficulty: true,
+  approvalEtaMinutes: true,
+  rewardAmount: true,
+  isHot: true,
+  isFeatured: true,
+  takenCount: true,
+  category: { select: { name: true, slug: true, icon: true } },
+} satisfies Prisma.OfferSelect;
 
 export type OfferFilters = {
   difficulty?: Difficulty[];
@@ -69,11 +87,7 @@ export async function listOffers(filters: OfferFilters = {}) {
     orderBy,
     take: take + 1,
     skip,
-    include: {
-      category: { select: { name: true, slug: true, icon: true } },
-      source: { select: { code: true, name: true } },
-      _count: { select: { steps: true } },
-    },
+    select: catalogOfferSelect,
   });
 
   const matched =
@@ -91,6 +105,37 @@ export async function listOffers(filters: OfferFilters = {}) {
     items: hasMore ? matched.slice(0, take) : matched,
     hasMore,
   };
+}
+
+function catalogCacheKey(filters: OfferFilters): string[] {
+  return [
+    (filters.difficulty ?? []).slice().sort().join(","),
+    filters.categorySlug ?? "",
+    filters.minReward == null ? "" : String(filters.minReward),
+    filters.maxReward == null ? "" : String(filters.maxReward),
+    filters.search ?? "",
+    filters.sort ?? "",
+    String(filters.take ?? 20),
+    String(filters.skip ?? 0),
+  ];
+}
+
+/** Каталог Mini App: те же фильтры, что у listOffers, плюс кэш на 20 с. */
+export async function listCatalogOffers(filters: OfferFilters = {}) {
+  return unstable_cache(
+    async () => {
+      const result = await listOffers(filters);
+      return {
+        hasMore: result.hasMore,
+        items: result.items.map((item) => ({
+          ...item,
+          rewardAmount: item.rewardAmount.toString(),
+        })),
+      };
+    },
+    ["catalog-offers", ...catalogCacheKey(filters)],
+    { revalidate: 20, tags: [CACHE_TAGS.catalog] },
+  )();
 }
 
 export async function getOfferBySlug(slug: string) {
@@ -122,11 +167,7 @@ export async function listSimilarOffers(
     },
     orderBy: [{ isFeatured: "desc" }, { priority: "desc" }],
     take,
-    include: {
-      category: { select: { name: true, slug: true, icon: true } },
-      source: { select: { code: true, name: true } },
-      _count: { select: { steps: true } },
-    },
+    select: catalogOfferSelect,
   });
 }
 
@@ -171,7 +212,7 @@ export async function listCategories() {
   });
 }
 
-export async function getCategoriesWithCounts() {
+async function loadCategoriesWithCounts() {
   const categories = await db.category.findMany({
     where: { isActive: true },
     orderBy: { sortOrder: "asc" },
@@ -180,6 +221,13 @@ export async function getCategoriesWithCounts() {
     },
   });
   return categories.filter((c) => c._count.offers > 0);
+}
+
+export async function getCategoriesWithCounts() {
+  return unstable_cache(loadCategoriesWithCounts, ["categories-with-counts"], {
+    revalidate: 30,
+    tags: [CACHE_TAGS.catalog],
+  })();
 }
 
 // ── Ручное переопределение сложности и времени одобрения ─────────────────────

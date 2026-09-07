@@ -6,6 +6,7 @@ import { formatMoney } from "@/lib/format";
 import { notify } from "@/server/modules/notifications";
 import { postLedgerEntry, releaseHold } from "@/server/modules/wallet";
 import { accrueReferralBonuses } from "@/server/modules/referrals";
+import { ACTIVE_SUBMISSION_STATUSES } from "@/lib/labels";
 
 export class SubmissionError extends Error {
   constructor(
@@ -710,7 +711,16 @@ export async function getUserSubmissions(
 ) {
   return db.taskSubmission.findMany({
     where: { userId, ...(statuses?.length ? { status: { in: statuses } } : {}) },
-    include: {
+    select: {
+      id: true,
+      status: true,
+      rewardAmount: true,
+      expiresAt: true,
+      payoutAvailableAt: true,
+      paidAt: true,
+      reviewedAt: true,
+      submittedAt: true,
+      startedAt: true,
       offer: {
         select: {
           title: true,
@@ -721,10 +731,37 @@ export async function getUserSubmissions(
           approvalEtaMinutes: true,
         },
       },
-      proofs: { select: { id: true, kind: true } },
     },
     orderBy: { startedAt: "desc" },
     take: 60,
+  });
+}
+
+/** Полоска «В работе» на главной — без доказательств и без закрытых статусов. */
+export async function getActiveWork(userId: string) {
+  return db.taskSubmission.findMany({
+    where: { userId, status: { in: ACTIVE_SUBMISSION_STATUSES } },
+    orderBy: { updatedAt: "desc" },
+    take: 12,
+    select: {
+      id: true,
+      status: true,
+      rewardAmount: true,
+      expiresAt: true,
+      payoutAvailableAt: true,
+      paidAt: true,
+      reviewedAt: true,
+      submittedAt: true,
+      startedAt: true,
+      offer: {
+        select: {
+          title: true,
+          brandName: true,
+          iconUrl: true,
+          difficulty: true,
+        },
+      },
+    },
   });
 }
 

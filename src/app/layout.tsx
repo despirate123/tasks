@@ -3,7 +3,11 @@ import Script from "next/script";
 import { Geist } from "next/font/google";
 import "./globals.css";
 
-const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin", "cyrillic"] });
+const geist = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin", "cyrillic"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "ProfiBux — задания за вознаграждение",
@@ -71,6 +75,8 @@ export default function RootLayout({
   return (
     <html lang="ru" className={geist.variable} suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://telegram.org" />
+        <link rel="dns-prefetch" href="https://telegram.org" />
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <script dangerouslySetInnerHTML={{ __html: telegramBoot }} />
       </head>
