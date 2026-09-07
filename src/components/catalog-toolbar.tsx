@@ -15,7 +15,6 @@ import {
   REWARD_CHIPS,
   catalogHref,
   isRewardChipActive,
-  rewardFilterLabel,
   toggleDifficultyList,
 } from "@/lib/catalog-filters";
 
@@ -63,10 +62,6 @@ export function CatalogToolbar({
     setQuery(state.q ?? "");
   }, [state.q]);
 
-  const hasFilters = Boolean(
-    state.difficulty.length || state.category || state.q || state.sort || state.reward,
-  );
-
   return (
     <div className="space-y-2">
       <HowItWorksAutoOpen active={howto} />
@@ -94,7 +89,7 @@ export function CatalogToolbar({
         />
       </form>
 
-      <div className="flex flex-wrap gap-2">
+      <ChipScroller>
         {REWARD_CHIPS.map((chip) => {
           const active = isRewardChipActive(state.reward, chip.key);
           return (
@@ -109,9 +104,9 @@ export function CatalogToolbar({
             </FilterLink>
           );
         })}
-      </div>
 
-      <ChipScroller>
+        <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
+
         {DIFFICULTY_ORDER.map((value) => {
           const active = state.difficulty.includes(value);
           const meta = DIFFICULTY[value];
@@ -151,10 +146,9 @@ export function CatalogToolbar({
           );
         })}
 
-        <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
-
         {categories.length > 0 ? (
           <>
+            <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
             <FilterLink
               href={catalogHref(state, { category: undefined })}
               data-chip-active={!state.category || undefined}
@@ -181,26 +175,6 @@ export function CatalogToolbar({
           </>
         ) : null}
       </ChipScroller>
-
-      {hasFilters ? (
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-content-secondary">
-          <span>
-            {rewardFilterLabel(state.reward)
-              ? rewardFilterLabel(state.reward)
-              : "Фильтр"}
-            {state.difficulty.length
-              ? ` · ${state.difficulty.map((value) => DIFFICULTY[value].label).join(", ")}`
-              : ""}
-            {state.category
-              ? ` · ${categories.find((item) => item.slug === state.category)?.name ?? state.category}`
-              : ""}
-            {state.q ? ` · «${state.q}»` : ""}
-          </span>
-          <FilterLink href="/" className="font-medium text-[var(--acid)]">
-            Сбросить
-          </FilterLink>
-        </p>
-      ) : null}
     </div>
   );
 }

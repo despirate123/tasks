@@ -260,12 +260,19 @@ async function HomeCatalogResults({ searchParams }: { searchParams: SearchParams
 
   return (
     <div className="space-y-3">
-      <p className="text-[12.5px] text-content-muted">
-        {offers.length} шт.
-        {rewardFilterLabel(rewardKey) ? ` · ${rewardFilterLabel(rewardKey)}` : ""}
-        {difficulty.length
-          ? ` · ${difficulty.map((value) => DIFFICULTY[value].label).join(", ")}`
-          : ""}
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-content-muted">
+        <span>
+          {offers.length} шт.
+          {rewardFilterLabel(rewardKey) ? ` · ${rewardFilterLabel(rewardKey)}` : ""}
+          {difficulty.length
+            ? ` · ${difficulty.map((value) => DIFFICULTY[value].label).join(", ")}`
+            : ""}
+        </span>
+        {hasFilters ? (
+          <FilterLink href="/" className="font-medium text-[var(--acid)]">
+            Сбросить
+          </FilterLink>
+        ) : null}
       </p>
       <CatalogResults
         offers={offers}

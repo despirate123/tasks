@@ -35,9 +35,18 @@ export function ChipScroller({
     sync();
     const active = node.querySelector<HTMLElement>("[data-chip-active='true']");
     if (active) {
-      const left =
-        active.offsetLeft - node.clientWidth / 2 + active.offsetWidth / 2;
-      node.scrollTo({ left: Math.max(0, left) });
+      const pad = 16;
+      const viewLeft = node.scrollLeft;
+      const viewRight = viewLeft + node.clientWidth;
+      const chipLeft = active.offsetLeft;
+      const chipRight = chipLeft + active.offsetWidth;
+      // Не центрируем чип по умолчанию — иначе лента уезжает
+      // и «до 150 ₽» пропадает с первого экрана.
+      if (chipLeft < viewLeft + pad || chipRight > viewRight - pad) {
+        const left =
+          chipLeft - node.clientWidth / 2 + active.offsetWidth / 2;
+        node.scrollTo({ left: Math.max(0, left) });
+      }
     }
     node.addEventListener("scroll", sync, { passive: true });
     const observer = new ResizeObserver(sync);
