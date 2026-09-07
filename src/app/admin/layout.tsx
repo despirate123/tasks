@@ -5,7 +5,6 @@ import { displayName, getCurrentUser, hasRole } from "@/server/auth";
 import { USER_ROLE } from "@/lib/labels";
 import { TelegramInit } from "@/components/telegram-init";
 import { AdminNav } from "./admin-nav";
-import { AdminRefresh } from "./admin-refresh";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +26,6 @@ export default async function AdminLayout({
   return (
     <>
       <TelegramInit serverUserId={user.id} />
-      <AdminRefresh />
       <div className="admin-shell relative z-10 min-h-[100svh]">
         <header
           className="relative z-10 border-b border-border-subtle"
