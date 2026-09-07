@@ -217,6 +217,39 @@ export async function markAllRead(userId: string) {
   });
 }
 
+export async function getNotificationPreferences(userId: string) {
+  const rows = await db.notificationPreference.findMany({ where: { userId } });
+  return new Map(rows.map((row) => [row.type, { inApp: row.inApp, bot: row.bot }]));
+}
+
+export async function setNotificationGroupPreference(
+  userId: string,
+  types: NotificationType[],
+  channel: "inApp" | "bot",
+  enabled: boolean,
+) {
+  for (const type of types) {
+    const priority = DEFAULT_PRIORITY[type];
+    if (UNDISMISSABLE.includes(priority)) continue;
+    const current = await db.notificationPreference.findUnique({
+      where: { userId_type: { userId, type } },
+    });
+    await db.notificationPreference.upsert({
+      where: { userId_type: { userId, type } },
+      create: {
+        userId,
+        type,
+        inApp: channel === "inApp" ? enabled : true,
+        bot: channel === "bot" ? enabled : BOT_DUPLICATED[type],
+      },
+      update: {
+        inApp: channel === "inApp" ? enabled : (current?.inApp ?? true),
+        bot: channel === "bot" ? enabled : (current?.bot ?? true),
+      },
+    });
+  }
+}
+
 /** Группировка списка по дням — «Сегодня», «Вчера», дата. */
 export function groupByDay<T extends { createdAt: Date }>(items: T[]) {
   const groups = new Map<string, T[]>();

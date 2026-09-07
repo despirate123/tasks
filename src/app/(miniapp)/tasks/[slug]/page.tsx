@@ -8,7 +8,6 @@ import {
   Clock,
   FileText,
   Hourglass,
-  Tag,
   Users,
   Video,
 } from "lucide-react";
@@ -23,6 +22,8 @@ import { Card } from "@/components/ui/card";
 import { DetailRow, SectionTitle, Separator } from "@/components/ui/misc";
 import { DifficultyBadge, OfferAvatar } from "@/components/domain";
 import { TakeOfferButton } from "./take-button";
+import { OfferLinksBlock } from "@/components/offer-links";
+import { HOLD_EXPLAINER } from "@/lib/notification-settings";
 
 export default async function TaskPage({
   params,
@@ -42,7 +43,7 @@ export default async function TaskPage({
     user && !eligibility.ok && "submissionId" in eligibility
       ? await db.taskSubmission.findUnique({
           where: { id: eligibility.submissionId as string },
-          select: { id: true, status: true },
+          select: { id: true, status: true, clickId: true, publicCode: true },
         })
       : null;
 
@@ -111,7 +112,9 @@ export default async function TaskPage({
           </div>
           <div className="text-right text-[11.5px] text-content-muted">
             <p>Одобрение {formatEta(offer.approvalEtaMinutes)}</p>
-            {offer.holdHours > 0 ? <p className="mt-0.5">Холд {offer.holdHours} ч</p> : null}
+            {offer.holdHours > 0 ? (
+              <p className="mt-0.5">Проверка до зачисления · {offer.holdHours} ч</p>
+            ) : null}
           </div>
         </div>
       </Card>
@@ -122,6 +125,14 @@ export default async function TaskPage({
             {offer.subtitle}
           </p>
         </Card>
+      ) : null}
+
+      {offer.promoCode || offer.trackingUrl ? (
+        <OfferLinksBlock
+          promoCode={offer.promoCode}
+          trackingUrl={offer.trackingUrl}
+          clickId={activeSubmission?.clickId ?? activeSubmission?.publicCode}
+        />
       ) : null}
 
       <div className="space-y-2.5">
@@ -156,20 +167,6 @@ export default async function TaskPage({
             </>
           ) : null}
 
-          {offer.promoCode ? (
-            <>
-              <Separator className="my-4" />
-              <div className="flex items-center gap-2.5 rounded-2xl bg-surface-overlay p-3">
-                <Tag className="size-4 shrink-0 text-medium" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] text-content-muted">Промокод</p>
-                  <p className="font-mono text-[15px] font-bold tracking-wider">
-                    {offer.promoCode}
-                  </p>
-                </div>
-              </div>
-            </>
-          ) : null}
         </Card>
       </div>
 
@@ -211,7 +208,7 @@ export default async function TaskPage({
           />
           {offer.holdHours > 0 ? (
             <DetailRow
-              label="Холд до зачисления"
+              label="Проверка до зачисления"
               value={`${offer.holdHours} ч`}
             />
           ) : null}
@@ -232,6 +229,9 @@ export default async function TaskPage({
             value={offer.geo.join(", ") || "Любое"}
           />
         </Card>
+        <p className="px-1 text-[12px] leading-relaxed text-content-muted">
+          {HOLD_EXPLAINER}
+        </p>
       </div>
 
       <div className="flex items-center gap-4 px-1 text-[12px] text-content-muted">

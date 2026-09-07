@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { DetailRow, SectionTitle } from "@/components/ui/misc";
 import { DifficultyBadge, OfferAvatar } from "@/components/domain";
 import { OfferControls } from "./offer-controls";
+import { OfferLinksEditor } from "./offer-links";
 
 export default async function AdminOfferPage({
   params,
@@ -72,6 +73,13 @@ export default async function AdminOfferPage({
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-5">
+          <OfferLinksEditor
+            offerId={offer.id}
+            promoCode={offer.promoCode}
+            trackingUrl={offer.trackingUrl}
+            holdHours={offer.holdHours}
+          />
+
           <OfferControls
             offerId={offer.id}
             difficulty={offer.difficulty}

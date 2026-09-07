@@ -113,6 +113,7 @@ export async function takeOffer(user: User, offerId: string) {
     const created = await tx.taskSubmission.create({
       data: {
         publicCode: publicCode("TS"),
+        clickId: publicCode("CK"),
         userId: user.id,
         offerId: offer.id,
         status: "DRAFT",

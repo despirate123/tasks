@@ -65,7 +65,7 @@ export const SUBMISSION_STATUS: Record<
   PENDING_PAYOUT: {
     label: "Ожидает выплаты",
     className: "bg-brand-500/14 text-brand-300 ring-brand-500/28",
-    hint: "Выполнение подтверждено. Деньги придут на баланс после холда.",
+    hint: "Выполнение подтверждено. Деньги проходят проверку у рекламодателя — обычно часы или дни, у части офферов до 60 дней.",
   },
   PAID: {
     label: "Выплачено",
@@ -101,39 +101,47 @@ export function submissionNextAction(status: SubmissionStatus): string {
 
 export const WITHDRAWAL_STATUS: Record<
   WithdrawalStatus,
-  { label: string; className: string }
+  { label: string; className: string; hint: string }
 > = {
   PENDING_REVIEW: {
     label: "На проверке",
     className: "bg-info/12 text-info ring-info/25",
+    hint: "Смотрим заявку и реквизиты. Обычно это быстро.",
   },
   APPROVED: {
     label: "Одобрена",
     className: "bg-brand-500/14 text-brand-300 ring-brand-500/28",
+    hint: "Заявка подтверждена, готовим перевод.",
   },
   PROCESSING: {
     label: "Обрабатывается",
     className: "bg-brand-500/14 text-brand-300 ring-brand-500/28",
+    hint: "Деньги уходят на указанные реквизиты.",
   },
   SENT: {
     label: "Отправлена",
     className: "bg-medium/12 text-medium ring-medium/25",
+    hint: "Перевод отправлен. Если есть TX — он ниже.",
   },
   COMPLETED: {
     label: "Выплачена",
     className: "bg-brand-500/12 text-brand-300 ring-brand-500/25",
+    hint: "Деньги дошли. Заявка закрыта.",
   },
   FAILED: {
     label: "Ошибка",
     className: "bg-hard/12 text-hard ring-hard/25",
+    hint: "Перевод не прошёл. Средства вернулись на баланс.",
   },
   REJECTED: {
     label: "Отклонена",
     className: "bg-hard/12 text-hard ring-hard/25",
+    hint: "Заявку отклонили. Причина ниже, деньги на балансе.",
   },
   CANCELLED: {
     label: "Отменена",
     className: "bg-content-muted/12 text-content-muted ring-border-strong",
+    hint: "Вы отменили заявку. Сумма снова доступна к выводу.",
   },
 };
 

@@ -323,7 +323,7 @@ export function BalanceCard({
           <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[12px]">
             {Number(pending) > 0 ? (
               <div>
-                <p className="text-white/60">В обработке</p>
+                <p className="text-white/60">На проверке</p>
                 <p className="tabular font-semibold text-white">
                   {formatMoney(pending as number)}
                 </p>
@@ -338,6 +338,12 @@ export function BalanceCard({
               </div>
             ) : null}
           </div>
+        ) : null}
+        {Number(pending) > 0 ? (
+          <p className="relative mt-3 text-[11.5px] leading-relaxed text-white/55">
+            Ещё проверяет рекламодатель. Обычно часы или дни, у части офферов —
+            до 60 дней. После проверки сумма станет доступна к выводу.
+          </p>
         ) : null}
       </div>
     </div>

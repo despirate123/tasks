@@ -1,16 +1,24 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Clock, ExternalLink, Tag } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import { getCurrentUser } from "@/server/auth";
 import { db } from "@/server/db";
-import { validateProofs } from "@/server/modules/submissions";
+import { checkEligibility, validateProofs } from "@/server/modules/submissions";
+import { listSimilarOffers } from "@/server/modules/offers";
 import { formatCountdown, formatDateTime, formatMoney } from "@/lib/format";
 import { SUBMISSION_STATUS } from "@/lib/labels";
+import { HOLD_EXPLAINER } from "@/lib/notification-settings";
+import { submissionClickId } from "@/lib/tracking-url";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SectionTitle, Separator } from "@/components/ui/misc";
-import { OfferAvatar, SubmissionStatusBadge } from "@/components/domain";
+import { OfferAvatar, OfferCard, SubmissionStatusBadge } from "@/components/domain";
+import { OfferLinksBlock } from "@/components/offer-links";
+import { CancelSubmissionButton } from "@/components/cancel-submission-button";
 import { ProofForm } from "./proof-form";
+import { TakeOfferButton } from "@/app/(miniapp)/tasks/[slug]/take-button";
+import { resolveOfferAccent } from "@/server/offer-accent";
 
 export default async function SubmissionPage({
   params,
@@ -24,7 +32,7 @@ export default async function SubmissionPage({
   const submission = await db.taskSubmission.findFirst({
     where: { id, userId: user.id },
     include: {
-      offer: { include: { steps: { orderBy: { order: "asc" } } } },
+      offer: { include: { steps: { orderBy: { order: "asc" } }, category: true } },
       proofs: { include: { media: true }, orderBy: { order: "asc" } },
       events: { orderBy: { createdAt: "desc" } },
       rejectionReason: true,
@@ -45,6 +53,20 @@ export default async function SubmissionPage({
   // статус черновика и подсказка уже есть в шапке карточки.
   const timeline = submission.events.filter(
     (event) => !(event.toStatus === "DRAFT" && event.fromStatus == null),
+  );
+
+  const canRetake =
+    submission.status === "REJECTED" && user
+      ? await checkEligibility(user, submission.offer)
+      : null;
+  const similar =
+    submission.status === "REJECTED"
+      ? await listSimilarOffers(submission.offerId, submission.offer.categoryId, 4)
+      : [];
+  const similarAccents = await Promise.all(
+    similar.map((offer) =>
+      resolveOfferAccent(offer.iconUrl, offer.brandName ?? offer.title),
+    ),
   );
 
   return (
@@ -112,18 +134,38 @@ export default async function SubmissionPage({
         ) : null}
 
         {submission.status === "PENDING_PAYOUT" && submission.payoutAvailableAt ? (
-          <div className="mt-3 flex items-center gap-2 rounded-2xl bg-brand-500/8 p-3 ring-1 ring-inset ring-brand-500/20">
-            <Clock className="size-4 shrink-0 text-brand-300" />
-            <p className="text-[12.5px] text-content-secondary">
-              Деньги станут доступны через{" "}
-              <span className="font-semibold text-brand-300">
-                {formatCountdown(submission.payoutAvailableAt)}
-              </span>
+          <div className="mt-3 space-y-2 rounded-2xl bg-brand-500/8 p-3 ring-1 ring-inset ring-brand-500/20">
+            <div className="flex items-center gap-2">
+              <Clock className="size-4 shrink-0 text-brand-300" />
+              <p className="text-[12.5px] text-content-secondary">
+                Проверка до{" "}
+                <span className="font-semibold text-brand-300">
+                  {formatCountdown(submission.payoutAvailableAt)}
+                </span>
+              </p>
+            </div>
+            <p className="text-[12px] leading-relaxed text-content-muted">
+              {HOLD_EXPLAINER}
             </p>
           </div>
         ) : null}
 
-        {submission.rejectionReason || submission.reviewComment ? (
+        {submission.status === "NEEDS_REVISION" ? (
+          <div className="mt-3 rounded-2xl bg-medium/8 p-3 ring-1 ring-inset ring-medium/20">
+            <p className="text-[13px] font-semibold text-medium">Что исправить</p>
+            <p className="mt-1 text-[12.5px] leading-relaxed text-content-secondary">
+              {submission.rejectionReason?.title
+                ? `${submission.rejectionReason.title}. `
+                : ""}
+              {submission.reviewComment ??
+                "Дозагрузите или замените доказательства по замечанию модератора."}
+            </p>
+            <p className="mt-2 text-[12px] leading-relaxed text-content-muted">
+              Уже загруженное можно оставить или удалить и заменить. Отправьте снова,
+              когда всё будет готово.
+            </p>
+          </div>
+        ) : submission.rejectionReason || submission.reviewComment ? (
           <div
             className={`mt-3 rounded-2xl p-3 ring-1 ring-inset ${
               submission.status === "REJECTED"
@@ -147,7 +189,21 @@ export default async function SubmissionPage({
             ) : null}
           </div>
         ) : null}
+
+        {editable ? (
+          <div className="mt-3">
+            <CancelSubmissionButton submissionId={submission.id} />
+          </div>
+        ) : null}
       </Card>
+
+      {submission.offer.promoCode || submission.offer.trackingUrl ? (
+        <OfferLinksBlock
+          promoCode={submission.offer.promoCode}
+          trackingUrl={submission.offer.trackingUrl}
+          clickId={submissionClickId(submission)}
+        />
+      ) : null}
 
       {editable ? (
         <>
@@ -180,29 +236,6 @@ export default async function SubmissionPage({
                 </p>
               )}
 
-              {submission.offer.promoCode ? (
-                <div className="mt-3.5 flex items-center gap-2.5 rounded-2xl bg-surface-overlay p-3">
-                  <Tag className="size-4 shrink-0 text-medium" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] text-content-muted">Промокод</p>
-                    <p className="font-mono text-[15px] font-bold tracking-wider">
-                      {submission.offer.promoCode}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-
-              {submission.offer.trackingUrl ? (
-                <a
-                  href={submission.offer.trackingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-medium text-brand-300"
-                >
-                  Перейти к заданию
-                  <ExternalLink className="size-3.5" />
-                </a>
-              ) : null}
             </Card>
           </div>
 
@@ -263,6 +296,35 @@ export default async function SubmissionPage({
               </p>
             ) : null}
           </Card>
+        </div>
+      ) : null}
+
+      {submission.status === "REJECTED" ? (
+        <div className="space-y-3">
+          {canRetake?.ok ? (
+            <TakeOfferButton
+              offerId={submission.offerId}
+              reward={formatMoney(submission.rewardAmount)}
+            />
+          ) : (
+            <Button variant="secondary" size="lg" block asChild>
+              <Link href="/">Другие задания</Link>
+            </Button>
+          )}
+          {similar.length > 0 ? (
+            <div className="space-y-2.5">
+              <SectionTitle>Похожие задания</SectionTitle>
+              <div className="grid grid-cols-2 items-start gap-2">
+                {similar.map((offer, index) => (
+                  <OfferCard
+                    key={offer.id}
+                    offer={offer}
+                    accent={similarAccents[index]?.color}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
 

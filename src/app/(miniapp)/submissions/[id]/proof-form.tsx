@@ -190,6 +190,13 @@ export function ProofForm({
             </div>
           ) : null}
 
+          {isRevision && proofs.length > 0 ? (
+            <p className="text-[12.5px] leading-relaxed text-content-secondary">
+              Уже загружено. Оставьте как есть или удалите и замените, если модератор
+              просил другое.
+            </p>
+          ) : null}
+
           {proofs.length > 0 ? (
             <div className="grid grid-cols-3 gap-2">
               {proofs.map((proof) => (

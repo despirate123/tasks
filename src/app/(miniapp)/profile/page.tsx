@@ -56,9 +56,7 @@ export default async function ProfilePage() {
       }),
     ]);
 
-  const activeWithdrawals = withdrawals.filter((w) =>
-    ["PENDING_REVIEW", "APPROVED", "PROCESSING", "SENT"].includes(w.status),
-  );
+  const recentWithdrawals = withdrawals.slice(0, 6);
   const canWithdraw = Number(wallet.available) > 0;
 
   return (
@@ -166,33 +164,36 @@ export default async function ProfilePage() {
         />
       </div>
 
-      {activeWithdrawals.length > 0 ? (
+      {recentWithdrawals.length > 0 ? (
         <div className="space-y-2.5">
-          <SectionTitle>Заявки на вывод</SectionTitle>
+          <SectionTitle>Выводы</SectionTitle>
           <Card className="motion-list divide-y divide-border-subtle">
-            {activeWithdrawals.map((w) => (
+            {recentWithdrawals.map((w) => (
               <div key={w.id} className="flex items-center gap-3 p-3.5">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-overlay text-content-secondary">
-                  <ArrowUpRight className="size-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="tabular text-[13.5px] font-semibold">
-                    {formatMoney(w.amountGross)}
-                    {w.payoutCurrency === "USDT" && w.cryptoAmount
-                      ? ` → ${Number(w.cryptoAmount).toFixed(2)} USDT`
-                      : ""}
-                  </p>
-                  <p className="mt-0.5 text-[11.5px] text-content-muted">
-                    {(w.methodSnapshot as { masked?: string })?.masked ?? w.methodKind} ·{" "}
-                    {formatRelative(w.requestedAt)}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
+                <Link
+                  href={`/profile/withdrawals/${w.id}`}
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-overlay text-content-secondary">
+                    <ArrowUpRight className="size-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="tabular text-[13.5px] font-semibold">
+                      {formatMoney(w.amountGross)}
+                      {w.payoutCurrency === "USDT" && w.cryptoAmount
+                        ? ` → ${Number(w.cryptoAmount).toFixed(2)} USDT`
+                        : ""}
+                    </p>
+                    <p className="mt-0.5 text-[11.5px] text-content-muted">
+                      {(w.methodSnapshot as { masked?: string })?.masked ?? w.methodKind}{" "}
+                      · {formatRelative(w.requestedAt)}
+                    </p>
+                  </div>
                   <WithdrawalStatusBadge status={w.status} />
-                  {w.status === "PENDING_REVIEW" ? (
-                    <CancelWithdrawalButton id={w.id} />
-                  ) : null}
-                </div>
+                </Link>
+                {w.status === "PENDING_REVIEW" ? (
+                  <CancelWithdrawalButton id={w.id} />
+                ) : null}
               </div>
             ))}
           </Card>

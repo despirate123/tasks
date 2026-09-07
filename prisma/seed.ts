@@ -142,14 +142,18 @@ async function seedReferenceData() {
   }
 
   const programs = [
-    { level: 1, minReferrals: 0, name: "Друзья", percent: new D(10), signupBonus: new D(0) },
+    { level: 1, minReferrals: 0, name: "Друзья", percent: new D(10), signupBonus: new D(50) },
     { level: 2, minReferrals: 0, name: "Друзья друзей", percent: new D(3), signupBonus: new D(0) },
   ];
   for (const program of programs) {
     await db.referralProgram.upsert({
       where: { level_minReferrals: { level: program.level, minReferrals: program.minReferrals } },
       create: program,
-      update: { percent: program.percent, name: program.name },
+      update: {
+        percent: program.percent,
+        name: program.name,
+        signupBonus: program.signupBonus,
+      },
     });
   }
 
@@ -926,7 +930,7 @@ async function seedUsers() {
         riskScore: seed.riskScore ?? 0,
         createdAt: seed.createdAt,
         lastSeenAt: minutesAgo(Math.floor(Math.random() * 300)),
-        onboardedAt: seed.createdAt,
+        onboardedAt: seed.telegramId === 777000001n ? null : seed.createdAt,
         wallets: { create: { currency: "RUB" } },
         stats: { create: {} },
       },

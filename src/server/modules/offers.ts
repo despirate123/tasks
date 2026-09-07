@@ -9,6 +9,8 @@ export type OfferFilters = {
   maxReward?: number;
   search?: string;
   sort?: "reward" | "eta" | "new" | "popular";
+  take?: number;
+  skip?: number;
 };
 
 export async function listOffers(filters: OfferFilters = {}) {
@@ -52,16 +54,26 @@ export async function listOffers(filters: OfferFilters = {}) {
             ? [{ takenCount: "desc" }]
             : [{ isFeatured: "desc" }, { priority: "desc" }, { createdAt: "desc" }];
 
-  return db.offer.findMany({
+  const take = filters.take ?? 20;
+  const skip = filters.skip ?? 0;
+
+  const rows = await db.offer.findMany({
     where,
     orderBy,
-    take: 60,
+    take: take + 1,
+    skip,
     include: {
       category: { select: { name: true, slug: true, icon: true } },
       source: { select: { code: true, name: true } },
       _count: { select: { steps: true } },
     },
   });
+
+  const hasMore = rows.length > take;
+  return {
+    items: hasMore ? rows.slice(0, take) : rows,
+    hasMore,
+  };
 }
 
 export async function getOfferBySlug(slug: string) {
@@ -73,6 +85,66 @@ export async function getOfferBySlug(slug: string) {
       steps: { orderBy: { order: "asc" } },
     },
   });
+}
+
+export async function listSimilarOffers(
+  offerId: string,
+  categoryId: string | null,
+  take = 4,
+) {
+  const now = new Date();
+  return db.offer.findMany({
+    where: {
+      id: { not: offerId },
+      status: "ACTIVE",
+      ...(categoryId ? { categoryId } : {}),
+      AND: [
+        { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+        { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+      ],
+    },
+    orderBy: [{ isFeatured: "desc" }, { priority: "desc" }],
+    take,
+    include: {
+      category: { select: { name: true, slug: true, icon: true } },
+      source: { select: { code: true, name: true } },
+      _count: { select: { steps: true } },
+    },
+  });
+}
+
+export async function updateOfferLinks(
+  actorId: string,
+  offerId: string,
+  input: { promoCode: string | null; trackingUrl: string | null; holdHours: number },
+) {
+  const before = await db.offer.findUnique({
+    where: { id: offerId },
+    select: { promoCode: true, trackingUrl: true, holdHours: true },
+  });
+  if (!before) throw new Error("OFFER_NOT_FOUND");
+
+  const holdHours = Math.max(0, Math.min(Math.round(input.holdHours), 24 * 90));
+  const promoCode = input.promoCode?.trim() || null;
+  const trackingUrl = input.trackingUrl?.trim() || null;
+
+  const updated = await db.offer.update({
+    where: { id: offerId },
+    data: { promoCode, trackingUrl, holdHours, updatedById: actorId },
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId,
+      action: "offer.links.set",
+      entityType: "offer",
+      entityId: offerId,
+      before,
+      after: { promoCode, trackingUrl, holdHours },
+    },
+  });
+
+  return updated;
 }
 
 export async function getCategoriesWithCounts() {

@@ -23,13 +23,29 @@ import { ActiveWork } from "@/components/active-work";
 import { HomeHeader } from "@/components/home-header";
 import { ChipScroller } from "@/components/chip-scroller";
 import { ChipDot, chipClass } from "@/lib/chips";
+import { OnboardingCard } from "@/components/onboarding-card";
 import {
   HomeCatalogSkeleton,
   HomeHeaderSkeleton,
   HomeWalletSkeleton,
 } from "@/components/page-skeleton";
 
-type CatalogOffer = Awaited<ReturnType<typeof listOffers>>[number];
+type CatalogOffer = Awaited<ReturnType<typeof listOffers>>["items"][number];
+
+const CATALOG_PAGE = 12;
+const REWARD_CHIPS = [
+  { key: "", label: "Любая сумма" },
+  { key: "0-150", label: "до 150 ₽" },
+  { key: "150-400", label: "150–400 ₽" },
+  { key: "400", label: "от 400 ₽" },
+] as const;
+
+function parseReward(raw?: string): { minReward?: number; maxReward?: number } {
+  if (raw === "0-150") return { minReward: 0, maxReward: 150 };
+  if (raw === "150-400") return { minReward: 150, maxReward: 400 };
+  if (raw === "400") return { minReward: 400 };
+  return {};
+}
 
 async function HybridCatalog({
   offers,
@@ -75,6 +91,7 @@ async function HybridCatalog({
 
 const SORTS = [
   { key: "", label: "Рекомендуем" },
+  { key: "popular", label: "Популярные" },
   { key: "reward", label: "Дороже" },
   { key: "eta", label: "Быстрее" },
   { key: "new", label: "Новые" },
@@ -85,6 +102,8 @@ type SearchParams = Promise<{
   category?: string;
   sort?: string;
   q?: string;
+  reward?: string;
+  take?: string;
 }>;
 
 type CatalogQuery = Awaited<SearchParams>;
@@ -145,6 +164,9 @@ export default async function CatalogPage({
       <Suspense fallback={<HomeHeaderSkeleton />}>
         <HomeHeader />
       </Suspense>
+      <Suspense fallback={null}>
+        <HomeOnboarding />
+      </Suspense>
       <Suspense fallback={<HomeWalletSkeleton />}>
         <HomeWalletAndWork />
       </Suspense>
@@ -155,16 +177,29 @@ export default async function CatalogPage({
   );
 }
 
+async function HomeOnboarding() {
+  const user = await getCurrentUser();
+  if (!user || user.onboardedAt) return null;
+  return <OnboardingCard />;
+}
+
 async function HomeCatalog({ params }: { params: CatalogQuery }) {
   const difficulty = parseDifficulty(params);
   const user = await getCurrentUser();
+  const reward = parseReward(params.reward);
+  const take = Math.min(
+    Math.max(Number(params.take) || CATALOG_PAGE, CATALOG_PAGE),
+    80,
+  );
 
-  const [offers, categories, own] = await Promise.all([
+  const [catalog, categories, own] = await Promise.all([
     listOffers({
       difficulty: difficulty.length ? difficulty : undefined,
       categorySlug: params.category,
       search: params.q,
-      sort: params.sort as "reward" | "eta" | "new" | undefined,
+      sort: params.sort as "reward" | "eta" | "new" | "popular" | undefined,
+      take,
+      ...reward,
     }),
     getCategoriesWithCounts(),
     user
@@ -193,8 +228,9 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
     }
   }
 
+  const offers = catalog.items;
   const hasFilters = Boolean(
-    difficulty.length || params.category || params.q || params.sort,
+    difficulty.length || params.category || params.q || params.sort || params.reward,
   );
 
   const buildHref = (patch: Record<string, string | undefined>) => {
@@ -202,12 +238,14 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
     if (params.q) next.set("q", params.q);
     if (params.sort) next.set("sort", params.sort);
     if (params.category) next.set("category", params.category);
+    if (params.reward) next.set("reward", params.reward);
     for (const d of difficulty) next.append("difficulty", d);
 
     for (const [key, value] of Object.entries(patch)) {
       next.delete(key);
       if (value) next.set(key, value);
     }
+    next.delete("take");
     const qs = next.toString();
     return qs ? `/?${qs}` : "/";
   };
@@ -217,6 +255,7 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
     if (params.q) next.set("q", params.q);
     if (params.sort) next.set("sort", params.sort);
     if (params.category) next.set("category", params.category);
+    if (params.reward) next.set("reward", params.reward);
     const set = new Set(difficulty);
     if (set.has(value)) set.delete(value);
     else set.add(value);
@@ -224,6 +263,17 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
     const qs = next.toString();
     return qs ? `/?${qs}` : "/";
   };
+
+  const moreHref = (() => {
+    const next = new URLSearchParams();
+    if (params.q) next.set("q", params.q);
+    if (params.sort) next.set("sort", params.sort);
+    if (params.category) next.set("category", params.category);
+    if (params.reward) next.set("reward", params.reward);
+    for (const d of difficulty) next.append("difficulty", d);
+    next.set("take", String(take + CATALOG_PAGE));
+    return `/?${next.toString()}`;
+  })();
 
   return (
     <>
@@ -248,6 +298,9 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
           {params.sort ? <input type="hidden" name="sort" value={params.sort} /> : null}
           {params.category ? (
             <input type="hidden" name="category" value={params.category} />
+          ) : null}
+          {params.reward ? (
+            <input type="hidden" name="reward" value={params.reward} />
           ) : null}
           {difficulty.map((value) => (
             <input key={value} type="hidden" name="difficulty" value={value} />
@@ -286,6 +339,21 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
                   <SlidersHorizontal className="size-3" />
                 ) : null}
                 {sort.label}
+              </Link>
+            );
+          })}
+
+          <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
+          {REWARD_CHIPS.map((chip) => {
+            const active = (params.reward ?? "") === chip.key;
+            return (
+              <Link
+                key={chip.key || "any-reward"}
+                href={buildHref({ reward: chip.key || undefined })}
+                className={chipClass(active)}
+              >
+                {active ? <ChipDot /> : null}
+                {chip.label}
               </Link>
             );
           })}
@@ -341,7 +409,16 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
           }
         />
       ) : (
-        <HybridCatalog offers={offers} mineByOffer={mineByOffer} />
+        <>
+          <HybridCatalog offers={offers} mineByOffer={mineByOffer} />
+          {catalog.hasMore ? (
+            <div className="pt-1">
+              <Button variant="secondary" size="md" block asChild>
+                <Link href={moreHref}>Показать ещё</Link>
+              </Button>
+            </div>
+          ) : null}
+        </>
       )}
     </>
   );

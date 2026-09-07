@@ -36,10 +36,14 @@ export async function accrueReferralBonuses(tx: Tx, submissionId: string) {
   if (programs.length === 0) return;
 
   // Активируем реферала при первом оплаченном задании.
-  await tx.referral.updateMany({
+  const activated = await tx.referral.updateMany({
     where: { refereeId: submission.userId, status: "PENDING" },
     data: { status: "ACTIVE", activatedAt: new Date() },
   });
+
+  if (activated.count > 0) {
+    await paySignupBonus(tx, submission.userId, submission.id);
+  }
 
   const chain = await buildReferrerChain(tx, submission.userId, programs.length);
 
@@ -108,6 +112,49 @@ export async function accrueReferralBonuses(tx: Tx, submissionId: string) {
       entityId: submission.userId,
     });
   }
+}
+
+async function paySignupBonus(tx: Tx, refereeId: string, submissionId: string) {
+  const referral = await tx.referral.findUnique({
+    where: { refereeId },
+    select: { referrerId: true, status: true },
+  });
+  if (!referral || referral.status === "BLOCKED") return;
+
+  const program = await tx.referralProgram.findFirst({
+    where: { isActive: true, level: 1, signupBonus: { gt: 0 } },
+    orderBy: { minReferrals: "asc" },
+  });
+  if (!program) return;
+
+  const amount = new D(program.signupBonus).toDecimalPlaces(2, D.ROUND_DOWN);
+  if (amount.lte(0)) return;
+
+  await postLedgerEntry(tx, {
+    userId: referral.referrerId,
+    direction: "CREDIT",
+    type: "REFERRAL_BONUS",
+    amount,
+    idempotencyKey: `referral-signup:${refereeId}`,
+    description: "Бонус за первое задание приглашённого",
+    submissionId,
+  });
+
+  await tx.userStats.update({
+    where: { userId: referral.referrerId },
+    data: { referralEarnings: { increment: amount } },
+  });
+
+  await notify(tx, {
+    userId: referral.referrerId,
+    type: "REFERRAL_EARNING",
+    title: "Бонус за друга",
+    body: `${formatMoney(amount)} — приглашённый выполнил первое задание.`,
+    deepLink: "/referrals",
+    groupKey: `referral-signup:${refereeId}`,
+    entityType: "referral",
+    entityId: refereeId,
+  });
 }
 
 async function buildReferrerChain(tx: Tx, userId: string, maxLevels: number) {

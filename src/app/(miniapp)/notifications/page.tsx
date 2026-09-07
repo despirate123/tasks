@@ -4,9 +4,12 @@ import {
   groupByDay,
   listNotifications,
   getUnreadCount,
+  getNotificationPreferences,
 } from "@/server/modules/notifications";
-import { EmptyState } from "@/components/ui/misc";
+import { EmptyState, SectionTitle } from "@/components/ui/misc";
 import { NotificationList, MarkAllReadButton } from "./notification-list";
+import { NotificationPrefs } from "./notification-prefs";
+import type { NotificationType } from "@/generated/prisma";
 
 export default async function NotificationsPage() {
   const user = await getCurrentUser();
@@ -21,10 +24,14 @@ export default async function NotificationsPage() {
     );
   }
 
-  const [notifications, unread] = await Promise.all([
+  const [notifications, unread, prefRows] = await Promise.all([
     listNotifications(user.id),
     getUnreadCount(user.id),
+    getNotificationPreferences(user.id),
   ]);
+  const prefs = Object.fromEntries(prefRows) as Partial<
+    Record<NotificationType, { inApp: boolean; bot: boolean }>
+  >;
 
   const groups = groupByDay(notifications).map((group) => ({
     label: group.label,
@@ -54,6 +61,15 @@ export default async function NotificationsPage() {
         {unread > 0 ? <MarkAllReadButton /> : null}
       </div>
 
+      <div className="space-y-2.5">
+        <SectionTitle>Настройки</SectionTitle>
+        <NotificationPrefs prefs={prefs} />
+        <p className="px-1 text-[12px] leading-relaxed text-content-muted">
+          Результаты проверки и выплаты по умолчанию дублируются в бот. Остальное —
+          только колокольчик, чтобы чат не превращался в спам.
+        </p>
+      </div>
+
       {notifications.length === 0 ? (
         <EmptyState
           icon={<Bell />}
@@ -63,13 +79,6 @@ export default async function NotificationsPage() {
       ) : (
         <NotificationList groups={groups} />
       )}
-
-      <div className="rounded-card bg-surface-raised/60 p-4 ring-1 ring-inset ring-border-subtle">
-        <p className="text-[12.5px] leading-relaxed text-content-secondary">
-          Результаты проверки, зачисления и статусы выплат дублируются в
-          Telegram-бот. Остальное — только здесь, чтобы бот не превращался в спам.
-        </p>
-      </div>
     </div>
   );
 }

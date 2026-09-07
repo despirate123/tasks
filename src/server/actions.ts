@@ -17,6 +17,7 @@ import {
   resetOfferAuto,
   setOfferApprovalEta,
   setOfferDifficulty,
+  updateOfferLinks,
 } from "@/server/modules/offers";
 import {
   approveWithdrawal,
@@ -28,7 +29,12 @@ import {
   markWithdrawalSent,
   refundWithdrawal,
 } from "@/server/modules/withdrawals";
-import { markAllRead, markRead } from "@/server/modules/notifications";
+import {
+  markAllRead,
+  markRead,
+  setNotificationGroupPreference,
+} from "@/server/modules/notifications";
+import type { NotificationType } from "@/generated/prisma";
 import { deleteBanner, toggleBanner, upsertBanner } from "@/server/modules/banners";
 import { postLedgerEntry } from "@/server/modules/wallet";
 import { maskCard, maskCryptoAddress } from "@/lib/format";
@@ -195,6 +201,7 @@ export async function cancelSubmissionAction(
     const user = await requireUser();
     const submission = await db.taskSubmission.findFirst({
       where: { id: submissionId, userId: user.id },
+      include: { offer: { select: { slug: true } } },
     });
     if (!submission) return { ok: false, error: "Выполнение не найдено" };
     if (!["DRAFT", "NEEDS_REVISION"].includes(submission.status)) {
@@ -205,6 +212,10 @@ export async function cancelSubmissionAction(
       await tx.taskSubmission.update({
         where: { id: submissionId },
         data: { status: "CANCELLED" },
+      });
+      await tx.offer.update({
+        where: { id: submission.offerId },
+        data: { takenCount: { decrement: 1 } },
       });
       await tx.submissionEvent.create({
         data: {
@@ -218,11 +229,14 @@ export async function cancelSubmissionAction(
       });
     });
 
+    revalidatePath("/");
     revalidatePath("/my-tasks");
-    return { ok: true, message: "Выполнение отменено" };
+    revalidatePath(`/submissions/${submissionId}`);
+    revalidatePath(`/tasks/${submission.offer.slug}`);
   } catch (error) {
     return fail(error);
   }
+  redirect("/my-tasks?tab=closed");
 }
 
 // ── Уведомления ──────────────────────────────────────────────────────────────
@@ -231,6 +245,35 @@ export async function markNotificationReadAction(id: string): Promise<ActionResu
   try {
     const user = await requireUser();
     await markRead(user.id, id);
+    revalidatePath("/notifications");
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function completeOnboardingAction(): Promise<ActionResult> {
+  try {
+    const user = await requireUser();
+    await db.user.update({
+      where: { id: user.id },
+      data: { onboardedAt: new Date() },
+    });
+    revalidatePath("/");
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function setNotificationGroupAction(
+  types: NotificationType[],
+  channel: "inApp" | "bot",
+  enabled: boolean,
+): Promise<ActionResult> {
+  try {
+    const user = await requireUser();
+    await setNotificationGroupPreference(user.id, types, channel, enabled);
     revalidatePath("/notifications");
     return { ok: true };
   } catch (error) {
@@ -429,6 +472,26 @@ export async function setOfferStatusAction(
     revalidatePath("/admin/offers");
     revalidatePath("/");
     return { ok: true, message: "Статус задания обновлён" };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function updateOfferLinksAction(
+  offerId: string,
+  input: { promoCode: string; trackingUrl: string; holdHours: number },
+): Promise<ActionResult> {
+  try {
+    const admin = await requireRole("MODERATOR");
+    await updateOfferLinks(admin.id, offerId, {
+      promoCode: input.promoCode,
+      trackingUrl: input.trackingUrl,
+      holdHours: input.holdHours,
+    });
+    revalidatePath("/admin/offers");
+    revalidatePath(`/admin/offers/${offerId}`);
+    revalidatePath("/");
+    return { ok: true, message: "Ссылка и промокод обновлены" };
   } catch (error) {
     return fail(error);
   }

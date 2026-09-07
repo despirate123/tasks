@@ -6,7 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { haptic } from "@/components/telegram-init";
 
-export function ReferralShare({ link, code }: { link: string; code: string }) {
+export function ReferralShare({
+  link,
+  code,
+  qrSvg,
+  signupBonus,
+}: {
+  link: string;
+  code: string;
+  qrSvg: string;
+  signupBonus?: string | null;
+}) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -30,6 +40,16 @@ export function ReferralShare({ link, code }: { link: string; code: string }) {
 
   return (
     <Card className="space-y-3 p-4">
+      <div
+        className="mx-auto w-[11.5rem] overflow-hidden rounded-2xl bg-[#f4f5f6] p-2"
+        dangerouslySetInnerHTML={{ __html: qrSvg }}
+      />
+      {signupBonus ? (
+        <p className="text-center text-[12.5px] leading-relaxed text-content-secondary">
+          За первое оплаченное задание друга вы получите ещё {signupBonus} сверх
+          процента.
+        </p>
+      ) : null}
       <div>
         <p className="text-[11px] tracking-wide text-content-muted uppercase">
           Ваша ссылка

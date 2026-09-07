@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   AlertTriangle,
   Bitcoin,
@@ -212,10 +213,18 @@ export function WithdrawForm({
           <Info className="size-4 shrink-0 text-info" />
           <p className="text-[12.5px] leading-relaxed text-content-secondary">
             Заявка {activeRequestCode} ещё в обработке. Новую можно создать после её
-            завершения — так мы исключаем двойные выплаты.
+            завершения — так мы исключаем двойные выплаты.{" "}
+            {activeRequestId ? (
+              <Link
+                href={`/profile/withdrawals/${activeRequestId}`}
+                className="font-medium text-brand-300"
+              >
+                Открыть заявку
+              </Link>
+            ) : null}
             {canCancelActive && activeRequestId ? (
               <>
-                {" "}
+                {" · "}
                 <CancelWithdrawalButton id={activeRequestId} />
               </>
             ) : null}

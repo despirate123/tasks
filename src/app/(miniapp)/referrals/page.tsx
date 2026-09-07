@@ -1,4 +1,5 @@
 import { Gift, Users } from "lucide-react";
+import { renderSVG } from "uqr";
 import { getCurrentUser, displayName } from "@/server/auth";
 import { getReferralOverview } from "@/server/modules/referrals";
 import { formatDate, formatMoney, formatRelative } from "@/lib/format";
@@ -23,6 +24,16 @@ export default async function ReferralsPage() {
 
   const overview = await getReferralOverview(user.id);
   const activeCount = overview.referrals.filter((r) => r.status === "ACTIVE").length;
+  const signupBonus = overview.programs.find(
+    (program) => program.level === 1 && Number(program.signupBonus) > 0,
+  );
+  const qrSvg = renderSVG(overview.link, {
+    ecc: "M",
+    border: 2,
+    pixelSize: 6,
+    whiteColor: "#f4f5f6",
+    blackColor: "#121212",
+  });
 
   return (
     <div className="space-y-4">
@@ -42,9 +53,21 @@ export default async function ReferralsPage() {
             {Number(program.percent)} %
           </Badge>
         ))}
+        {signupBonus ? (
+          <Badge tone="brand" size="md">
+            +{formatMoney(signupBonus.signupBonus)} за первое задание друга
+          </Badge>
+        ) : null}
       </div>
 
-      <ReferralShare link={overview.link} code={overview.code} />
+      <ReferralShare
+        link={overview.link}
+        code={overview.code}
+        qrSvg={qrSvg}
+        signupBonus={
+          signupBonus ? formatMoney(signupBonus.signupBonus) : null
+        }
+      />
 
       <div className="motion-list grid grid-cols-3 gap-2">
         <StatTile label="Приглашено" value={overview.referrals.length} />
