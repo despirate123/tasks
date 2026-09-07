@@ -57,7 +57,15 @@ export async function POST(
   });
 
   const secret = process.env[`${source.toUpperCase()}_POSTBACK_SECRET`];
-  if (secret) {
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      await db.postbackLog.update({
+        where: { id: log.id },
+        data: { error: "WEBHOOK_NOT_CONFIGURED" },
+      });
+      return NextResponse.json({ error: "webhook not configured" }, { status: 503 });
+    }
+  } else {
     const expected = createHmac("sha256", secret).update(raw).digest("hex");
     const a = Buffer.from(expected, "hex");
     const b = Buffer.from(signature ?? "", "hex");

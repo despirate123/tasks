@@ -1,9 +1,8 @@
 import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { getCurrentUser, hasRole } from "@/server/auth";
-import { LOCAL_UPLOAD_DIR } from "@/lib/storage";
+import { resolveLocalUploadPath } from "@/lib/storage";
 
 /**
  * Выдача доказательства.
@@ -37,8 +36,11 @@ export async function GET(
     return new NextResponse("Forbidden", { status: 403 });
   }
 
+  const filePath = resolveLocalUploadPath(media.storageKey);
+  if (!filePath) return new NextResponse("Forbidden", { status: 403 });
+
   try {
-    const data = await readFile(path.join(LOCAL_UPLOAD_DIR, media.storageKey));
+    const data = await readFile(filePath);
     return new NextResponse(new Uint8Array(data), {
       headers: {
         "Content-Type": media.mimeType,

@@ -33,7 +33,8 @@ export class LedgerError extends Error {
       | "WALLET_NOT_FOUND"
       | "INSUFFICIENT_FUNDS"
       | "ALREADY_APPLIED"
-      | "INVALID_AMOUNT",
+      | "INVALID_AMOUNT"
+      | "CONCURRENT_UPDATE",
     message?: string,
   ) {
     super(message ?? code);
@@ -42,16 +43,67 @@ export class LedgerError extends Error {
 }
 
 /**
+ * Блокирует строку кошелька до конца транзакции.
+ * Без FOR UPDATE два параллельных списания читают один available и оба проходят.
+ */
+export async function lockWallet(tx: Tx, userId: string) {
+  const locked = await tx.$queryRaw<Array<{ id: string }>>`
+    SELECT id FROM wallets WHERE "userId" = ${userId} AND currency = 'RUB' FOR UPDATE
+  `;
+  if (locked.length > 0) return;
+
+  try {
+    await tx.wallet.create({ data: { userId, currency: "RUB" } });
+  } catch (error) {
+    if (
+      !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+      error.code !== "P2002"
+    ) {
+      throw error;
+    }
+  }
+
+  await tx.$queryRaw`
+    SELECT id FROM wallets WHERE "userId" = ${userId} AND currency = 'RUB' FOR UPDATE
+  `;
+}
+
+async function applyWalletUpdate(
+  tx: Tx,
+  walletId: string,
+  version: number,
+  data: {
+    available: Prisma.Decimal;
+    pending: Prisma.Decimal;
+    hold: Prisma.Decimal;
+    totalEarned: Prisma.Decimal;
+    totalWithdrawn: Prisma.Decimal;
+  },
+) {
+  const updated = await tx.wallet.updateMany({
+    where: { id: walletId, version },
+    data: {
+      ...data,
+      version: { increment: 1 },
+    },
+  });
+  if (updated.count !== 1) {
+    throw new LedgerError(
+      "CONCURRENT_UPDATE",
+      "Кошелёк изменился, повторите операцию",
+    );
+  }
+}
+
+/**
  * Единственный способ изменить баланс.
  *
  * Инварианты:
  *  1. Запись в леджер и обновление кэша в wallets — в одной транзакции.
- *  2. Повторный вызов с тем же idempotencyKey не меняет баланс (возвращает
- *     существующую запись). Это норма при ретраях воркеров и постбеках.
+ *  2. Повторный вызов с тем же idempotencyKey не меняет баланс.
  *  3. DEBIT не может увести available в минус.
- *
- * Функция принимает транзакционный клиент, потому что почти всегда вызывается
- * внутри более широкой бизнес-транзакции (одобрение выполнения, создание вывода).
+ *  4. Строка кошелька берётся FOR UPDATE + version, иначе два списания
+ *     читают один available и оба проходят.
  */
 export async function postLedgerEntry(tx: Tx, input: LedgerInput) {
   const amount = new D(input.amount);
@@ -64,6 +116,8 @@ export async function postLedgerEntry(tx: Tx, input: LedgerInput) {
     where: { idempotencyKey: input.idempotencyKey },
   });
   if (existing) return { entry: existing, applied: false as const };
+
+  await lockWallet(tx, input.userId);
 
   const wallet = await tx.wallet.findUnique({
     where: { userId_currency: { userId: input.userId, currency: "RUB" } },
@@ -131,16 +185,12 @@ export async function postLedgerEntry(tx: Tx, input: LedgerInput) {
     },
   });
 
-  await tx.wallet.update({
-    where: { id: wallet.id },
-    data: {
-      available,
-      pending,
-      hold,
-      totalEarned,
-      totalWithdrawn,
-      version: { increment: 1 },
-    },
+  await applyWalletUpdate(tx, wallet.id, wallet.version, {
+    available,
+    pending,
+    hold,
+    totalEarned,
+    totalWithdrawn,
   });
 
   return { entry, applied: true as const };
@@ -156,6 +206,8 @@ export async function releaseHold(
   userId: string,
   amount: Prisma.Decimal | number | string,
 ) {
+  await lockWallet(tx, userId);
+
   const wallet = await tx.wallet.findUnique({
     where: { userId_currency: { userId, currency: "RUB" } },
   });
@@ -165,9 +217,12 @@ export async function releaseHold(
   const pending = D.max(new D(wallet.pending).minus(value), new D(0));
   const available = new D(wallet.available).plus(value);
 
-  await tx.wallet.update({
-    where: { id: wallet.id },
-    data: { pending, available, version: { increment: 1 } },
+  await applyWalletUpdate(tx, wallet.id, wallet.version, {
+    available,
+    pending,
+    hold: new D(wallet.hold),
+    totalEarned: new D(wallet.totalEarned),
+    totalWithdrawn: new D(wallet.totalWithdrawn),
   });
 
   return { available, pending };

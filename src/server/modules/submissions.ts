@@ -22,7 +22,13 @@ export class SubmissionError extends Error {
  * Возвращает конкретную причину отказа — «ошибка» без объяснения гарантирует
  * поток в поддержку.
  */
-export async function checkEligibility(user: User, offer: Offer) {
+type QueryClient = Pick<Prisma.TransactionClient, "taskSubmission">;
+
+export async function checkEligibility(
+  user: User,
+  offer: Offer,
+  client: QueryClient = db,
+) {
   if (offer.status !== "ACTIVE") {
     return { ok: false as const, reason: "Задание сейчас недоступно" };
   }
@@ -44,14 +50,14 @@ export async function checkEligibility(user: User, offer: Offer) {
   }
 
   const [userAttempts, active] = await Promise.all([
-    db.taskSubmission.count({
+    client.taskSubmission.count({
       where: {
         userId: user.id,
         offerId: offer.id,
         status: { notIn: ["CANCELLED", "EXPIRED"] },
       },
     }),
-    db.taskSubmission.findFirst({
+    client.taskSubmission.findFirst({
       where: {
         userId: user.id,
         offerId: offer.id,
@@ -72,7 +78,7 @@ export async function checkEligibility(user: User, offer: Offer) {
   }
 
   if (offer.newUsersOnly) {
-    const paid = await db.taskSubmission.count({
+    const paid = await client.taskSubmission.count({
       where: { userId: user.id, status: "PAID" },
     });
     if (paid > 0) {
@@ -82,7 +88,7 @@ export async function checkEligibility(user: User, offer: Offer) {
 
   if (offer.dailyLimit != null) {
     const since = new Date(Date.now() - 86_400_000);
-    const today = await db.taskSubmission.count({
+    const today = await client.taskSubmission.count({
       where: { offerId: offer.id, startedAt: { gte: since } },
     });
     if (today >= offer.dailyLimit) {
@@ -98,18 +104,22 @@ export async function checkEligibility(user: User, offer: Offer) {
  * в оффере, уже начатые выполнения оплатятся по старой цене.
  */
 export async function takeOffer(user: User, offerId: string) {
-  const offer = await db.offer.findUnique({ where: { id: offerId } });
-  if (!offer) throw new SubmissionError("OFFER_NOT_FOUND", "Задание не найдено");
+  return db.$transaction(async (tx) => {
+    await tx.$queryRaw`
+      SELECT id FROM offers WHERE id = ${offerId} FOR UPDATE
+    `;
 
-  const eligibility = await checkEligibility(user, offer);
-  if (!eligibility.ok) {
-    if ("submissionId" in eligibility && eligibility.submissionId) {
-      return { submissionId: eligibility.submissionId, reused: true as const };
+    const offer = await tx.offer.findUnique({ where: { id: offerId } });
+    if (!offer) throw new SubmissionError("OFFER_NOT_FOUND", "Задание не найдено");
+
+    const eligibility = await checkEligibility(user, offer, tx);
+    if (!eligibility.ok) {
+      if ("submissionId" in eligibility && eligibility.submissionId) {
+        return { submissionId: eligibility.submissionId, reused: true as const };
+      }
+      throw new SubmissionError("NOT_ELIGIBLE", eligibility.reason);
     }
-    throw new SubmissionError("NOT_ELIGIBLE", eligibility.reason);
-  }
 
-  const submission = await db.$transaction(async (tx) => {
     const created = await tx.taskSubmission.create({
       data: {
         publicCode: publicCode("TS"),
@@ -140,10 +150,8 @@ export async function takeOffer(user: User, offerId: string) {
       },
     });
 
-    return created;
+    return { submissionId: created.id, reused: false as const };
   });
-
-  return { submissionId: submission.id, reused: false as const };
 }
 
 /** Проверка полноты доказательств согласно требованиям оффера. */
@@ -205,8 +213,12 @@ export async function submitForReview(userId: string, submissionId: string) {
   const isRevision = submission.status === "NEEDS_REVISION";
 
   return db.$transaction(async (tx) => {
-    const updated = await tx.taskSubmission.update({
-      where: { id: submission.id },
+    const claimed = await tx.taskSubmission.updateMany({
+      where: {
+        id: submission.id,
+        userId,
+        status: { in: ["DRAFT", "NEEDS_REVISION"] },
+      },
       data: {
         status: "PENDING_REVIEW",
         submittedAt: now,
@@ -218,6 +230,15 @@ export async function submitForReview(userId: string, submissionId: string) {
         reviewerId: null,
         reviewLockedAt: null,
       },
+    });
+    if (claimed.count !== 1) {
+      throw new SubmissionError(
+        "BAD_STATUS",
+        "Это выполнение уже отправлено на проверку",
+      );
+    }
+    const updated = await tx.taskSubmission.findUniqueOrThrow({
+      where: { id: submission.id },
     });
 
     await tx.submissionEvent.create({
@@ -287,8 +308,11 @@ export async function approveSubmission(
   const payoutAt = new Date(now.getTime() + submission.offer.holdHours * 3_600_000);
 
   return db.$transaction(async (tx) => {
-    const updated = await tx.taskSubmission.update({
-      where: { id: submission.id },
+    const claimed = await tx.taskSubmission.updateMany({
+      where: {
+        id: submission.id,
+        status: { in: ["PENDING_REVIEW", "IN_REVIEW", "NEEDS_REVISION"] },
+      },
       data: {
         status: "PENDING_PAYOUT",
         reviewedAt: now,
@@ -297,6 +321,12 @@ export async function approveSubmission(
         payoutAvailableAt: payoutAt,
         reviewLockedAt: null,
       },
+    });
+    if (claimed.count !== 1) {
+      throw new SubmissionError("BAD_STATUS", "Это выполнение уже обработано");
+    }
+    const updated = await tx.taskSubmission.findUniqueOrThrow({
+      where: { id: submission.id },
     });
 
     await postLedgerEntry(tx, {
@@ -382,8 +412,11 @@ export async function rejectSubmission(
   const now = new Date();
 
   return db.$transaction(async (tx) => {
-    const updated = await tx.taskSubmission.update({
-      where: { id: submission.id },
+    const claimed = await tx.taskSubmission.updateMany({
+      where: {
+        id: submission.id,
+        status: { in: ["PENDING_REVIEW", "IN_REVIEW", "NEEDS_REVISION"] },
+      },
       data: {
         status: "REJECTED",
         reviewedAt: now,
@@ -392,6 +425,12 @@ export async function rejectSubmission(
         reviewComment: comment,
         reviewLockedAt: null,
       },
+    });
+    if (claimed.count !== 1) {
+      throw new SubmissionError("BAD_STATUS", "Это выполнение уже обработано");
+    }
+    const updated = await tx.taskSubmission.findUniqueOrThrow({
+      where: { id: submission.id },
     });
 
     await tx.offer.update({
@@ -477,8 +516,11 @@ export async function requestRevision(
   const now = new Date();
 
   return db.$transaction(async (tx) => {
-    const updated = await tx.taskSubmission.update({
-      where: { id: submission.id },
+    const claimed = await tx.taskSubmission.updateMany({
+      where: {
+        id: submission.id,
+        status: { in: ["PENDING_REVIEW", "IN_REVIEW"] },
+      },
       data: {
         status: "NEEDS_REVISION",
         reviewerId: moderatorId,
@@ -488,6 +530,12 @@ export async function requestRevision(
         // Даём сутки на доработку, иначе выполнение зависнет навсегда.
         expiresAt: new Date(now.getTime() + 86_400_000),
       },
+    });
+    if (claimed.count !== 1) {
+      throw new SubmissionError("BAD_STATUS", "Это выполнение уже обработано");
+    }
+    const updated = await tx.taskSubmission.findUniqueOrThrow({
+      where: { id: submission.id },
     });
 
     await tx.submissionEvent.create({
@@ -528,9 +576,13 @@ export async function settleSubmission(submissionId: string) {
   if (!submission || submission.status !== "PENDING_PAYOUT") return null;
 
   return db.$transaction(async (tx) => {
-    const updated = await tx.taskSubmission.update({
-      where: { id: submission.id },
+    const claimed = await tx.taskSubmission.updateMany({
+      where: { id: submission.id, status: "PENDING_PAYOUT" },
       data: { status: "PAID", paidAt: new Date() },
+    });
+    if (claimed.count !== 1) return null;
+    const updated = await tx.taskSubmission.findUniqueOrThrow({
+      where: { id: submission.id },
     });
 
     if (submission.offer.holdHours > 0) {

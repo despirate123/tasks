@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "webhook not configured" }, { status: 503 });
   }
 
-  const body = JSON.parse(raw) as {
+  let body: {
     withdrawalId?: string;
     txHash?: string;
     network?: string;
@@ -50,6 +50,11 @@ export async function POST(request: Request) {
     feePaid?: string;
     reason?: string;
   };
+  try {
+    body = JSON.parse(raw) as typeof body;
+  } catch {
+    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+  }
 
   if (!body.withdrawalId || !body.network) {
     return NextResponse.json({ error: "missing fields" }, { status: 400 });

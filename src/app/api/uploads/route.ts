@@ -1,15 +1,16 @@
 import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { dirname } from "node:path";
 import { NextResponse } from "next/server";
 import { db } from "@/server/db";
-import { getCurrentUser } from "@/server/auth";
+import { requireUser } from "@/server/auth";
 import {
   ALLOWED_IMAGE_TYPES,
   ALLOWED_VIDEO_TYPES,
-  LOCAL_UPLOAD_DIR,
+  EXT_BY_MIME,
   MAX_PHOTO_BYTES,
   MAX_VIDEO_BYTES,
+  resolveLocalUploadPath,
 } from "@/lib/storage";
 
 /**
@@ -26,11 +27,19 @@ import {
  *  - checksum (SHA-256) — мгновенно ловит повторную отправку того же файла.
  */
 export async function POST(request: Request) {
-  const user = await getCurrentUser();
-  if (!user) {
+  let user;
+  try {
+    user = await requireUser();
+  } catch (error) {
+    const blocked = error instanceof Error && error.message === "USER_BLOCKED";
     return NextResponse.json(
-      { error: { code: "UNAUTHORIZED", message: "Требуется авторизация" } },
-      { status: 401 },
+      {
+        error: {
+          code: blocked ? "USER_BLOCKED" : "UNAUTHORIZED",
+          message: blocked ? "Аккаунт заблокирован" : "Требуется авторизация",
+        },
+      },
+      { status: blocked ? 403 : 401 },
     );
   }
 
@@ -133,14 +142,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const rawExt = file.name.includes(".") ? file.name.split(".").pop() : null;
-  const ext = (rawExt ?? (isVideo ? "mp4" : "jpg")).toLowerCase().slice(0, 5);
+  const ext = EXT_BY_MIME[file.type] ?? (isVideo ? "mp4" : "jpg");
   const storageKey = `proofs/${submission.id}/${checksum.slice(0, 16)}.${ext}`;
+  const filePath = resolveLocalUploadPath(storageKey);
+  if (!filePath) {
+    return NextResponse.json(
+      { error: { code: "BAD_PATH", message: "Некорректный путь файла" } },
+      { status: 400 },
+    );
+  }
 
-  await mkdir(path.join(LOCAL_UPLOAD_DIR, path.dirname(storageKey)), {
-    recursive: true,
-  });
-  await writeFile(path.join(LOCAL_UPLOAD_DIR, storageKey), buffer);
+  await mkdir(dirname(filePath), { recursive: true });
+  await writeFile(filePath, buffer);
 
   const media = await db.$transaction(async (tx) => {
     const asset = await tx.mediaAsset.create({

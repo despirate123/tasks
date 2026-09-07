@@ -6,7 +6,7 @@ import { publicCode } from "@/lib/utils";
 import { formatCrypto, formatMoney } from "@/lib/format";
 import { PAYOUT_METHOD } from "@/lib/labels";
 import { notify } from "@/server/modules/notifications";
-import { postLedgerEntry } from "@/server/modules/wallet";
+import { lockWallet, postLedgerEntry } from "@/server/modules/wallet";
 import { getSetting } from "@/server/modules/settings";
 
 const D = Prisma.Decimal;
@@ -28,6 +28,12 @@ export class WithdrawalError extends Error {
 function encryptionKey(): Buffer {
   const raw = process.env.PAYOUT_ENCRYPTION_KEY;
   if (raw && raw.length >= 64) return Buffer.from(raw.slice(0, 64), "hex");
+  if (process.env.NODE_ENV === "production") {
+    throw new WithdrawalError(
+      "ENCRYPTION_KEY_MISSING",
+      "Ключ шифрования реквизитов не задан",
+    );
+  }
   // Локальная разработка: детерминированный ключ-заглушка.
   return Buffer.alloc(32, 7);
 }
@@ -208,50 +214,58 @@ export async function createWithdrawal(
     );
   }
 
-  const wallet = await db.wallet.findUnique({
-    where: { userId_currency: { userId: user.id, currency: "RUB" } },
-  });
-  if (!wallet || new D(wallet.available).lt(gross)) {
-    throw new WithdrawalError(
-      "INSUFFICIENT_FUNDS",
-      `Доступно только ${formatMoney(wallet?.available ?? 0)}`,
-    );
-  }
-
-  const activeCount = await db.withdrawal.count({
-    where: {
-      userId: user.id,
-      status: { in: ["PENDING_REVIEW", "APPROVED", "PROCESSING", "SENT"] },
-    },
-  });
-  if (activeCount > 0) {
-    throw new WithdrawalError(
-      "ACTIVE_REQUEST_EXISTS",
-      "У вас уже есть заявка в обработке. Дождитесь её завершения",
-    );
-  }
-
   const dailyLimit = new D(await getSetting("withdrawal.dailyLimit.user", 50000));
   const since = new Date(Date.now() - 86_400_000);
-  const todayTotal = await db.withdrawal.aggregate({
-    where: {
-      userId: user.id,
-      requestedAt: { gte: since },
-      status: { notIn: ["REJECTED", "CANCELLED", "FAILED"] },
-    },
-    _sum: { amountGross: true },
-  });
-  if (new D(todayTotal._sum.amountGross ?? 0).plus(gross).gt(dailyLimit)) {
-    throw new WithdrawalError(
-      "DAILY_LIMIT",
-      `Суточный лимит вывода — ${formatMoney(dailyLimit)}`,
-    );
-  }
-
   const id = crypto.randomUUID();
   const isCrypto = PAYOUT_METHOD[method.kind].currency === "USDT";
 
   return db.$transaction(async (tx) => {
+    const liveMethod = await tx.payoutMethod.findFirst({
+      where: { id: method.id, userId: user.id, deletedAt: null },
+    });
+    if (!liveMethod) {
+      throw new WithdrawalError("METHOD_NOT_FOUND", "Реквизиты не найдены");
+    }
+
+    await lockWallet(tx, user.id);
+    const wallet = await tx.wallet.findUnique({
+      where: { userId_currency: { userId: user.id, currency: "RUB" } },
+    });
+    if (!wallet || new D(wallet.available).lt(gross)) {
+      throw new WithdrawalError(
+        "INSUFFICIENT_FUNDS",
+        `Доступно только ${formatMoney(wallet?.available ?? 0)}`,
+      );
+    }
+
+    const activeCount = await tx.withdrawal.count({
+      where: {
+        userId: user.id,
+        status: { in: ["PENDING_REVIEW", "APPROVED", "PROCESSING", "SENT"] },
+      },
+    });
+    if (activeCount > 0) {
+      throw new WithdrawalError(
+        "ACTIVE_REQUEST_EXISTS",
+        "У вас уже есть заявка в обработке. Дождитесь её завершения",
+      );
+    }
+
+    const todayTotal = await tx.withdrawal.aggregate({
+      where: {
+        userId: user.id,
+        requestedAt: { gte: since },
+        status: { notIn: ["REJECTED", "CANCELLED", "FAILED"] },
+      },
+      _sum: { amountGross: true },
+    });
+    if (new D(todayTotal._sum.amountGross ?? 0).plus(gross).gt(dailyLimit)) {
+      throw new WithdrawalError(
+        "DAILY_LIMIT",
+        `Суточный лимит вывода — ${formatMoney(dailyLimit)}`,
+      );
+    }
+
     const withdrawal = await tx.withdrawal.create({
       data: {
         id,
@@ -360,17 +374,18 @@ async function runAntifraudChecks(
 // ── Переходы статусов ────────────────────────────────────────────────────────
 
 export async function approveWithdrawal(actorId: string, withdrawalId: string) {
-  const w = await db.withdrawal.findUnique({ where: { id: withdrawalId } });
-  if (!w) throw new WithdrawalError("NOT_FOUND", "Заявка не найдена");
-  if (w.status !== "PENDING_REVIEW") {
-    throw new WithdrawalError("BAD_STATUS", "Заявка уже обработана");
-  }
-
   return db.$transaction(async (tx) => {
-    const updated = await tx.withdrawal.update({
-      where: { id: w.id },
+    const claimed = await tx.withdrawal.updateMany({
+      where: { id: withdrawalId, status: "PENDING_REVIEW" },
       data: { status: "APPROVED", reviewerId: actorId, reviewedAt: new Date() },
     });
+    if (claimed.count !== 1) {
+      const existing = await tx.withdrawal.findUnique({ where: { id: withdrawalId } });
+      if (!existing) throw new WithdrawalError("NOT_FOUND", "Заявка не найдена");
+      throw new WithdrawalError("BAD_STATUS", "Заявка уже обработана");
+    }
+    const updated = await tx.withdrawal.findUniqueOrThrow({ where: { id: withdrawalId } });
+    const w = updated;
     await tx.withdrawalEvent.create({
       data: {
         withdrawalId: w.id,
@@ -405,15 +420,11 @@ export async function markWithdrawalSent(
   withdrawalId: string,
   txHash: string,
 ) {
-  const w = await db.withdrawal.findUnique({ where: { id: withdrawalId } });
-  if (!w) throw new WithdrawalError("NOT_FOUND", "Заявка не найдена");
-  if (!["APPROVED", "PROCESSING"].includes(w.status)) {
-    throw new WithdrawalError("BAD_STATUS", "Заявка не одобрена к выплате");
-  }
-
   return db.$transaction(async (tx) => {
-    const updated = await tx.withdrawal.update({
-      where: { id: w.id },
+    const w = await tx.withdrawal.findUnique({ where: { id: withdrawalId } });
+    if (!w) throw new WithdrawalError("NOT_FOUND", "Заявка не найдена");
+    const claimed = await tx.withdrawal.updateMany({
+      where: { id: withdrawalId, status: { in: ["APPROVED", "PROCESSING"] } },
       data: {
         status: "SENT",
         txHash,
@@ -421,6 +432,10 @@ export async function markWithdrawalSent(
         processedAt: new Date(),
       },
     });
+    if (claimed.count !== 1) {
+      throw new WithdrawalError("BAD_STATUS", "Заявка не одобрена к выплате");
+    }
+    const updated = await tx.withdrawal.findUniqueOrThrow({ where: { id: withdrawalId } });
 
     if (w.payoutCurrency === "USDT" && w.network) {
       await tx.cryptoTransaction.upsert({
@@ -455,17 +470,20 @@ export async function markWithdrawalSent(
 
 /** Финализация после подтверждений в сети: закрываем hold. */
 export async function completeWithdrawal(withdrawalId: string, actorId?: string) {
-  const w = await db.withdrawal.findUnique({ where: { id: withdrawalId } });
-  if (!w) throw new WithdrawalError("NOT_FOUND", "Заявка не найдена");
-  if (!["SENT", "PROCESSING", "APPROVED"].includes(w.status)) {
-    throw new WithdrawalError("BAD_STATUS", "Заявка не в состоянии отправки");
-  }
-
   return db.$transaction(async (tx) => {
-    const updated = await tx.withdrawal.update({
-      where: { id: w.id },
+    const w = await tx.withdrawal.findUnique({ where: { id: withdrawalId } });
+    if (!w) throw new WithdrawalError("NOT_FOUND", "Заявка не найдена");
+    const claimed = await tx.withdrawal.updateMany({
+      where: {
+        id: withdrawalId,
+        status: { in: ["SENT", "PROCESSING", "APPROVED"] },
+      },
       data: { status: "COMPLETED", completedAt: new Date() },
     });
+    if (claimed.count !== 1) {
+      throw new WithdrawalError("BAD_STATUS", "Заявка не в состоянии отправки");
+    }
+    const updated = await tx.withdrawal.findUniqueOrThrow({ where: { id: withdrawalId } });
 
     await postLedgerEntry(tx, {
       userId: w.userId,
@@ -522,15 +540,14 @@ export async function refundWithdrawal(
   reason: string,
   actorId?: string,
 ) {
-  const w = await db.withdrawal.findUnique({ where: { id: withdrawalId } });
-  if (!w) throw new WithdrawalError("NOT_FOUND", "Заявка не найдена");
-  if (["COMPLETED", "REJECTED", "FAILED", "CANCELLED"].includes(w.status)) {
-    throw new WithdrawalError("BAD_STATUS", "Заявка уже в терминальном статусе");
-  }
-
   return db.$transaction(async (tx) => {
-    const updated = await tx.withdrawal.update({
-      where: { id: w.id },
+    const w = await tx.withdrawal.findUnique({ where: { id: withdrawalId } });
+    if (!w) throw new WithdrawalError("NOT_FOUND", "Заявка не найдена");
+    const claimed = await tx.withdrawal.updateMany({
+      where: {
+        id: withdrawalId,
+        status: { in: ["PENDING_REVIEW", "APPROVED", "PROCESSING", "SENT"] },
+      },
       data: {
         status: outcome,
         failureReason: reason,
@@ -538,6 +555,10 @@ export async function refundWithdrawal(
         reviewedAt: new Date(),
       },
     });
+    if (claimed.count !== 1) {
+      throw new WithdrawalError("BAD_STATUS", "Заявка уже в терминальном статусе");
+    }
+    const updated = await tx.withdrawal.findUniqueOrThrow({ where: { id: withdrawalId } });
 
     await postLedgerEntry(tx, {
       userId: w.userId,

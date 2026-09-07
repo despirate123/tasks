@@ -38,7 +38,9 @@ export function verifyInitData(
   const params = new URLSearchParams(initData);
   const hash = params.get("hash");
   if (!hash) return { ok: false, reason: "MISSING_HASH" };
+  // hash и signature не входят в data-check-string (Bot API / Mini Apps).
   params.delete("hash");
+  params.delete("signature");
 
   const dataCheckString = [...params.entries()]
     .map(([k, v]) => `${k}=${v}`)
@@ -153,17 +155,67 @@ function isSeedDemoUser(telegramId: bigint) {
   return telegramId >= SEED_TELEGRAM_FROM && telegramId <= SEED_TELEGRAM_TO;
 }
 
+const SESSION_TTL_SEC = 60 * 60 * 24 * 30;
+const DEV_SESSION_FALLBACK = "dev-only-session-secret-not-for-production";
+const PLACEHOLDER_SECRETS = new Set(["", "change-me-to-a-32-byte-random-string"]);
+
+function sessionSecret() {
+  const secret =
+    process.env.AUTH_SECRET ||
+    process.env.SESSION_SECRET ||
+    process.env.PAYOUT_ENCRYPTION_KEY ||
+    process.env.TELEGRAM_BOT_TOKEN ||
+    "";
+  if (!PLACEHOLDER_SECRETS.has(secret)) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SESSION_SECRET_MISSING");
+  }
+  return DEV_SESSION_FALLBACK;
+}
+
+function safeEqual(left: string, right: string) {
+  const a = Buffer.from(left);
+  const b = Buffer.from(right);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
+/** Подписанная cookie: v1.{userId}.{exp}.{hmac}. Сырой id больше не принимается. */
+export function signSessionToken(userId: string, nowSec = Math.floor(Date.now() / 1000)) {
+  if (!userId || userId.includes(".")) throw new Error("INVALID_USER_ID");
+  const exp = nowSec + SESSION_TTL_SEC;
+  const payload = `v1.${userId}.${exp}`;
+  const sig = createHmac("sha256", sessionSecret()).update(payload).digest("base64url");
+  return `${payload}.${sig}`;
+}
+
+export function parseSessionToken(token: string | undefined | null): string | null {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length !== 4 || parts[0] !== "v1") return null;
+  const [, userId, expRaw, sig] = parts;
+  const exp = Number(expRaw);
+  if (!userId || !Number.isFinite(exp) || Math.floor(Date.now() / 1000) > exp) {
+    return null;
+  }
+  const expected = createHmac("sha256", sessionSecret())
+    .update(`v1.${userId}.${expRaw}`)
+    .digest("base64url");
+  if (!safeEqual(sig, expected)) return null;
+  return userId;
+}
+
 export async function createSession(userId: string) {
   const jar = await cookies();
   const httpsMiniApp = (process.env.MINIAPP_URL ?? "").startsWith("https");
-  jar.set(SESSION_COOKIE, userId, {
+  jar.set(SESSION_COOKIE, signSessionToken(userId), {
     httpOnly: true,
     // same-site: страница и API на одном хосте. SameSite=None без Secure
     // браузер и WebView Telegram просто выбрасывают — сессия не сохраняется.
     sameSite: "lax",
     secure: httpsMiniApp || process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: SESSION_TTL_SEC,
   });
 }
 
@@ -176,7 +228,7 @@ export async function createSession(userId: string) {
  */
 export const getCurrentUser = cache(async function getCurrentUser(): Promise<User | null> {
   const jar = await cookies();
-  const sessionUserId = jar.get(SESSION_COOKIE)?.value;
+  const sessionUserId = parseSessionToken(jar.get(SESSION_COOKIE)?.value);
 
   const bypass = process.env.DEV_AUTH_BYPASS === "true";
 

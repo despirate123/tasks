@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sanitizeHttpUrl } from "@/lib/urls";
 import { haptic } from "@/components/telegram-init";
 
 export type PromoBannerSlide = {
@@ -27,6 +28,7 @@ export function PromoBannerCard({
   banner: PromoBannerSlide;
   className?: string;
 }) {
+  const imageUrl = sanitizeHttpUrl(banner.imageUrl);
   return (
     <div
       className={cn(
@@ -35,10 +37,10 @@ export function PromoBannerCard({
       )}
       style={{ background: banner.background }}
     >
-      {banner.imageUrl ? (
+      {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={banner.imageUrl}
+          src={imageUrl}
           alt=""
           className="absolute inset-0 size-full object-cover opacity-35"
         />
@@ -196,9 +198,10 @@ export function PromoBannerRail({ banners }: { banners: PromoBannerSlide[] }) {
         >
           {banners.map((banner, i) => {
             const inner = <PromoBannerCard banner={banner} />;
-            const body = banner.href ? (
+            const href = sanitizeHttpUrl(banner.href);
+            const body = href ? (
               <Link
-                href={banner.href}
+                href={href}
                 onClick={() => haptic("light")}
                 className="block"
                 tabIndex={i === index ? 0 : -1}

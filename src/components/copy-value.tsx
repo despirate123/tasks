@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Copy, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sanitizeHttpUrl } from "@/lib/urls";
 import { haptic } from "@/components/telegram-init";
 
 export function CopyValue({
@@ -19,6 +20,8 @@ export function CopyValue({
   mono?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
+
+  const safeHref = sanitizeHttpUrl(href);
 
   const copy = async () => {
     haptic("light");
@@ -54,9 +57,9 @@ export function CopyValue({
           {copied ? <Check className="size-3.5 text-brand-300" /> : <Copy className="size-3.5" />}
           {copied ? "Скопировано" : "Копировать"}
         </button>
-        {href ? (
+        {safeHref ? (
           <a
-            href={href}
+            href={safeHref}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500/14 px-3 py-1.5 text-[12.5px] font-medium text-brand-300 ring-1 ring-inset ring-brand-500/28"

@@ -44,10 +44,25 @@ import type { Difficulty, PayoutMethodKind } from "@/generated/prisma";
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
 
 function fail(error: unknown): ActionResult {
-  const message =
-    error instanceof Error ? error.message : "Не удалось выполнить действие";
-  return { ok: false, error: message };
+  if (error instanceof Error) {
+    if (error.message === "UNAUTHORIZED") {
+      return { ok: false, error: "Нужно войти заново" };
+    }
+    if (error.message === "USER_BLOCKED") {
+      return { ok: false, error: "Аккаунт заблокирован" };
+    }
+    if (error.message === "FORBIDDEN") {
+      return { ok: false, error: "Недостаточно прав" };
+    }
+    if (error.name.startsWith("Prisma") || error.message.includes("Invalid `prisma")) {
+      return { ok: false, error: "Не удалось выполнить действие" };
+    }
+    return { ok: false, error: error.message };
+  }
+  return { ok: false, error: "Не удалось выполнить действие" };
 }
+
+const MAX_PROOF_COMMENT = 2000;
 
 // ── Задания ──────────────────────────────────────────────────────────────────
 
@@ -79,81 +94,25 @@ export async function saveProofCommentAction(
       return { ok: false, error: "Выполнение уже отправлено на проверку" };
     }
 
+    const text = comment.trim().slice(0, MAX_PROOF_COMMENT);
+
     await db.$transaction(async (tx) => {
       await tx.taskSubmission.update({
         where: { id: submissionId },
-        data: { comment },
+        data: { comment: text || null },
       });
       await tx.submissionProof.deleteMany({
         where: { submissionId, kind: "TEXT" },
       });
-      if (comment.trim()) {
+      if (text) {
         await tx.submissionProof.create({
-          data: { submissionId, kind: "TEXT", text: comment, order: 0 },
+          data: { submissionId, kind: "TEXT", text, order: 0 },
         });
       }
     });
 
     revalidatePath(`/submissions/${submissionId}`);
     return { ok: true, message: "Комментарий сохранён" };
-  } catch (error) {
-    return fail(error);
-  }
-}
-
-/**
- * Привязка загруженного медиафайла к выполнению.
- *
- * В продакшене файл к этому моменту уже лежит в S3: клиент получил presigned
- * PUT через /api/uploads/presign и загрузил напрямую, минуя наш сервер.
- * Здесь мы только фиксируем факт и считаем checksum для дедупликации.
- */
-export async function attachProofAction(
-  submissionId: string,
-  input: { kind: "PHOTO" | "VIDEO"; storageKey: string; mimeType: string; sizeBytes: number },
-): Promise<ActionResult> {
-  try {
-    const user = await requireUser();
-    const submission = await db.taskSubmission.findFirst({
-      where: { id: submissionId, userId: user.id },
-      include: { offer: true, proofs: true },
-    });
-    if (!submission) return { ok: false, error: "Выполнение не найдено" };
-    if (!["DRAFT", "NEEDS_REVISION"].includes(submission.status)) {
-      return { ok: false, error: "Выполнение уже отправлено на проверку" };
-    }
-
-    const photos = submission.proofs.filter((p) => p.kind === "PHOTO").length;
-    if (input.kind === "PHOTO" && photos >= submission.offer.maxPhotos) {
-      return {
-        ok: false,
-        error: `Можно приложить не больше ${submission.offer.maxPhotos} фото`,
-      };
-    }
-
-    await db.$transaction(async (tx) => {
-      const media = await tx.mediaAsset.create({
-        data: {
-          storageKey: input.storageKey,
-          bucket: process.env.S3_BUCKET ?? "profibux-proofs",
-          mimeType: input.mimeType,
-          sizeBytes: input.sizeBytes,
-          status: "READY",
-          uploadedById: user.id,
-        },
-      });
-      await tx.submissionProof.create({
-        data: {
-          submissionId,
-          kind: input.kind,
-          mediaId: media.id,
-          order: submission.proofs.length,
-        },
-      });
-    });
-
-    revalidatePath(`/submissions/${submissionId}`);
-    return { ok: true, message: "Доказательство добавлено" };
   } catch (error) {
     return fail(error);
   }
@@ -209,12 +168,19 @@ export async function cancelSubmissionAction(
     }
 
     await db.$transaction(async (tx) => {
-      await tx.taskSubmission.update({
-        where: { id: submissionId },
+      const cancelled = await tx.taskSubmission.updateMany({
+        where: {
+          id: submissionId,
+          userId: user.id,
+          status: { in: ["DRAFT", "NEEDS_REVISION"] },
+        },
         data: { status: "CANCELLED" },
       });
-      await tx.offer.update({
-        where: { id: submission.offerId },
+      if (cancelled.count !== 1) {
+        throw new Error("Это выполнение уже нельзя отменить");
+      }
+      await tx.offer.updateMany({
+        where: { id: submission.offerId, takenCount: { gt: 0 } },
         data: { takenCount: { decrement: 1 } },
       });
       await tx.submissionEvent.create({
