@@ -6,18 +6,9 @@ import { BannerEditor } from "./banner-editor";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
-type SearchParams = Promise<{ saved?: string | string[]; title?: string | string[] }>;
-
-function firstParam(value?: string | string[]) {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-export default async function AdminBannersPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function AdminBannersPage() {
   const actor = await requireRole("MODERATOR");
   if (!hasRole(actor, "ADMIN")) {
     return (
@@ -27,9 +18,6 @@ export default async function AdminBannersPage({
       />
     );
   }
-  const params = await searchParams;
-  const saved = firstParam(params.saved) === "1";
-  const savedTitle = firstParam(params.title)?.trim();
   const banners = await listAdminBanners();
 
   return (
@@ -37,15 +25,10 @@ export default async function AdminBannersPage({
       <div>
         <h1 className="text-[24px] leading-tight font-bold">Баннеры</h1>
         <p className="mt-1 text-[13px] leading-relaxed text-content-secondary">
-          Карусель под аватаром в Mini App. Слайды меняются каждые 5 секунд —
-          если правите второй или третий, на главной сначала виден первый.
-          После сохранения страница перечитывает базу, не кэш.
+          Карусель под аватаром. Слайд 1 виден сразу, остальные — свайпом
+          или через 5 секунд. Сохранение пишет в базу; главная подтягивает
+          новый текст сама, без перезапуска.
         </p>
-        {saved ? (
-          <p className="mt-2 text-[13px] font-medium text-brand-300">
-            {savedTitle ? `Записано в базу: «${savedTitle}»` : "Изменение записано в базу"}
-          </p>
-        ) : null}
       </div>
 
       <section className="space-y-3">
@@ -66,10 +49,11 @@ export default async function AdminBannersPage({
           />
         ) : (
           <div className="space-y-3">
-            {banners.map((banner) => (
+            {banners.map((banner, index) => (
               <BannerEditor
-                key={`${banner.id}:${banner.updatedAt.toISOString()}`}
+                key={banner.id}
                 mode="edit"
+                slide={index + 1}
                 initial={serializeAdminBanner(banner)}
               />
             ))}

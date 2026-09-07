@@ -63,7 +63,7 @@ export function PromoBannerCard({
           <Megaphone className="size-4" strokeWidth={2.2} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[14px] leading-tight font-semibold">
+          <span className="block text-[14px] leading-snug font-semibold [overflow-wrap:anywhere]">
             {banner.title}
           </span>
           {banner.subtitle ? (
@@ -123,13 +123,19 @@ function useLiveBanners(initial: PromoBannerSlide[]) {
     };
 
     load();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 5000);
     const onVisible = () => {
       if (document.visibilityState === "visible") load();
     };
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
     return () => {
       cancelled = true;
+      window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
     };
   }, []);
 

@@ -300,7 +300,7 @@ async function seedReferenceData() {
           isActive: true,
         },
         {
-          title: "Приведи друга — 10%",
+          title: "Приведи друга — получай 10% с его прибыли",
           subtitle: "С каждой выплаты реферала тебе капает процент на кошелёк.",
           href: "/referrals",
           background: "#1a1218",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
 import { PromoBannerCard, type PromoBannerSlide } from "@/components/promo-banner";
 import { sanitizeHttpUrl } from "@/lib/urls";
@@ -50,19 +51,16 @@ async function bannerRequest(
   return data;
 }
 
-function reloadBanners(title?: string) {
-  const params = new URLSearchParams({ saved: "1" });
-  if (title) params.set("title", title);
-  window.location.assign(`/admin/banners?${params.toString()}`);
-}
-
 export function BannerEditor({
   initial,
   mode,
+  slide,
 }: {
   initial?: BannerEditorValues;
   mode: "create" | "edit";
+  slide?: number;
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState<BannerEditorValues>(initial ?? emptyValues());
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
@@ -117,14 +115,25 @@ export function BannerEditor({
           endsAt: values.endsAt,
         }),
       (result) => {
-        if (result.ok && result.banner) setValues(result.banner);
-        reloadBanners(result.ok ? result.banner?.title ?? values.title : undefined);
+        if (result.ok && result.banner) {
+          setValues(result.banner);
+        }
+        if (mode === "create") {
+          setValues(emptyValues());
+          router.refresh();
+        }
       },
     );
   };
 
   return (
     <Card className="space-y-4 p-4">
+      {slide != null ? (
+        <p className="text-[12px] font-medium text-content-muted">
+          Слайд {slide}
+          {slide === 1 ? " · его первым видно на главной" : " · свайп или автосмена каждые 5 сек"}
+        </p>
+      ) : null}
       <PromoBannerCard
         banner={{
           id: values.id || "preview",
@@ -142,7 +151,7 @@ export function BannerEditor({
           <Input
             value={values.title}
             onChange={set("title")}
-            placeholder="Новые задания каждый день"
+            placeholder="Приведи друга — получай 10% с его прибыли"
           />
         </Field>
         <Field label="Текст" className="md:col-span-2">
@@ -244,7 +253,9 @@ export function BannerEditor({
                       id: values.id,
                       isActive: !values.isActive,
                     }),
-                  (result) => reloadBanners(result.ok ? result.banner?.title : undefined),
+                  (result) => {
+                    if (result.ok && result.banner) setValues(result.banner);
+                  },
                 )
               }
             >
@@ -258,7 +269,7 @@ export function BannerEditor({
                 if (!window.confirm("Удалить этот баннер?")) return;
                 run(
                   () => bannerRequest("DELETE", { id: values.id }),
-                  () => reloadBanners(),
+                  () => router.refresh(),
                 );
               }}
             >
