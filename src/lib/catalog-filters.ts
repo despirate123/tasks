@@ -11,14 +11,13 @@ export type RewardFilter = {
 };
 
 /**
- * Старые ключи (`0-150`) оставляем: часть клиентов и закладок уже
- * ходит с ними. Новый `to150` безопаснее в WebView — дефис после нуля
- * отдельные оболочки режут или воспринимают как выражение.
+ * «до 150» — только верхняя граница. Нижний порог 0 в Prisma не нужен
+ * и в части клиентов ломал сравнение. Старые ключи (`0-150`) читаем.
  */
 const REWARD_RANGES: Record<string, RewardFilter> = {
-  to150: { minReward: 0, maxReward: 150 },
-  "0-150": { minReward: 0, maxReward: 150 },
-  lte150: { minReward: 0, maxReward: 150 },
+  to150: { maxReward: 150 },
+  "0-150": { maxReward: 150 },
+  lte150: { maxReward: 150 },
   "150to400": { minReward: 150, maxReward: 400 },
   "150-400": { minReward: 150, maxReward: 400 },
   from400: { minReward: 400 },
@@ -42,7 +41,41 @@ export function parseRewardFilter(
 ): RewardFilter {
   const key = firstSearchParam(raw)?.trim();
   if (!key) return {};
-  return REWARD_RANGES[key] ?? {};
+  if (REWARD_RANGES[key]) return REWARD_RANGES[key];
+
+  const normalized = key.replace(/[–—−]/g, "-").toLowerCase();
+  if (REWARD_RANGES[normalized]) return REWARD_RANGES[normalized];
+  if (normalized === "0-150" || normalized === "to150" || normalized === "lte150") {
+    return { maxReward: 150 };
+  }
+  if (normalized === "150-400" || normalized === "150to400") {
+    return { minReward: 150, maxReward: 400 };
+  }
+  if (normalized === "400" || normalized === "from400" || normalized === "gte400") {
+    return { minReward: 400 };
+  }
+  return {};
+}
+
+export function isRewardChipActive(
+  rewardKey: string | undefined,
+  chipKey: string,
+) {
+  if (chipKey === "") return !rewardKey;
+  if ((rewardKey ?? "") === chipKey) return true;
+  if (chipKey === "to150") {
+    return rewardKey === "0-150" || rewardKey === "lte150";
+  }
+  if (chipKey === "150to400") return rewardKey === "150-400";
+  if (chipKey === "from400") return rewardKey === "400" || rewardKey === "gte400";
+  return false;
+}
+
+export function rewardFilterLabel(rewardKey: string | undefined) {
+  const chip = REWARD_CHIPS.find(
+    (item) => item.key !== "" && isRewardChipActive(rewardKey, item.key),
+  );
+  return chip?.label;
 }
 
 export function matchesRewardFilter(amount: number, filter: RewardFilter) {

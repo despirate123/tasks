@@ -32,8 +32,13 @@ import {
 import {
   REWARD_CHIPS,
   firstSearchParam,
+  isRewardChipActive,
   parseRewardFilter,
+  rewardFilterLabel,
 } from "@/lib/catalog-filters";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type CatalogOffer = Awaited<ReturnType<typeof listOffers>>["items"][number];
 
@@ -56,7 +61,7 @@ async function CatalogResults({
 
   if (layout === "list") {
     return (
-      <div className="motion-list space-y-2">
+      <div className="space-y-2">
         {offers.map((offer, index) => (
           <OfferCard
             key={offer.id}
@@ -80,7 +85,7 @@ async function CatalogResults({
   const rest = offers.filter((offer) => offer.id !== hero.id);
 
   return (
-    <div className="motion-list space-y-2">
+    <div className="space-y-2">
       <OfferCard
         offer={hero}
         mine={mineByOffer.get(hero.id) ?? null}
@@ -320,6 +325,24 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
           ))}
         </form>
 
+        <div className="flex flex-wrap gap-2">
+          {REWARD_CHIPS.map((chip) => {
+            const active = isRewardChipActive(rewardKey, chip.key);
+            return (
+              <Link
+                key={chip.key || "any-reward"}
+                href={buildHref({ reward: chip.key || undefined })}
+                prefetch={false}
+                data-chip-active={active || undefined}
+                className={chipClass(active)}
+              >
+                {active ? <ChipDot /> : null}
+                {chip.label}
+              </Link>
+            );
+          })}
+        </div>
+
         <ChipScroller>
           {DIFFICULTY_ORDER.map((value) => {
             const active = difficulty.includes(value);
@@ -328,6 +351,7 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
               <Link
                 key={value}
                 href={toggleDifficultyHref(value)}
+                prefetch={false}
                 data-chip-active={active || undefined}
                 className={chipClass(active, active ? meta.className : undefined)}
               >
@@ -345,6 +369,7 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
               <Link
                 key={item.key || "default"}
                 href={buildHref({ sort: item.key || undefined })}
+                prefetch={false}
                 data-chip-active={active || undefined}
                 className={chipClass(active)}
               >
@@ -359,30 +384,13 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
           })}
 
           <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
-          {REWARD_CHIPS.map((chip) => {
-            const active =
-              (rewardKey ?? "") === chip.key ||
-              (chip.key === "to150" && (rewardKey === "0-150" || rewardKey === "lte150")) ||
-              (chip.key === "150to400" && rewardKey === "150-400") ||
-              (chip.key === "from400" && (rewardKey === "400" || rewardKey === "gte400"));
-            return (
-              <Link
-                key={chip.key || "any-reward"}
-                href={buildHref({ reward: chip.key || undefined })}
-                data-chip-active={active || undefined}
-                className={chipClass(active)}
-              >
-                {active ? <ChipDot /> : null}
-                {chip.label}
-              </Link>
-            );
-          })}
 
           {categories.length > 0 ? (
             <>
               <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
               <Link
                 href={buildHref({ category: undefined })}
+                prefetch={false}
                 data-chip-active={!category || undefined}
                 className={chipClass(!category)}
               >
@@ -395,6 +403,7 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
                   <Link
                     key={item.slug}
                     href={buildHref({ category: item.slug })}
+                    prefetch={false}
                     data-chip-active={active || undefined}
                     className={chipClass(active)}
                   >
@@ -408,9 +417,22 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
           ) : null}
         </ChipScroller>
         {hasFilters ? (
-          <p className="text-[12px]">
-            <Link href="/" className="font-medium text-[var(--acid)]">
-              Сбросить фильтры
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-content-secondary">
+            <span>
+              {offers.length} шт.
+              {rewardFilterLabel(rewardKey)
+                ? ` · ${rewardFilterLabel(rewardKey)}`
+                : ""}
+              {difficulty.length
+                ? ` · ${difficulty.map((value) => DIFFICULTY[value].label).join(", ")}`
+                : ""}
+              {category
+                ? ` · ${categories.find((item) => item.slug === category)?.name ?? category}`
+                : ""}
+              {query ? ` · «${query}»` : ""}
+            </span>
+            <Link href="/" prefetch={false} className="font-medium text-[var(--acid)]">
+              Сбросить
             </Link>
           </p>
         ) : null}
@@ -440,6 +462,7 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
       ) : (
         <>
           <CatalogResults
+            key={`${rewardKey ?? ""}-${category ?? ""}-${sort ?? ""}-${difficulty.join(",")}-${query ?? ""}`}
             offers={offers}
             mineByOffer={mineByOffer}
             layout={hasFilters || offers.length <= 3 ? "list" : "hybrid"}

@@ -833,6 +833,7 @@ async function main() {
     matchesRewardFilter(120, parseRewardFilter("to150")) &&
       matchesRewardFilter(150, parseRewardFilter("to150")) &&
       matchesRewardFilter(150, parseRewardFilter("0-150")) &&
+      matchesRewardFilter(120, parseRewardFilter("0–150")) &&
       !matchesRewardFilter(151, parseRewardFilter("to150")),
   );
   check(

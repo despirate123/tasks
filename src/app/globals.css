@@ -399,7 +399,9 @@ body::after {
 }
 
 .motion-list > * {
-  animation: pb-fade-up 0.28s var(--ease-soft) both;
+  /* без both: в Telegram WebView first-child зависал в opacity:0
+     и пропадало первое задание в отфильтрованном списке. */
+  animation: pb-fade-up 0.28s var(--ease-soft);
 }
 .motion-list > *:nth-child(1) { animation-delay: 0s; }
 .motion-list > *:nth-child(2) { animation-delay: 0.03s; }

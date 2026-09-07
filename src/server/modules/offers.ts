@@ -3,6 +3,7 @@ import type { Difficulty, Offer, OfferStatus, User } from "@/generated/prisma";
 import { db } from "@/server/db";
 import { slugify } from "@/lib/utils";
 import { sanitizeHttpUrl } from "@/lib/urls";
+import { matchesRewardFilter } from "@/lib/catalog-filters";
 
 export type OfferFilters = {
   difficulty?: Difficulty[];
@@ -75,9 +76,19 @@ export async function listOffers(filters: OfferFilters = {}) {
     },
   });
 
-  const hasMore = rows.length > take;
+  const matched =
+    filters.minReward != null || filters.maxReward != null
+      ? rows.filter((row) =>
+          matchesRewardFilter(Number(row.rewardAmount), {
+            minReward: filters.minReward,
+            maxReward: filters.maxReward,
+          }),
+        )
+      : rows;
+
+  const hasMore = matched.length > take;
   return {
-    items: hasMore ? rows.slice(0, take) : rows,
+    items: hasMore ? matched.slice(0, take) : matched,
     hasMore,
   };
 }
