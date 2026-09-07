@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { asMoneyNode } from "@/components/money";
 
 export function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -116,11 +117,11 @@ export function StatTile({
       </p>
       <p
         className={cn(
-          "tabular relative mt-1.5 break-words text-lg leading-none font-bold",
+          "relative mt-1.5 text-lg font-bold",
           meta.value,
         )}
       >
-        {value}
+        {asMoneyNode(value)}
       </p>
       {hint ? (
         <p className="relative mt-1 text-[11px] text-content-muted">{hint}</p>
@@ -154,8 +155,8 @@ export function MetricRow({
           <p className="mt-0.5 text-[11px] leading-snug text-content-muted">{hint}</p>
         ) : null}
       </div>
-      <p className="tabular shrink-0 pt-0.5 text-[15px] leading-none font-bold text-content-primary">
-        {value}
+      <p className="shrink-0 pt-0.5 text-[15px] font-bold text-content-primary">
+        {asMoneyNode(value)}
       </p>
     </div>
   );
@@ -174,7 +175,7 @@ export function DetailRow({
   return (
     <div className={cn("flex items-start justify-between gap-4 py-2.5", className)}>
       <span className="text-[13px] text-content-secondary">{label}</span>
-      <span className="tabular text-right text-[13px] font-medium">{value}</span>
+      <span className="text-right text-[13px] font-medium">{asMoneyNode(value)}</span>
     </div>
   );
 }

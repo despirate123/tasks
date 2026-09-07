@@ -45,7 +45,10 @@ export function EarningsChart({
               fontSize: 12,
               color: "#f1f5fb",
             }}
-            formatter={(value) => [`${Number(value).toLocaleString("ru-RU")} ₽`, "Заработок"]}
+            formatter={(value) => [
+              `${Number(value).toLocaleString("ru-RU").replace(/\s/g, "\u00A0")}\u00A0₽`,
+              "Заработок",
+            ]}
           />
           <Area
             type="monotone"

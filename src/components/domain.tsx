@@ -8,6 +8,7 @@ import {
 import type { Difficulty, SubmissionStatus, WithdrawalStatus } from "@/generated/prisma";
 import { cn } from "@/lib/utils";
 import { formatEta, formatMoney } from "@/lib/format";
+import { Money, MoneyText } from "@/components/money";
 import { accentFromTitle, offerHue } from "@/lib/offer-accent";
 import { DIFFICULTY, SUBMISSION_STATUS, WITHDRAWAL_STATUS } from "@/lib/labels";
 import { Badge } from "@/components/ui/badge";
@@ -232,8 +233,8 @@ export function OfferCard({
             </p>
           </div>
           <div className="shrink-0 rounded-2xl bg-black/25 px-2.5 py-2 text-right ring-1 ring-inset ring-white/[0.06]">
-            <p className="tabular text-[16px] leading-none font-bold text-content-primary">
-              {formatMoney(offer.rewardAmount as number)}
+            <p className="text-[16px] font-bold text-content-primary">
+              <Money value={offer.rewardAmount as number} />
             </p>
             <p className="mt-1.5 flex items-center justify-end gap-1 text-[10.5px] text-content-muted">
               <Clock className="size-3" />
@@ -277,8 +278,8 @@ export function OfferCard({
         <p className="mt-1 truncate text-[11.5px] text-content-muted">
           {offerMeta(offer, mine)}
         </p>
-        <p className="tabular mt-auto border-t border-white/[0.06] pt-2.5 text-[16px] leading-none font-bold text-content-primary">
-          {formatMoney(offer.rewardAmount as number)}
+        <p className="mt-auto border-t border-white/[0.06] pt-2.5 text-[16px] font-bold text-content-primary">
+          <Money value={offer.rewardAmount as number} />
         </p>
       </TintedOfferCard>
     </Link>
@@ -315,8 +316,8 @@ export function BalanceCard({
         <p className="text-[12px] font-medium tracking-wide text-content-secondary uppercase">
           Доступно к выводу
         </p>
-        <p className="tabular mt-1.5 text-[34px] leading-none font-bold text-content-primary">
-          {formatMoney(available as number)}
+        <p className="mt-1.5 text-[34px] font-bold text-content-primary">
+          <Money value={available as number} />
         </p>
 
         {hasFrozen ? (
@@ -324,16 +325,16 @@ export function BalanceCard({
             {Number(pending) > 0 ? (
               <div>
                 <p className="text-white/60">На проверке</p>
-                <p className="tabular font-semibold text-white">
-                  {formatMoney(pending as number)}
+                <p className="font-semibold text-white">
+                  <Money value={pending as number} />
                 </p>
               </div>
             ) : null}
             {Number(hold) > 0 ? (
               <div>
                 <p className="text-white/60">В выводе</p>
-                <p className="tabular font-semibold text-white">
-                  {formatMoney(hold as number)}
+                <p className="font-semibold text-white">
+                  <Money value={hold as number} />
                 </p>
               </div>
             ) : null}
@@ -370,15 +371,13 @@ export function MoneyDelta({
 }) {
   const isCredit = direction === "CREDIT";
   return (
-    <span
+    <MoneyText
+      text={`${isCredit ? "+" : "−"}${formatMoney(amount as number)}`}
       className={cn(
-        "tabular text-[14px] font-semibold",
+        "text-[14px] font-semibold",
         isCredit ? "text-money-400" : "text-content-secondary",
       )}
-    >
-      {isCredit ? "+" : "−"}
-      {formatMoney(amount as number)}
-    </span>
+    />
   );
 }
 
@@ -424,7 +423,7 @@ export function RewardPill({ amount }: { amount: unknown }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-pill bg-money-500/12 px-3 py-1.5 text-sm font-bold text-money-400 ring-1 ring-inset ring-money-500/25">
       <Coins className="size-3.5" />
-      <span className="tabular">{formatMoney(amount as number)}</span>
+      <Money value={amount as number} />
     </span>
   );
 }

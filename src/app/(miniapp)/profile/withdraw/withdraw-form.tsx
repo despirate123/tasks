@@ -442,7 +442,7 @@ export function WithdrawForm({
                 {isCrypto ? (
                   <DetailRow
                     label="Курс"
-                    value={`1 USDT ≈ ${quote.effectiveRate.toFixed(2)} ₽`}
+                    value={`1 USDT ≈ ${quote.effectiveRate.toFixed(2)}\u00A0₽`}
                   />
                 ) : null}
                 <DetailRow

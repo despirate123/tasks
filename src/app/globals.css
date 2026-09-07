@@ -553,8 +553,42 @@ body::after {
   animation: pb-shimmer 1.6s infinite;
 }
 
+/* U+20BD нет в subset Geist (latin+cyrillic). Системный «₽» на iOS
+   выше цифр и WebKit часто переносит его на следующую строку. */
+@font-face {
+  font-family: "RubleMark";
+  src: local("SF Pro Text"), local("SF Pro Display"), local(".SF NS Text"),
+    local("Segoe UI"), local("Roboto"), local("Arial");
+  unicode-range: U+20BD;
+  size-adjust: 94%;
+  ascent-override: 90%;
+  descent-override: 20%;
+}
+
 .tabular {
+  font-family: "RubleMark", var(--font-sans);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+.money {
+  display: inline-flex;
+  align-items: baseline;
+  max-width: 100%;
+  font-family: "RubleMark", var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
+.money-curr {
+  flex: none;
+  position: relative;
+  top: -0.06em;
+  margin-left: 0.18em;
 }
 
 ::view-transition-old(profile-avatar),

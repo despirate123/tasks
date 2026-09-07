@@ -8,16 +8,21 @@ function toNumber(value: Money): number {
   return Number.parseFloat(value.toString());
 }
 
+/** Неразрывные пробелы: на узком экране «₽» не уезжает на следующую строку. */
+function noWrapMoney(value: string) {
+  return value.replace(/\s/g, "\u00A0");
+}
+
 /** «1 250 ₽», «1 250,50 ₽» — копейки показываем только когда они есть. */
 export function formatMoney(value: Money, currency = "RUB"): string {
   const n = toNumber(value);
   const hasCents = Math.abs(n % 1) > 0.0001;
-  const symbol = currency === "USDT" ? " USDT" : " ₽";
-  return (
-    n.toLocaleString("ru-RU", {
-      minimumFractionDigits: hasCents ? 2 : 0,
-      maximumFractionDigits: 2,
-    }) + symbol
+  const amount = n.toLocaleString("ru-RU", {
+    minimumFractionDigits: hasCents ? 2 : 0,
+    maximumFractionDigits: 2,
+  });
+  return noWrapMoney(
+    currency === "USDT" ? `${amount}\u00A0USDT` : `${amount}\u00A0₽`,
   );
 }
 
@@ -30,7 +35,7 @@ export function formatMoneySigned(value: Money, currency = "RUB"): string {
 
 export function formatCrypto(value: Money, asset = "USDT"): string {
   const n = toNumber(value);
-  return `${n.toFixed(2)} ${asset}`;
+  return noWrapMoney(`${n.toFixed(2)}\u00A0${asset}`);
 }
 
 /**
@@ -123,5 +128,7 @@ export function maskCryptoAddress(address: string): string {
 
 export function formatPercent(value: Money): string {
   const n = toNumber(value);
-  return `${n.toLocaleString("ru-RU", { maximumFractionDigits: 1 })} %`;
+  return noWrapMoney(
+    `${n.toLocaleString("ru-RU", { maximumFractionDigits: 1 })} %`,
+  );
 }

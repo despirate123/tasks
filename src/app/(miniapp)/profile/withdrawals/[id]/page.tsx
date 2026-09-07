@@ -83,7 +83,7 @@ export default async function WithdrawalDetailPage({
           {withdrawal.fxRate ? (
             <DetailRow
               label="Курс"
-              value={`1 USDT = ${Number(withdrawal.fxRate).toFixed(2)} ₽`}
+              value={`1 USDT = ${Number(withdrawal.fxRate).toFixed(2)}\u00A0₽`}
             />
           ) : null}
           <DetailRow label="Создана" value={formatDateTime(withdrawal.requestedAt)} />

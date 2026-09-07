@@ -133,7 +133,7 @@ function PayoutRow({ withdrawal: w }: { withdrawal: QueueItem }) {
                   : formatMoney(w.amountNet)}
               </span>
               {Number(w.fee) > 0 ? ` · комиссия ${formatMoney(w.fee)}` : ""}
-              {w.fxRate ? ` · курс ${Number(w.fxRate).toFixed(2)} ₽` : ""}
+              {w.fxRate ? ` · курс ${Number(w.fxRate).toFixed(2)}\u00A0₽` : ""}
             </p>
           </div>
 

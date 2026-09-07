@@ -27,6 +27,7 @@ import {
 } from "@/components/domain";
 import { CancelWithdrawalButton } from "@/components/cancel-withdrawal-button";
 import { SupportButton } from "@/components/support-button";
+import { HowItWorksMenuRow } from "@/components/how-it-works";
 import { supportTelegramUrl } from "@/lib/support";
 
 export default async function ProfilePage() {
@@ -223,6 +224,7 @@ export default async function ProfilePage() {
           title="Уведомления"
           subtitle="История и настройки"
         />
+        <HowItWorksMenuRow />
       </Card>
 
       <div className="space-y-2.5">

@@ -7,7 +7,7 @@ import { getCategoriesWithCounts, listOffers } from "@/server/modules/offers";
 import { getWallet } from "@/server/modules/wallet";
 import { getUserSubmissions } from "@/server/modules/submissions";
 import { db } from "@/server/db";
-import { formatMoney } from "@/lib/format";
+import { Money } from "@/components/money";
 import {
   ACTIVE_SUBMISSION_STATUSES,
   DIFFICULTY,
@@ -23,7 +23,7 @@ import { ActiveWork } from "@/components/active-work";
 import { HomeHeader } from "@/components/home-header";
 import { ChipScroller } from "@/components/chip-scroller";
 import { ChipDot, chipClass } from "@/lib/chips";
-import { OnboardingCard } from "@/components/onboarding-card";
+import { HowItWorksButton } from "@/components/how-it-works";
 import {
   HomeCatalogSkeleton,
   HomeHeaderSkeleton,
@@ -35,9 +35,9 @@ type CatalogOffer = Awaited<ReturnType<typeof listOffers>>["items"][number];
 const CATALOG_PAGE = 12;
 const REWARD_CHIPS = [
   { key: "", label: "Любая сумма" },
-  { key: "0-150", label: "до 150 ₽" },
-  { key: "150-400", label: "150–400 ₽" },
-  { key: "400", label: "от 400 ₽" },
+  { key: "0-150", label: "до 150\u00A0₽" },
+  { key: "150-400", label: "150–400\u00A0₽" },
+  { key: "400", label: "от 400\u00A0₽" },
 ] as const;
 
 function parseReward(raw?: string): { minReward?: number; maxReward?: number } {
@@ -141,8 +141,8 @@ async function HomeWalletAndWork() {
           <span className="block text-[11px] tracking-wide text-content-muted uppercase">
             Баланс
           </span>
-          <span className="tabular block text-[17px] leading-tight font-bold text-money-400">
-            {formatMoney(wallet.available)}
+          <span className="block text-[17px] font-bold text-money-400">
+            <Money value={wallet.available} />
           </span>
         </span>
         <span className="text-[12px] font-medium text-[var(--acid)]">Вывести →</span>
@@ -164,9 +164,6 @@ export default async function CatalogPage({
       <Suspense fallback={<HomeHeaderSkeleton />}>
         <HomeHeader />
       </Suspense>
-      <Suspense fallback={null}>
-        <HomeOnboarding />
-      </Suspense>
       <Suspense fallback={<HomeWalletSkeleton />}>
         <HomeWalletAndWork />
       </Suspense>
@@ -175,12 +172,6 @@ export default async function CatalogPage({
       </Suspense>
     </div>
   );
-}
-
-async function HomeOnboarding() {
-  const user = await getCurrentUser();
-  if (!user || user.onboardedAt) return null;
-  return <OnboardingCard />;
 }
 
 async function HomeCatalog({ params }: { params: CatalogQuery }) {
@@ -278,14 +269,17 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
   return (
     <>
       <div className="space-y-2">
-        <h1 className="text-[17px] leading-tight font-bold">
-          Задания
-          {offers.length > 0 ? (
-            <span className="tabular ml-1.5 text-[13px] font-medium text-content-muted">
-              {offers.length}
-            </span>
-          ) : null}
-        </h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-[17px] leading-tight font-bold">
+            Задания
+            {offers.length > 0 ? (
+              <span className="tabular ml-1.5 text-[13px] font-medium text-content-muted">
+                {offers.length}
+              </span>
+            ) : null}
+          </h1>
+          <HowItWorksButton />
+        </div>
 
         <form action="/" className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-content-muted" />
