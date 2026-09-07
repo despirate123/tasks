@@ -1,32 +1,23 @@
 import { Megaphone } from "lucide-react";
 import { hasRole, requireRole } from "@/server/auth";
-import { listAdminBanners } from "@/server/modules/banners";
+import { listAdminBanners, serializeAdminBanner } from "@/server/modules/banners";
 import { EmptyState } from "@/components/ui/misc";
-import { BannerEditor, type BannerEditorValues } from "./banner-editor";
+import { BannerEditor } from "./banner-editor";
 
-function toLocalInput(date: Date | null) {
-  if (!date) return "";
-  const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+type SearchParams = Promise<{ saved?: string | string[]; title?: string | string[] }>;
+
+function firstParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
 }
 
-function toValues(banner: Awaited<ReturnType<typeof listAdminBanners>>[number]): BannerEditorValues {
-  return {
-    id: banner.id,
-    title: banner.title,
-    subtitle: banner.subtitle ?? "",
-    href: banner.href ?? "",
-    imageUrl: banner.imageUrl ?? "",
-    background: banner.background,
-    accent: banner.accent,
-    sortOrder: banner.sortOrder,
-    isActive: banner.isActive,
-    startsAt: toLocalInput(banner.startsAt),
-    endsAt: toLocalInput(banner.endsAt),
-  };
-}
-
-export default async function AdminBannersPage() {
+export default async function AdminBannersPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const actor = await requireRole("MODERATOR");
   if (!hasRole(actor, "ADMIN")) {
     return (
@@ -36,6 +27,9 @@ export default async function AdminBannersPage() {
       />
     );
   }
+  const params = await searchParams;
+  const saved = firstParam(params.saved) === "1";
+  const savedTitle = firstParam(params.title)?.trim();
   const banners = await listAdminBanners();
 
   return (
@@ -45,9 +39,13 @@ export default async function AdminBannersPage() {
         <p className="mt-1 text-[13px] leading-relaxed text-content-secondary">
           Карусель под аватаром в Mini App. Слайды меняются каждые 5 секунд —
           если правите второй или третий, на главной сначала виден первый.
-          После сохранения главная сама подтягивает свежие слайды. Картинка —
-          только прямая https-ссылка на изображение, не файл из Telegram.
+          После сохранения страница перечитывает базу, не кэш.
         </p>
+        {saved ? (
+          <p className="mt-2 text-[13px] font-medium text-brand-300">
+            {savedTitle ? `Записано в базу: «${savedTitle}»` : "Изменение записано в базу"}
+          </p>
+        ) : null}
       </div>
 
       <section className="space-y-3">
@@ -69,7 +67,11 @@ export default async function AdminBannersPage() {
         ) : (
           <div className="space-y-3">
             {banners.map((banner) => (
-              <BannerEditor key={banner.id} mode="edit" initial={toValues(banner)} />
+              <BannerEditor
+                key={`${banner.id}:${banner.updatedAt.toISOString()}`}
+                mode="edit"
+                initial={serializeAdminBanner(banner)}
+              />
             ))}
           </div>
         )}

@@ -39,7 +39,14 @@ import {
   setNotificationGroupPreference,
 } from "@/server/modules/notifications";
 import type { NotificationType } from "@/generated/prisma";
-import { deleteBanner, toggleBanner, upsertBanner } from "@/server/modules/banners";
+import {
+  deleteBanner,
+  getBanner,
+  parseOptionalDate,
+  serializeAdminBanner,
+  toggleBanner,
+  upsertBanner,
+} from "@/server/modules/banners";
 import { notify } from "@/server/modules/notifications";
 import { postLedgerEntry } from "@/server/modules/wallet";
 import { maskCard, maskCryptoAddress } from "@/lib/format";
@@ -47,7 +54,9 @@ import { PAYOUT_METHOD } from "@/lib/labels";
 import type { Difficulty, PayoutMethodKind } from "@/generated/prisma";
 import { CACHE_TAGS } from "@/server/cache-tags";
 
-export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
+export type ActionResult =
+  | { ok: true; message?: string; banner?: ReturnType<typeof serializeAdminBanner> }
+  | { ok: false; error: string };
 
 function bumpCatalog() {
   updateTag(CACHE_TAGS.catalog);
@@ -742,18 +751,11 @@ export async function setUserStatusAction(
   }
 }
 
-function parseOptionalDate(value: string | undefined) {
-  if (!value?.trim()) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) throw new Error("Некорректная дата");
-  return date;
-}
-
 export async function upsertBannerAction(formData: FormData): Promise<ActionResult> {
   try {
     const admin = await requireRole("ADMIN");
     const id = String(formData.get("id") ?? "").trim() || undefined;
-    await upsertBanner(id, {
+    const saved = await upsertBanner(id, {
       title: String(formData.get("title") ?? ""),
       subtitle: String(formData.get("subtitle") ?? ""),
       href: String(formData.get("href") ?? ""),
@@ -765,8 +767,16 @@ export async function upsertBannerAction(formData: FormData): Promise<ActionResu
       startsAt: parseOptionalDate(String(formData.get("startsAt") ?? "")),
       endsAt: parseOptionalDate(String(formData.get("endsAt") ?? "")),
     }, admin.id);
+    const verify = await getBanner(saved.id);
+    if (!verify || verify.title !== saved.title) {
+      return { ok: false, error: "Заголовок не записался в базу. Попробуйте ещё раз." };
+    }
     bumpBanners();
-    return { ok: true, message: id ? "Баннер обновлён" : "Баннер создан" };
+    return {
+      ok: true,
+      message: `Сохранено: «${verify.title}»`,
+      banner: serializeAdminBanner(verify),
+    };
   } catch (error) {
     return fail(error);
   }

@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
-import {
-  deleteBannerAction,
-  toggleBannerAction,
-  upsertBannerAction,
-} from "@/server/actions";
 import { PromoBannerCard, type PromoBannerSlide } from "@/components/promo-banner";
 import { sanitizeHttpUrl } from "@/lib/urls";
 import { Button } from "@/components/ui/button";
@@ -20,6 +14,10 @@ export type BannerEditorValues = PromoBannerSlide & {
   startsAt: string;
   endsAt: string;
 };
+
+type SaveResult =
+  | { ok: true; message?: string; banner?: BannerEditorValues }
+  | { ok: false; error: string };
 
 function emptyValues(): BannerEditorValues {
   return {
@@ -37,6 +35,27 @@ function emptyValues(): BannerEditorValues {
   };
 }
 
+async function bannerRequest(
+  method: "POST" | "PATCH" | "DELETE",
+  body: Record<string, unknown>,
+): Promise<SaveResult> {
+  const res = await fetch("/api/admin/banners", {
+    method,
+    cache: "no-store",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = (await res.json().catch(() => null)) as SaveResult | null;
+  if (!data) return { ok: false, error: "Сервер не ответил" };
+  return data;
+}
+
+function reloadBanners(title?: string) {
+  const params = new URLSearchParams({ saved: "1" });
+  if (title) params.set("title", title);
+  window.location.assign(`/admin/banners?${params.toString()}`);
+}
+
 export function BannerEditor({
   initial,
   mode,
@@ -44,7 +63,6 @@ export function BannerEditor({
   initial?: BannerEditorValues;
   mode: "create" | "edit";
 }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState<BannerEditorValues>(initial ?? emptyValues());
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
@@ -61,18 +79,15 @@ export function BannerEditor({
       setValues((current) => ({ ...current, [key]: value }));
     };
 
-  const run = (fn: () => Promise<{ ok: boolean; message?: string; error?: string }>) => {
+  const run = (fn: () => Promise<SaveResult>, after?: (result: SaveResult) => void) => {
     startTransition(async () => {
       const result = await fn();
       setFeedback({
         ok: result.ok,
         text: result.ok ? (result.message ?? "Готово") : (result.error ?? "Ошибка"),
       });
-      if (result.ok && mode === "create") {
-        setValues(emptyValues());
-      }
-      setTimeout(() => setFeedback(null), 3500);
-      router.refresh();
+      if (!result.ok) return;
+      after?.(result);
     });
   };
 
@@ -86,19 +101,26 @@ export function BannerEditor({
       : undefined;
 
   const save = () => {
-    const data = new FormData();
-    if (values.id) data.set("id", values.id);
-    data.set("title", values.title);
-    data.set("subtitle", values.subtitle ?? "");
-    data.set("href", values.href ?? "");
-    data.set("imageUrl", values.imageUrl ?? "");
-    data.set("background", values.background);
-    data.set("accent", values.accent);
-    data.set("sortOrder", String(values.sortOrder));
-    if (values.isActive) data.set("isActive", "on");
-    data.set("startsAt", values.startsAt);
-    data.set("endsAt", values.endsAt);
-    run(() => upsertBannerAction(data));
+    run(
+      () =>
+        bannerRequest("POST", {
+          id: values.id || undefined,
+          title: values.title,
+          subtitle: values.subtitle ?? "",
+          href: values.href ?? "",
+          imageUrl: values.imageUrl ?? "",
+          background: values.background,
+          accent: values.accent,
+          sortOrder: values.sortOrder,
+          isActive: values.isActive,
+          startsAt: values.startsAt,
+          endsAt: values.endsAt,
+        }),
+      (result) => {
+        if (result.ok && result.banner) setValues(result.banner);
+        reloadBanners(result.ok ? result.banner?.title ?? values.title : undefined);
+      },
+    );
   };
 
   return (
@@ -215,7 +237,16 @@ export function BannerEditor({
               type="button"
               variant="secondary"
               disabled={pending}
-              onClick={() => run(() => toggleBannerAction(values.id, !values.isActive))}
+              onClick={() =>
+                run(
+                  () =>
+                    bannerRequest("PATCH", {
+                      id: values.id,
+                      isActive: !values.isActive,
+                    }),
+                  (result) => reloadBanners(result.ok ? result.banner?.title : undefined),
+                )
+              }
             >
               {values.isActive ? "Скрыть" : "Показать"}
             </Button>
@@ -225,7 +256,10 @@ export function BannerEditor({
               disabled={pending}
               onClick={() => {
                 if (!window.confirm("Удалить этот баннер?")) return;
-                run(() => deleteBannerAction(values.id));
+                run(
+                  () => bannerRequest("DELETE", { id: values.id }),
+                  () => reloadBanners(),
+                );
               }}
             >
               <Trash2 />
