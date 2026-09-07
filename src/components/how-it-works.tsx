@@ -13,7 +13,20 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { haptic } from "@/components/telegram-init";
 
-const STEPS = ["Берёте задание", "Отправляете скрин", "Получаете деньги"];
+const STEPS = [
+  {
+    title: "Берёте задание",
+    text: "В каталоге выбираете то, что подходит по времени и сумме, и нажимаете «Взять».",
+  },
+  {
+    title: "Отправляете скрин",
+    text: "Делаете как написано в задании и присылаете фото или видео — что там просят.",
+  },
+  {
+    title: "Получаете деньги",
+    text: "Мы смотрим работу и зачисляем на баланс. Обычно в тот же день или на следующий.",
+  },
+];
 
 const HowItWorksContext = createContext<{ open: () => void }>({
   open: () => {},
@@ -171,15 +184,21 @@ function HowItWorksSheet({
           >
             Как это работает
           </h2>
-          <ol className="mt-4 space-y-3">
+          <p className="mt-1.5 text-[13px] leading-relaxed text-content-secondary">
+            Три шага: берёте задание, отправляете скрин, получаете деньги.
+          </p>
+          <ol className="mt-4 space-y-3.5">
             {STEPS.map((step, index) => (
-              <li key={step} className="flex items-center gap-3">
-                <span className="tabular flex size-6 shrink-0 items-center justify-center rounded-lg bg-brand-500/16 text-[12px] font-bold text-brand-300">
+              <li key={step.title} className="flex gap-3">
+                <span className="tabular mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg bg-brand-500/16 text-[12px] font-bold text-brand-300">
                   {index + 1}
                 </span>
-                <p className="min-w-0 text-[14px] font-medium leading-snug">
-                  {step}
-                </p>
+                <div className="min-w-0">
+                  <p className="text-[14px] font-medium leading-snug">{step.title}</p>
+                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-content-secondary">
+                    {step.text}
+                  </p>
+                </div>
               </li>
             ))}
           </ol>
