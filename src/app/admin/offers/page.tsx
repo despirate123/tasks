@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { Clock, Pencil } from "lucide-react";
+import { Clock, Pencil, Plus } from "lucide-react";
+import { hasRole, requireRole } from "@/server/auth";
 import { listAdminOffers } from "@/server/modules/offers";
+import { Button } from "@/components/ui/button";
 import { formatEta, formatMoney, formatPercent } from "@/lib/format";
 import { VALUE_SOURCE } from "@/lib/labels";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +30,8 @@ export default async function AdminOffersPage({
 }: {
   searchParams: Promise<{ status?: string; q?: string }>;
 }) {
+  const actor = await requireRole("MODERATOR");
+  const canEdit = hasRole(actor, "ADMIN");
   const params = await searchParams;
   const offers = await listAdminOffers({
     status: params.status as "ACTIVE" | "DRAFT" | "PAUSED" | "ARCHIVED" | undefined,
@@ -39,9 +43,19 @@ export default async function AdminOffersPage({
       <div>
         <h1 className="text-[24px] leading-tight font-bold">Офферы</h1>
         <p className="mt-1 text-[13px] leading-relaxed text-content-secondary">
-          Сложность и время одобрения можно задать вручную — синхронизация из
-          партнёрских сетей такие значения не перезаписывает.
+          На старте задания добавляете руками. Публикация — отдельной кнопкой
+          «Активен», черновик в Mini App не виден.
         </p>
+        {canEdit ? (
+          <div className="mt-3">
+            <Button variant="primary" size="sm" asChild>
+              <Link href="/admin/offers/new">
+                <Plus className="size-4" />
+                Новое задание
+              </Link>
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap gap-2">

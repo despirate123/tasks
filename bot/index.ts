@@ -198,14 +198,21 @@ bot.command("tasks", async (ctx) => {
 });
 
 bot.command("support", async (ctx) => {
+  const username = (process.env.SUPPORT_TELEGRAM_USERNAME ?? "profibux_support").replace(
+    /^@/,
+    "",
+  );
   await ctx.reply(
     [
-      "Поддержка ProfiBux",
+      "Напишите человеку в поддержку — бот заявки не читает.",
       "",
-      "Опишите проблему и укажите код выполнения (например TS-8F3K2) или код заявки на вывод (WD-2M91X) — так мы найдём вашу ситуацию за минуту.",
+      "В сообщении укажите код выполнения (TS-8F3K2) или заявки на вывод (WD-2M91X).",
       "",
-      `Ваш ID для поддержки: ${ctx.from?.id ?? "неизвестен"}`,
+      `Ваш Telegram ID: ${ctx.from?.id ?? "неизвестен"}`,
     ].join("\n"),
+    {
+      reply_markup: new InlineKeyboard().url("Написать в поддержку", `https://t.me/${username}`),
+    },
   );
 });
 

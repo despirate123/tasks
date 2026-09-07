@@ -83,7 +83,7 @@ export default async function TaskPage({
             size="lg"
           />
           <div className="min-w-0 flex-1">
-            <h1 className="text-[19px] leading-tight font-bold">{offer.title}</h1>
+            <h1 className="break-words text-[19px] leading-tight font-bold">{offer.title}</h1>
             {offer.brandName ? (
               <p className="mt-1 text-[13px] text-content-muted">
                 {offer.brandName}
@@ -225,10 +225,6 @@ export default async function TaskPage({
               )}
             />
           ) : null}
-          <DetailRow
-            label="Гео"
-            value={offer.geo.join(", ") || "Любое"}
-          />
         </Card>
         <p className="px-1 text-[12px] leading-relaxed text-content-muted">
           {offer.holdHours > 0

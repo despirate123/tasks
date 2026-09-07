@@ -210,21 +210,21 @@ export function OfferCard({
           iconUrl={offer.iconUrl}
           fallback={fallback}
           className={cn(
-            "offer-card flex items-center gap-3.5 rounded-card p-3.5 ring-1 ring-inset transition-[box-shadow] duration-300 ease-soft active:scale-[0.99]",
+            "offer-card flex min-w-0 items-center gap-3 rounded-card p-3 ring-1 ring-inset transition-[box-shadow] duration-300 ease-soft active:scale-[0.99] sm:gap-3.5 sm:p-3.5",
             offer.isHot
               ? "offer-card-featured ring-white/12"
               : "offer-card-featured ring-[var(--acid)]/22",
             mine === "done" && "opacity-75",
           )}
         >
-          <OfferMark title={brandTitle} iconUrl={offer.iconUrl} />
-          <div className="min-w-0 flex-1">
+          <OfferMark title={brandTitle} iconUrl={offer.iconUrl} size="md" />
+          <div className="min-w-0 flex-1 overflow-hidden">
             {highlight ? (
               <p className="mb-1.5">
                 <HighlightBadge kind={highlight} />
               </p>
             ) : null}
-            <p className="line-clamp-2 text-[15px] leading-snug font-semibold tracking-[-0.015em]">
+            <p className="line-clamp-2 break-words text-[14px] leading-snug font-semibold tracking-[-0.015em] sm:text-[15px]">
               {offer.title}
             </p>
             <p className="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] text-content-muted">
@@ -232,13 +232,13 @@ export function OfferCard({
               <span className="truncate">{offerMeta(offer, mine)}</span>
             </p>
           </div>
-          <div className="shrink-0 rounded-2xl bg-black/25 px-2.5 py-2 text-right ring-1 ring-inset ring-white/[0.06]">
-            <p className="text-[16px] font-bold text-content-primary">
+          <div className="w-[4.75rem] shrink-0 rounded-2xl bg-black/25 px-2 py-2 text-right ring-1 ring-inset ring-white/[0.06] sm:w-auto sm:px-2.5">
+            <p className="text-[15px] font-bold text-content-primary sm:text-[16px]">
               <Money value={offer.rewardAmount as number} />
             </p>
             <p className="mt-1.5 flex items-center justify-end gap-1 text-[10.5px] text-content-muted">
-              <Clock className="size-3" />
-              {formatEta(offer.approvalEtaMinutes)}
+              <Clock className="size-3 shrink-0" />
+              <span className="truncate">{formatEta(offer.approvalEtaMinutes)}</span>
             </p>
           </div>
         </TintedOfferCard>
@@ -252,7 +252,7 @@ export function OfferCard({
         iconUrl={offer.iconUrl}
         fallback={fallback}
         className={cn(
-          "offer-card flex aspect-square w-full flex-col rounded-card p-3 ring-1 ring-inset transition-[box-shadow] duration-300 ease-soft active:scale-[0.99]",
+          "offer-card flex min-h-[11.25rem] w-full min-w-0 flex-col overflow-hidden rounded-card p-2.5 ring-1 ring-inset transition-[box-shadow] duration-300 ease-soft active:scale-[0.99] sm:aspect-square sm:min-h-0 sm:p-3",
           offer.isHot
             ? "offer-card-featured ring-white/12"
             : offer.isFeatured
@@ -261,24 +261,24 @@ export function OfferCard({
           mine === "done" && "opacity-75",
         )}
       >
-        <div className="flex items-start justify-between gap-2">
-          <OfferMark title={brandTitle} iconUrl={offer.iconUrl} />
+        <div className="flex items-start justify-between gap-1.5">
+          <OfferMark title={brandTitle} iconUrl={offer.iconUrl} size="sm" />
           <span
             className={cn(
-              "rounded-pill px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset",
+              "shrink-0 rounded-pill px-1.5 py-0.5 text-[10px] leading-none font-medium whitespace-nowrap ring-1 ring-inset",
               difficulty.className,
             )}
           >
             {difficulty.label}
           </span>
         </div>
-        <p className="mt-3 line-clamp-2 text-[13.5px] leading-snug font-semibold tracking-[-0.015em]">
+        <p className="mt-2.5 line-clamp-2 min-w-0 break-words text-[13px] leading-snug font-semibold tracking-[-0.015em] sm:mt-3 sm:text-[13.5px]">
           {offer.title}
         </p>
-        <p className="mt-1 truncate text-[11.5px] text-content-muted">
+        <p className="mt-1 min-w-0 truncate text-[11px] text-content-muted sm:text-[11.5px]">
           {offerMeta(offer, mine)}
         </p>
-        <p className="mt-auto border-t border-white/[0.06] pt-2.5 text-[16px] font-bold text-content-primary">
+        <p className="mt-auto shrink-0 border-t border-white/[0.06] pt-2 text-[15px] font-bold text-content-primary sm:pt-2.5 sm:text-[16px]">
           <Money value={offer.rewardAmount as number} />
         </p>
       </TintedOfferCard>

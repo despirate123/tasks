@@ -14,10 +14,14 @@ import {
   takeOffer,
 } from "@/server/modules/submissions";
 import {
+  createManualOffer,
+  duplicateOffer,
   resetOfferAuto,
   setOfferApprovalEta,
   setOfferDifficulty,
+  updateManualOffer,
   updateOfferLinks,
+  type ManualOfferInput,
 } from "@/server/modules/offers";
 import {
   approveWithdrawal,
@@ -36,6 +40,7 @@ import {
 } from "@/server/modules/notifications";
 import type { NotificationType } from "@/generated/prisma";
 import { deleteBanner, toggleBanner, upsertBanner } from "@/server/modules/banners";
+import { notify } from "@/server/modules/notifications";
 import { postLedgerEntry } from "@/server/modules/wallet";
 import { maskCard, maskCryptoAddress } from "@/lib/format";
 import { PAYOUT_METHOD } from "@/lib/labels";
@@ -443,6 +448,39 @@ export async function setOfferStatusAction(
   }
 }
 
+export async function saveOfferAction(
+  id: string | undefined,
+  input: ManualOfferInput,
+): Promise<ActionResult & { offerId?: string }> {
+  try {
+    const admin = await requireRole("ADMIN");
+    const offer = id
+      ? await updateManualOffer(admin.id, id, input)
+      : await createManualOffer(admin.id, input);
+    revalidatePath("/admin/offers");
+    revalidatePath("/");
+    if (id) revalidatePath(`/admin/offers/${id}`);
+    return {
+      ok: true,
+      offerId: offer.id,
+      message: id ? "Задание обновлено" : "Задание создано",
+    };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function duplicateOfferAction(id: string): Promise<ActionResult & { offerId?: string }> {
+  try {
+    const admin = await requireRole("ADMIN");
+    const copy = await duplicateOffer(admin.id, id);
+    revalidatePath("/admin/offers");
+    return { ok: true, offerId: copy.id, message: "Копия создана как черновик" };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
 export async function updateOfferLinksAction(
   offerId: string,
   input: { promoCode: string; trackingUrl: string; holdHours: number },
@@ -655,6 +693,19 @@ export async function setUserStatusAction(
         where: { id: userId },
         data: { status, statusReason: reason || null },
       });
+      if (status === "LIMITED" || status === "BLOCKED") {
+        await notify(tx, {
+          userId,
+          type: "ACCOUNT_LIMITED",
+          title: status === "BLOCKED" ? "Аккаунт заблокирован" : "Аккаунт ограничен",
+          body:
+            reason.trim() ||
+            (status === "BLOCKED"
+              ? "Доступ к сервису закрыт. Напишите в поддержку, если это ошибка."
+              : "Новые задания пока недоступны. Вывод уже заработанного открыт."),
+          deepLink: "/profile",
+        });
+      }
       await tx.auditLog.create({
         data: {
           actorId: actor.id,

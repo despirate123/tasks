@@ -4,6 +4,7 @@ import { ScrollToTop } from "@/components/scroll-to-top";
 import { TabTransition } from "@/components/tab-transition";
 import { TelegramInit } from "@/components/telegram-init";
 import { HowItWorksProvider } from "@/components/how-it-works";
+import { BlockedScreen, LimitedBanner } from "@/components/account-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,15 @@ export default async function MiniAppLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
+
+  if (user?.status === "BLOCKED") {
+    return (
+      <>
+        <TelegramInit serverUserId={user.id} />
+        <BlockedScreen reason={user.statusReason} />
+      </>
+    );
+  }
 
   return (
     <>
@@ -30,6 +40,9 @@ export default async function MiniAppLayout({
               paddingRight: "max(1rem, var(--safe-right))",
             }}
           >
+            {user?.status === "LIMITED" ? (
+              <LimitedBanner reason={user.statusReason} />
+            ) : null}
             <TabTransition>{children}</TabTransition>
           </main>
 

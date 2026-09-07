@@ -294,6 +294,7 @@ export async function approveSubmission(
   moderatorId: string,
   submissionId: string,
   comment?: string,
+  options?: { auto?: boolean },
 ) {
   const submission = await db.taskSubmission.findUnique({
     where: { id: submissionId },
@@ -320,6 +321,7 @@ export async function approveSubmission(
         reviewComment: comment,
         payoutAvailableAt: payoutAt,
         reviewLockedAt: null,
+        autoApproved: options?.auto ?? false,
       },
     });
     if (claimed.count !== 1) {

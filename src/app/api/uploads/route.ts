@@ -4,6 +4,7 @@ import { dirname } from "node:path";
 import { NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { requireUser } from "@/server/auth";
+import { rateLimit } from "@/lib/rate-limit";
 import {
   ALLOWED_IMAGE_TYPES,
   ALLOWED_VIDEO_TYPES,
@@ -40,6 +41,18 @@ export async function POST(request: Request) {
         },
       },
       { status: blocked ? 403 : 401 },
+    );
+  }
+
+  if (!rateLimit(`upload:${user.id}`, 20, 10 * 60_000)) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "RATE_LIMITED",
+          message: "Слишком много загрузок. Подождите несколько минут",
+        },
+      },
+      { status: 429 },
     );
   }
 

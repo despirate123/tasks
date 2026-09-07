@@ -4,6 +4,7 @@ import {
   upsertUserFromTelegram,
   verifyInitData,
 } from "@/server/auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 /**
  * Единственная точка входа в приложение.
@@ -14,6 +15,15 @@ import {
  * а Telegram уже аутентифицировал пользователя за нас.
  */
 export async function POST(request: Request) {
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  if (!rateLimit(`auth:${ip}`, 40, 60_000)) {
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Слишком много попыток входа" } },
+      { status: 429 },
+    );
+  }
+
   const body = (await request.json().catch(() => null)) as
     | { initData?: string }
     | null;

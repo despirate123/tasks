@@ -12,7 +12,9 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-  if (!user || !hasRole(user, "MODERATOR")) redirect("/");
+  if (!user || user.status === "BLOCKED" || !hasRole(user, "MODERATOR")) {
+    redirect("/");
+  }
 
   const gutter = {
     paddingLeft: "max(1rem, var(--safe-left))",

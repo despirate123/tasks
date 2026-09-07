@@ -1,6 +1,8 @@
 import { Prisma } from "@/generated/prisma";
 import type { Difficulty, Offer, OfferStatus, User } from "@/generated/prisma";
 import { db } from "@/server/db";
+import { slugify } from "@/lib/utils";
+import { sanitizeHttpUrl } from "@/lib/urls";
 
 export type OfferFilters = {
   difficulty?: Difficulty[];
@@ -145,6 +147,13 @@ export async function updateOfferLinks(
   });
 
   return updated;
+}
+
+export async function listCategories() {
+  return db.category.findMany({
+    where: { isActive: true },
+    orderBy: { sortOrder: "asc" },
+  });
 }
 
 export async function getCategoriesWithCounts() {
@@ -437,6 +446,297 @@ export async function recalcActualEta(offerId: string) {
       // AUTO-значение подтягивается к факту; MANUAL остаётся как задал админ.
       ...(offer?.approvalEtaSource === "AUTO" ? { approvalEtaMinutes: median } : {}),
     },
+  });
+}
+
+export type ManualOfferInput = {
+  title: string;
+  subtitle?: string;
+  description: string;
+  brandName?: string;
+  iconUrl?: string;
+  categoryId?: string;
+  rewardAmount: number;
+  holdHours?: number;
+  difficulty?: Difficulty;
+  approvalEtaMinutes?: number;
+  requirePhoto?: boolean;
+  requireVideo?: boolean;
+  requireComment?: boolean;
+  minPhotos?: number;
+  maxPhotos?: number;
+  proofHint?: string;
+  completionTtlMins?: number;
+  perUserLimit?: number;
+  totalLimit?: number | null;
+  dailyLimit?: number | null;
+  newUsersOnly?: boolean;
+  trackingUrl?: string;
+  promoCode?: string;
+  isFeatured?: boolean;
+  isHot?: boolean;
+  status?: OfferStatus;
+  steps?: { title: string; description?: string }[];
+};
+
+function cleanText(value?: string | null) {
+  const trimmed = value?.trim() ?? "";
+  return trimmed.length ? trimmed : null;
+}
+
+async function uniqueSlug(base: string, excludeId?: string) {
+  const root = slugify(base) || "offer";
+  let slug = root;
+  let n = 2;
+  while (true) {
+    const existing = await db.offer.findUnique({ where: { slug }, select: { id: true } });
+    if (!existing || existing.id === excludeId) return slug;
+    slug = `${root}-${n}`;
+    n += 1;
+  }
+}
+
+export async function ensureManualSource() {
+  return db.offerSource.upsert({
+    where: { code: "MANUAL" },
+    create: { code: "MANUAL", name: "Добавлено вручную", enabled: true },
+    update: {},
+  });
+}
+
+function normalizeOfferInput(input: ManualOfferInput) {
+  const title = input.title.trim();
+  const description = input.description.trim();
+  if (title.length < 3) throw new Error("Укажите название задания");
+  if (description.length < 10) throw new Error("Опишите, что нужно сделать");
+
+  const rewardAmount = Number(input.rewardAmount);
+  if (!Number.isFinite(rewardAmount) || rewardAmount <= 0) {
+    throw new Error("Укажите вознаграждение больше нуля");
+  }
+
+  const minPhotos = Math.max(1, Math.min(Number(input.minPhotos) || 1, 10));
+  const maxPhotos = Math.max(minPhotos, Math.min(Number(input.maxPhotos) || 5, 12));
+  const steps = (input.steps ?? [])
+    .map((step) => ({
+      title: step.title.trim(),
+      description: cleanText(step.description),
+    }))
+    .filter((step) => step.title.length > 0)
+    .slice(0, 12);
+
+  return {
+    title,
+    subtitle: cleanText(input.subtitle),
+    description,
+    brandName: cleanText(input.brandName),
+    iconUrl: sanitizeHttpUrl(input.iconUrl),
+    categoryId: input.categoryId?.trim() || null,
+    rewardAmount,
+    holdHours: Math.max(0, Math.min(Math.round(input.holdHours ?? 0), 24 * 90)),
+    difficulty: input.difficulty ?? "MEDIUM",
+    approvalEtaMinutes: Math.max(
+      1,
+      Math.min(Math.round(input.approvalEtaMinutes ?? 1440), 60 * 24 * 60),
+    ),
+    requirePhoto: input.requirePhoto ?? true,
+    requireVideo: input.requireVideo ?? false,
+    requireComment: input.requireComment ?? true,
+    minPhotos,
+    maxPhotos,
+    proofHint: cleanText(input.proofHint),
+    completionTtlMins: Math.max(
+      30,
+      Math.min(Math.round(input.completionTtlMins ?? 1440), 60 * 24 * 30),
+    ),
+    perUserLimit: Math.max(1, Math.min(Math.round(input.perUserLimit ?? 1), 50)),
+    totalLimit:
+      input.totalLimit == null || Number(input.totalLimit) <= 0
+        ? null
+        : Math.round(Number(input.totalLimit)),
+    dailyLimit:
+      input.dailyLimit == null || Number(input.dailyLimit) <= 0
+        ? null
+        : Math.round(Number(input.dailyLimit)),
+    newUsersOnly: Boolean(input.newUsersOnly),
+    trackingUrl: sanitizeHttpUrl(input.trackingUrl),
+    promoCode: cleanText(input.promoCode)?.toUpperCase() ?? null,
+    isFeatured: Boolean(input.isFeatured),
+    isHot: Boolean(input.isHot),
+    status: input.status ?? "DRAFT",
+    steps,
+  };
+}
+
+export async function createManualOffer(actorId: string, input: ManualOfferInput) {
+  const data = normalizeOfferInput(input);
+  const source = await ensureManualSource();
+  const slug = await uniqueSlug(data.brandName || data.title);
+
+  return db.$transaction(async (tx) => {
+    const offer = await tx.offer.create({
+      data: {
+        sourceId: source.id,
+        slug,
+        title: data.title,
+        subtitle: data.subtitle,
+        description: data.description,
+        brandName: data.brandName,
+        iconUrl: data.iconUrl,
+        categoryId: data.categoryId,
+        rewardAmount: data.rewardAmount,
+        holdHours: data.holdHours,
+        difficulty: data.difficulty,
+        difficultySource: "MANUAL",
+        approvalEtaMinutes: data.approvalEtaMinutes,
+        approvalEtaSource: "MANUAL",
+        requirePhoto: data.requirePhoto,
+        requireVideo: data.requireVideo,
+        requireComment: data.requireComment,
+        minPhotos: data.minPhotos,
+        maxPhotos: data.maxPhotos,
+        proofHint: data.proofHint,
+        completionTtlMins: data.completionTtlMins,
+        perUserLimit: data.perUserLimit,
+        totalLimit: data.totalLimit,
+        dailyLimit: data.dailyLimit,
+        newUsersOnly: data.newUsersOnly,
+        trackingUrl: data.trackingUrl,
+        promoCode: data.promoCode,
+        isFeatured: data.isFeatured,
+        isHot: data.isHot,
+        status: data.status,
+        createdById: actorId,
+        updatedById: actorId,
+        steps: {
+          create: data.steps.map((step, index) => ({
+            order: index + 1,
+            title: step.title,
+            description: step.description,
+          })),
+        },
+      },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorId,
+        action: "offer.create",
+        entityType: "offer",
+        entityId: offer.id,
+        after: { title: offer.title, status: offer.status, reward: data.rewardAmount },
+      },
+    });
+
+    return offer;
+  });
+}
+
+export async function updateManualOffer(
+  actorId: string,
+  offerId: string,
+  input: ManualOfferInput,
+) {
+  const existing = await db.offer.findUnique({ where: { id: offerId } });
+  if (!existing) throw new Error("OFFER_NOT_FOUND");
+
+  const data = normalizeOfferInput(input);
+
+  return db.$transaction(async (tx) => {
+    await tx.offerStep.deleteMany({ where: { offerId } });
+    const offer = await tx.offer.update({
+      where: { id: offerId },
+      data: {
+        title: data.title,
+        subtitle: data.subtitle,
+        description: data.description,
+        brandName: data.brandName,
+        iconUrl: data.iconUrl,
+        categoryId: data.categoryId,
+        rewardAmount: data.rewardAmount,
+        holdHours: data.holdHours,
+        difficulty: data.difficulty,
+        difficultySource: "MANUAL",
+        approvalEtaMinutes: data.approvalEtaMinutes,
+        approvalEtaSource: "MANUAL",
+        requirePhoto: data.requirePhoto,
+        requireVideo: data.requireVideo,
+        requireComment: data.requireComment,
+        minPhotos: data.minPhotos,
+        maxPhotos: data.maxPhotos,
+        proofHint: data.proofHint,
+        completionTtlMins: data.completionTtlMins,
+        perUserLimit: data.perUserLimit,
+        totalLimit: data.totalLimit,
+        dailyLimit: data.dailyLimit,
+        newUsersOnly: data.newUsersOnly,
+        trackingUrl: data.trackingUrl,
+        promoCode: data.promoCode,
+        isFeatured: data.isFeatured,
+        isHot: data.isHot,
+        updatedById: actorId,
+        steps: {
+          create: data.steps.map((step, index) => ({
+            order: index + 1,
+            title: step.title,
+            description: step.description,
+          })),
+        },
+      },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorId,
+        action: "offer.update",
+        entityType: "offer",
+        entityId: offer.id,
+        after: { title: offer.title, reward: data.rewardAmount },
+      },
+    });
+
+    return offer;
+  });
+}
+
+export async function duplicateOffer(actorId: string, offerId: string) {
+  const offer = await db.offer.findUnique({
+    where: { id: offerId },
+    include: { steps: { orderBy: { order: "asc" } } },
+  });
+  if (!offer) throw new Error("OFFER_NOT_FOUND");
+
+  return createManualOffer(actorId, {
+    title: `${offer.title} (копия)`,
+    subtitle: offer.subtitle ?? undefined,
+    description: offer.description,
+    brandName: offer.brandName ?? undefined,
+    iconUrl: offer.iconUrl ?? undefined,
+    categoryId: offer.categoryId ?? undefined,
+    rewardAmount: Number(offer.rewardAmount),
+    holdHours: offer.holdHours,
+    difficulty: offer.difficulty,
+    approvalEtaMinutes: offer.approvalEtaMinutes,
+    requirePhoto: offer.requirePhoto,
+    requireVideo: offer.requireVideo,
+    requireComment: offer.requireComment,
+    minPhotos: offer.minPhotos,
+    maxPhotos: offer.maxPhotos,
+    proofHint: offer.proofHint ?? undefined,
+    completionTtlMins: offer.completionTtlMins,
+    perUserLimit: offer.perUserLimit,
+    totalLimit: offer.totalLimit,
+    dailyLimit: offer.dailyLimit,
+    newUsersOnly: offer.newUsersOnly,
+    trackingUrl: offer.trackingUrl ?? undefined,
+    promoCode: offer.promoCode ?? undefined,
+    isFeatured: false,
+    isHot: false,
+    status: "DRAFT",
+    steps: offer.steps.map((step) => ({
+      title: step.title,
+      description: step.description ?? undefined,
+    })),
   });
 }
 

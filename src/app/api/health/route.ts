@@ -9,13 +9,9 @@ export async function GET() {
       db: "up",
       time: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      {
-        status: "degraded",
-        db: "down",
-        error: error instanceof Error ? error.message : "unknown",
-      },
+      { status: "degraded", db: "down" },
       { status: 503 },
     );
   }

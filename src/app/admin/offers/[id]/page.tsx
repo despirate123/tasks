@@ -10,6 +10,7 @@ import { DetailRow, SectionTitle } from "@/components/ui/misc";
 import { DifficultyBadge, OfferAvatar } from "@/components/domain";
 import { OfferControls } from "./offer-controls";
 import { OfferLinksEditor } from "./offer-links";
+import { OfferOps } from "./offer-ops";
 
 export default async function AdminOfferPage({
   params,
@@ -67,6 +68,9 @@ export default async function AdminOfferPage({
             <Badge tone="money" size="md">
               {formatMoney(offer.rewardAmount)}
             </Badge>
+          </div>
+          <div className="mt-3">
+            <OfferOps offerId={offer.id} />
           </div>
         </div>
       </div>
