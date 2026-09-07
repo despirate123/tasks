@@ -9,8 +9,6 @@ const miniappHost = (() => {
 })();
 
 const nextConfig: NextConfig = {
-  // standalone — удобный артефакт для сервера (node .next/standalone).
-  output: "standalone",
   experimental: {
     // Клиентский кэш App Router. Ключ — полный URL, поэтому
     // `/?reward=to150` не подменяет `/`. Prefetch дока без этого бесполезен.
