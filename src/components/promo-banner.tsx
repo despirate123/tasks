@@ -123,9 +123,6 @@ function useLiveBanners(initial: PromoBannerSlide[]) {
     };
 
     load();
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") load();
-    }, 5000);
     const onVisible = () => {
       if (document.visibilityState === "visible") load();
     };
@@ -133,7 +130,6 @@ function useLiveBanners(initial: PromoBannerSlide[]) {
     window.addEventListener("focus", onVisible);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };

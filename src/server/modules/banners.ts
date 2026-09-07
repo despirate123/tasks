@@ -1,4 +1,3 @@
-import { connection } from "next/server";
 import { db } from "@/server/db";
 import { sanitizeHttpUrl } from "@/lib/urls";
 
@@ -77,7 +76,6 @@ export function serializeAdminBanner(banner: {
 
 /** Без Data Cache: 3 строки, а 30-секундный unstable_cache оставлял старый слайд после правки. */
 export async function listActiveBanners() {
-  await connection();
   const now = new Date();
   return db.promoBanner.findMany({
     where: {
@@ -101,14 +99,12 @@ export async function listActiveBanners() {
 }
 
 export async function listAdminBanners() {
-  await connection();
   return db.promoBanner.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 }
 
 export async function getBanner(id: string) {
-  await connection();
   return db.promoBanner.findUnique({ where: { id } });
 }
 
