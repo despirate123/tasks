@@ -90,23 +90,6 @@ export function CatalogToolbar({
       </form>
 
       <ChipScroller>
-        {REWARD_CHIPS.map((chip) => {
-          const active = isRewardChipActive(state.reward, chip.key);
-          return (
-            <FilterLink
-              key={chip.key || "any-reward"}
-              href={catalogHref(state, { reward: chip.key || undefined })}
-              data-chip-active={active || undefined}
-              className={chipClass(active)}
-            >
-              {active ? <ChipDot /> : null}
-              {chip.label}
-            </FilterLink>
-          );
-        })}
-
-        <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
-
         {DIFFICULTY_ORDER.map((value) => {
           const active = state.difficulty.includes(value);
           const meta = DIFFICULTY[value];
@@ -133,7 +116,7 @@ export function CatalogToolbar({
             <FilterLink
               key={item.key || "default"}
               href={catalogHref(state, { sort: item.key || undefined })}
-              data-chip-active={active || undefined}
+              data-chip-active={active && item.key ? true : undefined}
               className={chipClass(active)}
             >
               {active ? (
@@ -146,12 +129,28 @@ export function CatalogToolbar({
           );
         })}
 
+        <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
+
+        {REWARD_CHIPS.map((chip) => {
+          const active = isRewardChipActive(state.reward, chip.key);
+          return (
+            <FilterLink
+              key={chip.key || "any-reward"}
+              href={catalogHref(state, { reward: chip.key || undefined })}
+              data-chip-active={active && chip.key ? true : undefined}
+              className={chipClass(active)}
+            >
+              {active ? <ChipDot /> : null}
+              {chip.label}
+            </FilterLink>
+          );
+        })}
+
         {categories.length > 0 ? (
           <>
             <span className="mx-1 w-px shrink-0 self-stretch bg-border-subtle" />
             <FilterLink
               href={catalogHref(state, { category: undefined })}
-              data-chip-active={!state.category || undefined}
               className={chipClass(!state.category)}
             >
               {!state.category ? <ChipDot /> : null}

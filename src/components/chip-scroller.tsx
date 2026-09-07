@@ -40,8 +40,8 @@ export function ChipScroller({
       const viewRight = viewLeft + node.clientWidth;
       const chipLeft = active.offsetLeft;
       const chipRight = chipLeft + active.offsetWidth;
-      // Не центрируем чип по умолчанию — иначе лента уезжает
-      // и «до 150 ₽» пропадает с первого экрана.
+      // Только если выбранный чип реально обрезан — иначе лента
+      // стартует слева: сложность, сортировка, потом суммы.
       if (chipLeft < viewLeft + pad || chipRight > viewRight - pad) {
         const left =
           chipLeft - node.clientWidth / 2 + active.offsetWidth / 2;
