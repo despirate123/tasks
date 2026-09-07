@@ -23,7 +23,7 @@ import { ActiveWork } from "@/components/active-work";
 import { HomeHeader } from "@/components/home-header";
 import { ChipScroller } from "@/components/chip-scroller";
 import { ChipDot, chipClass } from "@/lib/chips";
-import { HowItWorksButton } from "@/components/how-it-works";
+import { HowItWorks } from "@/components/how-it-works";
 import {
   HomeCatalogSkeleton,
   HomeHeaderSkeleton,
@@ -104,6 +104,7 @@ type SearchParams = Promise<{
   q?: string;
   reward?: string;
   take?: string;
+  howto?: string;
 }>;
 
 type CatalogQuery = Awaited<SearchParams>;
@@ -269,17 +270,19 @@ async function HomeCatalog({ params }: { params: CatalogQuery }) {
   return (
     <>
       <div className="space-y-2">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-[17px] leading-tight font-bold">
-            Задания
-            {offers.length > 0 ? (
-              <span className="tabular ml-1.5 text-[13px] font-medium text-content-muted">
-                {offers.length}
-              </span>
-            ) : null}
-          </h1>
-          <HowItWorksButton />
-        </div>
+        <HowItWorks
+          defaultOpen={params.howto === "1"}
+          title={
+            <h1 className="text-[17px] leading-tight font-bold">
+              Задания
+              {offers.length > 0 ? (
+                <span className="tabular ml-1.5 text-[13px] font-medium text-content-muted">
+                  {offers.length}
+                </span>
+              ) : null}
+            </h1>
+          }
+        />
 
         <form action="/" className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-content-muted" />

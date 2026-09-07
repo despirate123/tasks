@@ -23,7 +23,6 @@ import { DetailRow, SectionTitle, Separator } from "@/components/ui/misc";
 import { DifficultyBadge, OfferAvatar } from "@/components/domain";
 import { TakeOfferButton } from "./take-button";
 import { OfferLinksBlock } from "@/components/offer-links";
-import { HOLD_EXPLAINER } from "@/lib/notification-settings";
 
 export default async function TaskPage({
   params,
@@ -113,7 +112,9 @@ export default async function TaskPage({
           <div className="text-right text-[11.5px] text-content-muted">
             <p>Одобрение {formatEta(offer.approvalEtaMinutes)}</p>
             {offer.holdHours > 0 ? (
-              <p className="mt-0.5">Проверка до зачисления · {offer.holdHours} ч</p>
+              <p className="mt-0.5">
+                Зачисление {formatEta(offer.holdHours * 60)}
+              </p>
             ) : null}
           </div>
         </div>
@@ -208,8 +209,8 @@ export default async function TaskPage({
           />
           {offer.holdHours > 0 ? (
             <DetailRow
-              label="Проверка до зачисления"
-              value={`${offer.holdHours} ч`}
+              label="Зачисление после одобрения"
+              value={formatEta(offer.holdHours * 60)}
             />
           ) : null}
           <DetailRow label="Попыток на участника" value={offer.perUserLimit} />
@@ -230,7 +231,9 @@ export default async function TaskPage({
           />
         </Card>
         <p className="px-1 text-[12px] leading-relaxed text-content-muted">
-          {HOLD_EXPLAINER}
+          {offer.holdHours > 0
+            ? "Срок зачисления указан выше — его задаёт рекламодатель для этого задания."
+            : "После проверки деньги сразу доступны к выводу."}
         </p>
       </div>
 
