@@ -4,7 +4,6 @@ import { ArrowLeftRight, ShieldCheck } from "lucide-react";
 import { displayName, getCurrentUser, hasRole } from "@/server/auth";
 import { USER_ROLE } from "@/lib/labels";
 import { TelegramInit } from "@/components/telegram-init";
-import { AdminRootClass } from "./admin-root-class";
 import { AdminNav } from "./admin-nav";
 
 export default async function AdminLayout({
@@ -23,11 +22,13 @@ export default async function AdminLayout({
   return (
     <>
       <TelegramInit serverUserId={user.id} />
-      <AdminRootClass />
       <div className="admin-shell relative z-10 min-h-[100svh]">
         <header
-          className="sticky top-0 z-40 border-b border-border-subtle bg-surface-base"
-          style={{ paddingTop: "var(--safe-top)" }}
+          className="relative z-10 border-b border-border-subtle"
+          style={{
+            paddingTop: "var(--safe-top)",
+            background: "#121212",
+          }}
         >
           <div
             className="mx-auto flex max-w-6xl items-center gap-3 py-2.5"

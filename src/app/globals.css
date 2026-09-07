@@ -106,13 +106,6 @@ body {
   }
 }
 
-/* overflow-x: clip на предке ломает position: sticky в iOS WebView. */
-html.is-admin,
-html.is-admin body {
-  overflow-x: visible;
-  scroll-behavior: auto;
-}
-
 body {
   font-family: var(--font-sans);
   font-weight: 450;
@@ -418,7 +411,7 @@ body::after {
 .motion-page > *:nth-child(3) { animation-delay: 0.05s; }
 .motion-page > *:nth-child(n + 4) { animation-delay: 0.07s; }
 
-/* Админка: transform-вход на блоках + sticky = тряска при скролле на телефоне. */
+/* Админка: без входных transform — на телефоне они дёргают вёрстку при скролле. */
 .admin-shell .motion-page > *,
 .admin-shell .motion-list > *,
 .admin-shell .motion-chips > * {
