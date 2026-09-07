@@ -1,7 +1,10 @@
+"use client";
+
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { haptic } from "@/components/telegram-init";
 
 const buttonVariants = cva(
   "clip-frame liquid-glass relative isolate inline-flex items-center justify-center gap-2 overflow-hidden whitespace-nowrap font-semibold transition-[background,transform,color] duration-300 ease-soft outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:pointer-events-none disabled:opacity-45 active:scale-[0.98] [&_svg]:shrink-0",
@@ -39,17 +42,36 @@ const buttonVariants = cva(
 
 function Button({
   className,
-  variant,
-  size,
+  variant = "primary",
+  size = "md",
   block,
   asChild = false,
+  onClick,
+  disabled,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : "button";
+  const large = size === "md" || size === "lg";
+  const impact =
+    large &&
+    (variant === "primary" ||
+      variant === "money" ||
+      variant === "support" ||
+      variant === "danger")
+      ? "medium"
+      : large && variant === "secondary"
+        ? "light"
+        : null;
+
   return (
     <Comp
       className={cn(buttonVariants({ variant, size, block }), className)}
+      disabled={disabled}
+      onClick={(event) => {
+        if (!disabled && impact) haptic(impact);
+        onClick?.(event);
+      }}
       {...props}
     />
   );

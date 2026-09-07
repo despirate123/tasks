@@ -40,13 +40,20 @@ const telegramBoot = `
       var s = app.safeAreaInset || {};
       var c = app.contentSafeAreaInset || {};
       var r = document.documentElement;
+      var platform = "";
+      try { platform = String(app.platform || "").toLowerCase(); } catch (e) {}
+      if (platform) r.setAttribute("data-tg-platform", platform);
       function n(o, k) { var v = Number(o[k]); return v > 0 ? v : 0; }
       function set(name, v) { if (v > 0) r.style.setProperty(name, v + "px"); }
       set("--tg-safe-area-inset-top", n(s, "top"));
       set("--tg-safe-area-inset-bottom", n(s, "bottom"));
       set("--tg-content-safe-area-inset-top", n(c, "top"));
       set("--safe-top", n(s, "top") + n(c, "top"));
-      set("--safe-bottom", n(s, "bottom") + n(c, "bottom"));
+      // Android Telegram часто отдаёт большой contentSafeAreaInset.bottom,
+      // хотя вебвью уже над системной панелью — док улетает вверх.
+      var bottom = platform === "android" ? n(s, "bottom") : n(s, "bottom") + n(c, "bottom");
+      if (platform === "android") r.style.setProperty("--safe-bottom", bottom + "px");
+      else set("--safe-bottom", bottom);
     } catch (e) {}
     return true;
   }

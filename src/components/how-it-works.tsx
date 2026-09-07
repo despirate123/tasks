@@ -13,41 +13,54 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { haptic } from "@/components/telegram-init";
 
-const STEPS = [
-  {
-    title: "Выбираете задание",
-    text: "В каталоге, под своё время. Нажали «Взять» — можно делать.",
-  },
-  {
-    title: "Делаете и отправляете скрины",
-    text: "Шаги написаны в задании. Фото или видео, кнопка «Отправить».",
-  },
-  {
-    title: "Деньги на балансе",
-    text: "Мы смотрим работу и зачисляем. Обычно в тот же день или за пару дней.",
-  },
-];
+const STEPS = ["Берёте задание", "Отправляете скрин", "Получаете деньги"];
 
 const HowItWorksContext = createContext<{ open: () => void }>({
   open: () => {},
 });
 
 export function HowItWorksProvider({ children }: { children: React.ReactNode }) {
-  const [visible, setVisible] = useState(false);
+  const [present, setPresent] = useState(false);
+  const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setReady(true);
   }, []);
 
-  const open = useCallback(() => setVisible(true), []);
-  const close = useCallback(() => setVisible(false), []);
+  const show = useCallback(() => {
+    setPresent(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setOpen(true));
+    });
+  }, []);
+
+  const hide = useCallback(() => {
+    setOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!present) return;
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setOpen(true));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [present]);
+
+  useEffect(() => {
+    if (open || !present) return;
+    const timer = window.setTimeout(() => setPresent(false), 340);
+    return () => window.clearTimeout(timer);
+  }, [open, present]);
 
   return (
-    <HowItWorksContext.Provider value={{ open }}>
+    <HowItWorksContext.Provider value={{ open: show }}>
       {children}
-      {ready && visible
-        ? createPortal(<HowItWorksSheet onClose={close} />, document.body)
+      {ready && present
+        ? createPortal(
+            <HowItWorksSheet open={open} onClose={hide} />,
+            document.body,
+          )
         : null}
     </HowItWorksContext.Provider>
   );
@@ -57,7 +70,7 @@ export function useHowItWorks() {
   return useContext(HowItWorksContext);
 }
 
-/** Старая ссылка /?howto=1 — открыть лист, не аккордеон в ленте. */
+/** Старая ссылка /?howto=1 — открыть лист. */
 export function HowItWorksAutoOpen({ active }: { active: boolean }) {
   const { open } = useHowItWorks();
   useEffect(() => {
@@ -103,14 +116,20 @@ export function HowItWorksMenuRow() {
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">Как это работает?</span>
         <span className="mt-0.5 block truncate text-[12px] text-content-muted">
-          Коротко, за минуту
+          Берёте, делаете, получаете
         </span>
       </span>
     </button>
   );
 }
 
-function HowItWorksSheet({ onClose }: { onClose: () => void }) {
+function HowItWorksSheet({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -124,14 +143,16 @@ function HowItWorksSheet({ onClose }: { onClose: () => void }) {
       <button
         type="button"
         aria-label="Закрыть"
-        className="absolute inset-0 bg-black/62"
+        data-open={open}
+        className="pb-backdrop absolute inset-0 bg-black/62"
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="how-it-works-title"
-        className="absolute inset-x-0 bottom-0 mx-auto flex w-full max-w-[var(--app-max-width)] flex-col rounded-t-[1.6rem] border-t border-border-subtle bg-surface-base shadow-[0_48px_0_0_#121212]"
+        data-open={open}
+        className="pb-sheet absolute inset-x-0 bottom-0 mx-auto flex w-full max-w-[var(--app-max-width)] flex-col rounded-t-[1.6rem] border-t border-border-subtle bg-surface-base shadow-[0_48px_0_0_#121212]"
         style={{
           maxHeight: "min(34rem, calc(100svh - 2.75rem))",
           paddingLeft: "max(1.25rem, var(--safe-left))",
@@ -144,44 +165,26 @@ function HowItWorksSheet({ onClose }: { onClose: () => void }) {
           <span className="h-1 w-10 rounded-full bg-white/16" />
         </div>
         <div className="min-h-0 overflow-y-auto overscroll-contain pb-1">
-          <p className="text-[11px] tracking-wide text-content-muted uppercase">
-            Как это работает
-          </p>
           <h2
             id="how-it-works-title"
-            className="mt-1 text-[18px] font-bold leading-tight"
+            className="text-[18px] font-bold leading-tight"
           >
-            Берёте задание — деньги на балансе
+            Как это работает
           </h2>
-          <p className="mt-2 text-[13px] leading-relaxed text-content-secondary">
-            Без анкет на старте. Три коротких шага.
-          </p>
           <ol className="mt-4 space-y-3">
             {STEPS.map((step, index) => (
-              <li key={step.title} className="flex gap-3">
-                <span className="tabular mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg bg-brand-500/16 text-[12px] font-bold text-brand-300">
+              <li key={step} className="flex items-center gap-3">
+                <span className="tabular flex size-6 shrink-0 items-center justify-center rounded-lg bg-brand-500/16 text-[12px] font-bold text-brand-300">
                   {index + 1}
                 </span>
-                <div className="min-w-0">
-                  <p className="text-[13.5px] font-medium leading-snug">{step.title}</p>
-                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-content-secondary">
-                    {step.text}
-                  </p>
-                </div>
+                <p className="min-w-0 text-[14px] font-medium leading-snug">
+                  {step}
+                </p>
               </li>
             ))}
           </ol>
         </div>
-        <Button
-          variant="primary"
-          size="lg"
-          block
-          className="mt-5 shrink-0"
-          onClick={() => {
-            haptic("light");
-            onClose();
-          }}
-        >
+        <Button variant="primary" size="lg" block className="mt-5 shrink-0" onClick={onClose}>
           <Check />
           Понятно
         </Button>

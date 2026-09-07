@@ -157,7 +157,6 @@ export function WithdrawForm({
 
   const addMethod = () => {
     setError(null);
-    haptic("light");
     startTransition(async () => {
       const result = await addPayoutMethodAction({
         kind: newKind,
@@ -180,7 +179,6 @@ export function WithdrawForm({
   const submit = () => {
     setError(null);
     setSuccess(null);
-    haptic("medium");
     startTransition(async () => {
       const result = await createWithdrawalAction(selectedId, quote.gross);
       if (result.ok) {

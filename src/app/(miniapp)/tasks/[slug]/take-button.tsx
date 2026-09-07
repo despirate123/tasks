@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Loader2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { takeOfferAction } from "@/server/actions";
-import { haptic, hapticNotify } from "@/components/telegram-init";
+import { hapticNotify } from "@/components/telegram-init";
 
 export function TakeOfferButton({
   offerId,
@@ -17,7 +17,6 @@ export function TakeOfferButton({
   const [error, setError] = useState<string | null>(null);
 
   const onClick = () => {
-    haptic("medium");
     setError(null);
     startTransition(async () => {
       // При успехе действие делает redirect, поэтому сюда управление

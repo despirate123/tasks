@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { haptic } from "@/components/telegram-init";
 
 const POLL_INTERVAL_MS = 20_000;
 
@@ -84,6 +85,7 @@ export function NotificationBell({ initialCount }: { initialCount: number }) {
     <Link
       href="/notifications"
       aria-label={count > 0 ? `Уведомления, ${count} непрочитанных` : "Уведомления"}
+      onClick={() => haptic("light")}
       className="liquid-glass relative flex size-10 items-center justify-center rounded-full glass-thin transition-[transform,background] duration-300 ease-soft hover:bg-white/6 active:scale-95"
     >
       <Bell className="size-[18px] text-content-secondary" strokeWidth={1.75} />

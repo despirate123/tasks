@@ -4,6 +4,7 @@ export type TelegramViewport = {
   safeAreaInset?: Insets;
   contentSafeAreaInset?: Insets;
   viewportStableHeight?: number;
+  platform?: string;
 };
 
 export type ApplyTelegramSafeAreaOptions = {
@@ -67,10 +68,16 @@ export function applyTelegramSafeArea(
   const sys = app.safeAreaInset ?? {};
   const content = app.contentSafeAreaInset ?? {};
   const root = document.documentElement;
+  const platform = (app.platform ?? "").toLowerCase();
+  const android = platform === "android";
+
+  if (platform) root.dataset.tgPlatform = platform;
 
   const next: Box = {
     top: px(sys.top) + px(content.top),
-    bottom: px(sys.bottom) + px(content.bottom),
+    // На Android content.bottom — фантом: вебвью уже не под системным баром,
+    // а сложение поднимает плавающий док на пол-экрана.
+    bottom: android ? px(sys.bottom) : px(sys.bottom) + px(content.bottom),
     left: px(sys.left) + px(content.left),
     right: px(sys.right) + px(content.right),
   };
@@ -88,9 +95,9 @@ export function applyTelegramSafeArea(
     writePx(root, "--tg-content-safe-area-inset-left", px(content.left));
     writePx(root, "--tg-content-safe-area-inset-right", px(content.right));
 
-    // Нули не записываем: оставляем CSS calc с env(safe-area-inset-*).
     if (next.top) writePx(root, "--safe-top", next.top);
-    if (next.bottom) writePx(root, "--safe-bottom", next.bottom);
+    // Ноль пишем: иначе на Android остаётся завышенный CSS-calc.
+    writePx(root, "--safe-bottom", next.bottom);
     if (next.left) writePx(root, "--safe-left", next.left);
     if (next.right) writePx(root, "--safe-right", next.right);
 

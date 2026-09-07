@@ -29,6 +29,7 @@ type TelegramWebApp = {
   };
   disableVerticalSwipes?: () => void;
   openTelegramLink?: (url: string) => void;
+  platform?: string;
 };
 
 declare global {
@@ -140,11 +141,37 @@ export function TelegramInit({ serverUserId = null }: { serverUserId?: string | 
 }
 
 export function haptic(style: "light" | "medium" | "heavy" = "light") {
-  window.Telegram?.WebApp?.HapticFeedback?.impactOccurred(style);
+  const feedback = window.Telegram?.WebApp?.HapticFeedback;
+  if (feedback?.impactOccurred) {
+    try {
+      feedback.impactOccurred(style);
+      return;
+    } catch {
+      /* старый WebView */
+    }
+  }
+  try {
+    navigator.vibrate?.(style === "heavy" ? 26 : style === "medium" ? 16 : 10);
+  } catch {
+    /* нет вибрации */
+  }
 }
 
 export function hapticNotify(type: "error" | "success" | "warning") {
-  window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred(type);
+  const feedback = window.Telegram?.WebApp?.HapticFeedback;
+  if (feedback?.notificationOccurred) {
+    try {
+      feedback.notificationOccurred(type);
+      return;
+    } catch {
+      /* старый WebView */
+    }
+  }
+  try {
+    navigator.vibrate?.(type === "error" ? [12, 36, 18] : 16);
+  } catch {
+    /* нет вибрации */
+  }
 }
 
 /** Открывает t.me-ссылку в Telegram, в браузере — в новой вкладке. */

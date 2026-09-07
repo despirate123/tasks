@@ -29,7 +29,7 @@ export function BottomNav() {
     <nav
       className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3"
       style={{
-        paddingBottom: "calc(var(--safe-bottom) + 0.55rem)",
+        paddingBottom: "calc(var(--safe-bottom) + var(--dock-gap))",
         paddingLeft: "max(0.75rem, var(--safe-left))",
         paddingRight: "max(0.75rem, var(--safe-right))",
       }}

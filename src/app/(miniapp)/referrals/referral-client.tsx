@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Check, Copy, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { haptic } from "@/components/telegram-init";
 
 export function ReferralShare({
   link,
@@ -20,7 +19,6 @@ export function ReferralShare({
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
-    haptic("light");
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
@@ -32,7 +30,6 @@ export function ReferralShare({
   };
 
   const share = () => {
-    haptic("medium");
     const text = "Выполняй простые задания и получай вознаграждение на карту или в USDT";
     const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");

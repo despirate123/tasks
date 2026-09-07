@@ -153,7 +153,6 @@ export function ProofForm({
 
   const submit = () => {
     setError(null);
-    haptic("medium");
     startTransition(async () => {
       // Комментарий сохраняем перед отправкой: пользователь мог набрать
       // текст и сразу нажать «Отправить», не нажимая «Сохранить».
