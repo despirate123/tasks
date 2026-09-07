@@ -84,3 +84,33 @@ export function matchesRewardFilter(amount: number, filter: RewardFilter) {
   if (filter.maxReward != null && amount > filter.maxReward) return false;
   return true;
 }
+
+export type CatalogQueryState = {
+  q?: string;
+  sort?: string;
+  category?: string;
+  reward?: string;
+  difficulty?: string[];
+};
+
+export function catalogHref(
+  state: CatalogQueryState,
+  patch: Partial<CatalogQueryState> = {},
+) {
+  const next = { ...state, ...patch };
+  const params = new URLSearchParams();
+  if (next.q) params.set("q", next.q);
+  if (next.sort) params.set("sort", next.sort);
+  if (next.category) params.set("category", next.category);
+  if (next.reward) params.set("reward", next.reward);
+  for (const value of next.difficulty ?? []) params.append("difficulty", value);
+  const qs = params.toString();
+  return qs ? `/?${qs}` : "/";
+}
+
+export function toggleDifficultyList(current: string[], value: string) {
+  const next = new Set(current);
+  if (next.has(value)) next.delete(value);
+  else next.add(value);
+  return [...next];
+}

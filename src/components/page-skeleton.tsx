@@ -22,6 +22,32 @@ export function HomeWalletSkeleton() {
   );
 }
 
+export function HomeCatalogToolbarSkeleton() {
+  return (
+    <div className="space-y-2">
+      <Skeleton className="h-5 w-28" />
+      <Skeleton className="h-10 w-full rounded-2xl" />
+      <div className="flex gap-2 overflow-hidden">
+        <Skeleton className="h-8 w-20 shrink-0 rounded-pill" />
+        <Skeleton className="h-8 w-24 shrink-0 rounded-pill" />
+        <Skeleton className="h-8 w-20 shrink-0 rounded-pill" />
+      </div>
+    </div>
+  );
+}
+
+export function HomeCatalogCardsSkeleton() {
+  return (
+    <div className="space-y-2">
+      <Skeleton className="h-[5.5rem] w-full rounded-card" />
+      <div className="grid grid-cols-2 gap-2">
+        <OfferCardSkeleton />
+        <OfferCardSkeleton />
+      </div>
+    </div>
+  );
+}
+
 export function HomeCatalogSkeleton() {
   return (
     <div className="space-y-2">
