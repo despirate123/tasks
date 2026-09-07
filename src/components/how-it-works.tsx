@@ -120,26 +120,24 @@ function HowItWorksSheet({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div
-      className="fixed inset-x-0 top-0 z-[80] overflow-hidden overscroll-none"
-      style={{ height: "var(--tg-viewport-stable-height, 100dvh)" }}
-    >
+    <div className="fixed inset-0 z-[100] overflow-hidden overscroll-none">
       <button
         type="button"
         aria-label="Закрыть"
-        className="absolute inset-0 bg-black/58"
+        className="absolute inset-0 bg-black/62"
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="how-it-works-title"
-        className="absolute inset-x-0 bottom-0 mx-auto flex w-full max-w-[var(--app-max-width)] flex-col rounded-t-[1.6rem] border-t border-border-subtle bg-surface-base"
+        className="absolute inset-x-0 bottom-0 mx-auto flex w-full max-w-[var(--app-max-width)] flex-col rounded-t-[1.6rem] border-t border-border-subtle bg-surface-base shadow-[0_48px_0_0_#121212]"
         style={{
-          maxHeight: "calc(var(--tg-viewport-stable-height, 100dvh) - 2.5rem)",
+          maxHeight: "min(34rem, calc(100svh - 2.75rem))",
           paddingLeft: "max(1.25rem, var(--safe-left))",
           paddingRight: "max(1.25rem, var(--safe-right))",
-          paddingBottom: "max(1.25rem, calc(var(--safe-bottom) + 0.75rem))",
+          paddingBottom:
+            "max(1.25rem, calc(var(--safe-bottom) + env(safe-area-inset-bottom, 0px) + 0.75rem))",
         }}
       >
         <div className="flex shrink-0 justify-center pt-3 pb-2">
@@ -178,7 +176,7 @@ function HowItWorksSheet({ onClose }: { onClose: () => void }) {
           variant="primary"
           size="lg"
           block
-          className="mt-4 shrink-0"
+          className="mt-5 shrink-0"
           onClick={() => {
             haptic("light");
             onClose();
