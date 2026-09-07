@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { requireRole } from "@/server/auth";
+import { sanitizeHttpUrl } from "@/lib/urls";
 import {
   deleteBanner,
   getBanner,
@@ -13,6 +14,7 @@ import {
 export const dynamic = "force-dynamic";
 
 type BannerBody = {
+  _action?: string;
   id?: string;
   title?: string;
   subtitle?: string;
@@ -20,8 +22,8 @@ type BannerBody = {
   imageUrl?: string;
   background?: string;
   accent?: string;
-  sortOrder?: number;
-  isActive?: boolean;
+  sortOrder?: number | string;
+  isActive?: boolean | string;
   startsAt?: string;
   endsAt?: string;
 };
@@ -58,22 +60,86 @@ function bumpPaths() {
   revalidatePath("/admin/banners");
 }
 
+function flagOn(value: BannerBody["isActive"]) {
+  return value === true || value === "on" || value === "true" || value === "1";
+}
+
+async function readBody(request: Request): Promise<{ body: BannerBody; viaForm: boolean }> {
+  const contentType = request.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    return { body: (await request.json()) as BannerBody, viaForm: false };
+  }
+  const form = await request.formData();
+  const body: BannerBody = {};
+  for (const [key, value] of form.entries()) {
+    if (typeof value === "string") body[key as keyof BannerBody] = value as never;
+  }
+  return { body, viaForm: true };
+}
+
+function adminRedirect(request: Request, title?: string) {
+  const url = new URL("/admin/banners", request.url);
+  url.searchParams.set("saved", "1");
+  if (title) url.searchParams.set("title", title);
+  return NextResponse.redirect(url, 303);
+}
+
 export async function POST(request: Request) {
   try {
     const admin = await requireRole("ADMIN");
-    const body = (await request.json()) as BannerBody;
-    const id = body.id?.trim() || undefined;
+    const { body, viaForm } = await readBody(request);
+    const action = String(body._action ?? "save");
+    const id = String(body.id ?? "").trim() || undefined;
+
+    if (action === "delete") {
+      if (!id) return noStore({ ok: false, error: "Нет id баннера" }, 400);
+      await deleteBanner(id);
+      bumpPaths();
+      if (viaForm) return adminRedirect(request);
+      return noStore({ ok: true, message: "Баннер удалён" });
+    }
+
+    if (action === "toggle") {
+      if (!id) return noStore({ ok: false, error: "Нет id баннера" }, 400);
+      const current = await getBanner(id);
+      if (!current) return noStore({ ok: false, error: "Баннер не найден" }, 404);
+      const saved = await toggleBanner(id, !current.isActive);
+      const verify = await getBanner(saved.id);
+      if (!verify) return noStore({ ok: false, error: "Баннер не найден" }, 404);
+      bumpPaths();
+      if (viaForm) return adminRedirect(request, verify.title);
+      return noStore({
+        ok: true,
+        message: verify.isActive ? "Баннер включён" : "Баннер скрыт",
+        banner: serializeAdminBanner(verify),
+      });
+    }
+
+    const rawHref = String(body.href ?? "");
+    const rawImage = String(body.imageUrl ?? "");
+    const warnings: string[] = [];
+    if (rawHref.trim() && !sanitizeHttpUrl(rawHref)) {
+      warnings.push("Ссылка сброшена — нужен путь /referrals или https://");
+    }
+    if (rawImage.trim() && !sanitizeHttpUrl(rawImage)) {
+      warnings.push("Картинка сброшена — нужна прямая http(s)-ссылка");
+    }
+
     const saved = await upsertBanner(
       id,
       {
         title: String(body.title ?? ""),
         subtitle: String(body.subtitle ?? ""),
-        href: String(body.href ?? ""),
-        imageUrl: String(body.imageUrl ?? ""),
+        href: rawHref,
+        imageUrl: rawImage,
         background: String(body.background ?? "#111111"),
         accent: String(body.accent ?? "#F7F16A"),
         sortOrder: Number(body.sortOrder ?? 0),
-        isActive: body.isActive ?? true,
+        isActive: viaForm
+          ? flagOn(body.isActive)
+          : body.isActive === undefined
+            ? true
+            : flagOn(body.isActive),
         startsAt: parseOptionalDate(body.startsAt),
         endsAt: parseOptionalDate(body.endsAt),
       },
@@ -87,49 +153,17 @@ export async function POST(request: Request) {
       );
     }
     bumpPaths();
+    const message = [
+      `Сохранено: «${verify.title}»`,
+      ...warnings,
+    ].join(". ");
+    if (viaForm) return adminRedirect(request, verify.title);
     return noStore({
       ok: true,
-      message: `Сохранено: «${verify.title}»`,
+      message,
+      warnings,
       banner: serializeAdminBanner(verify),
     });
-  } catch (error) {
-    return fail(error);
-  }
-}
-
-export async function PATCH(request: Request) {
-  try {
-    await requireRole("ADMIN");
-    const body = (await request.json()) as BannerBody;
-    const id = body.id?.trim();
-    if (!id) return noStore({ ok: false, error: "Нет id баннера" }, 400);
-    const saved = await toggleBanner(id, Boolean(body.isActive));
-    const verify = await getBanner(saved.id);
-    if (!verify) return noStore({ ok: false, error: "Баннер не найден" }, 404);
-    bumpPaths();
-    return noStore({
-      ok: true,
-      message: verify.isActive ? "Баннер включён" : "Баннер скрыт",
-      banner: serializeAdminBanner(verify),
-    });
-  } catch (error) {
-    return fail(error);
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    await requireRole("ADMIN");
-    const body = (await request.json()) as BannerBody;
-    const id = body.id?.trim();
-    if (!id) return noStore({ ok: false, error: "Нет id баннера" }, 400);
-    await deleteBanner(id);
-    const leftover = await getBanner(id);
-    if (leftover) {
-      return noStore({ ok: false, error: "Баннер не удалился" }, 500);
-    }
-    bumpPaths();
-    return noStore({ ok: true, message: "Баннер удалён" });
   } catch (error) {
     return fail(error);
   }

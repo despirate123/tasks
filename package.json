@@ -12,6 +12,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "check:e2e": "tsx scripts/e2e-check.mts",
+    "check:banners": "tsx scripts/banner-admin-check.mts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",

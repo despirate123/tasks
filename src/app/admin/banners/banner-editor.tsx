@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import { PromoBannerCard, type PromoBannerSlide } from "@/components/promo-banner";
 import { sanitizeHttpUrl } from "@/lib/urls";
@@ -15,10 +14,6 @@ export type BannerEditorValues = PromoBannerSlide & {
   startsAt: string;
   endsAt: string;
 };
-
-type SaveResult =
-  | { ok: true; message?: string; banner?: BannerEditorValues }
-  | { ok: false; error: string };
 
 function emptyValues(): BannerEditorValues {
   return {
@@ -36,21 +31,6 @@ function emptyValues(): BannerEditorValues {
   };
 }
 
-async function bannerRequest(
-  method: "POST" | "PATCH" | "DELETE",
-  body: Record<string, unknown>,
-): Promise<SaveResult> {
-  const res = await fetch("/api/admin/banners", {
-    method,
-    cache: "no-store",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = (await res.json().catch(() => null)) as SaveResult | null;
-  if (!data) return { ok: false, error: "Сервер не ответил" };
-  return data;
-}
-
 export function BannerEditor({
   initial,
   mode,
@@ -60,10 +40,8 @@ export function BannerEditor({
   mode: "create" | "edit";
   slide?: number;
 }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
   const [values, setValues] = useState<BannerEditorValues>(initial ?? emptyValues());
-  const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
+  const [pending, setPending] = useState(false);
 
   const set =
     (key: keyof BannerEditorValues) =>
@@ -77,54 +55,14 @@ export function BannerEditor({
       setValues((current) => ({ ...current, [key]: value }));
     };
 
-  const run = (fn: () => Promise<SaveResult>, after?: (result: SaveResult) => void) => {
-    startTransition(async () => {
-      const result = await fn();
-      setFeedback({
-        ok: result.ok,
-        text: result.ok ? (result.message ?? "Готово") : (result.error ?? "Ошибка"),
-      });
-      if (!result.ok) return;
-      after?.(result);
-    });
-  };
-
-  const hrefError =
+  const hrefHint =
     (values.href ?? "").trim() && !sanitizeHttpUrl(values.href)
-      ? "Нужен путь вроде /referrals или адрес https://"
+      ? "Неверный формат — при сохранении ссылка сбросится"
       : undefined;
-  const imageError =
+  const imageHint =
     (values.imageUrl ?? "").trim() && !sanitizeHttpUrl(values.imageUrl)
-      ? "Нужна прямая ссылка http:// или https:// на изображение"
+      ? "Неверный формат — при сохранении картинка сбросится"
       : undefined;
-
-  const save = () => {
-    run(
-      () =>
-        bannerRequest("POST", {
-          id: values.id || undefined,
-          title: values.title,
-          subtitle: values.subtitle ?? "",
-          href: values.href ?? "",
-          imageUrl: values.imageUrl ?? "",
-          background: values.background,
-          accent: values.accent,
-          sortOrder: values.sortOrder,
-          isActive: values.isActive,
-          startsAt: values.startsAt,
-          endsAt: values.endsAt,
-        }),
-      (result) => {
-        if (result.ok && result.banner) {
-          setValues(result.banner);
-        }
-        if (mode === "create") {
-          setValues(emptyValues());
-          router.refresh();
-        }
-      },
-    );
-  };
 
   return (
     <Card className="space-y-4 p-4">
@@ -146,9 +84,18 @@ export function BannerEditor({
         }}
       />
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <form
+        action="/api/admin/banners"
+        method="post"
+        className="grid gap-3 md:grid-cols-2"
+        onSubmit={() => setPending(true)}
+      >
+        <input type="hidden" name="_action" value="save" />
+        {values.id ? <input type="hidden" name="id" value={values.id} /> : null}
+
         <Field label="Заголовок" className="md:col-span-2">
           <Input
+            name="title"
             value={values.title}
             onChange={set("title")}
             placeholder="Приведи друга — получай 10% с его прибыли"
@@ -156,6 +103,7 @@ export function BannerEditor({
         </Field>
         <Field label="Текст" className="md:col-span-2">
           <Textarea
+            name="subtitle"
             value={values.subtitle ?? ""}
             onChange={set("subtitle")}
             placeholder="Коротко, что изменилось или куда нажать"
@@ -163,10 +111,11 @@ export function BannerEditor({
         </Field>
         <Field
           label="Ссылка"
-          hint="Внутренний путь (/referrals) или https://"
-          error={hrefError}
+          hint={hrefHint ?? "Внутренний путь (/referrals) или https://"}
+          error={hrefHint}
         >
           <Input
+            name="href"
             value={values.href ?? ""}
             onChange={set("href")}
             placeholder="/referrals"
@@ -174,10 +123,11 @@ export function BannerEditor({
         </Field>
         <Field
           label="Картинка (URL)"
-          hint="Только прямая http(s)-ссылка. Файл из Telegram или проводника Windows не подойдёт."
-          error={imageError}
+          hint={imageHint ?? "Только прямая http(s)-ссылка"}
+          error={imageHint}
         >
           <Input
+            name="imageUrl"
             value={values.imageUrl ?? ""}
             onChange={set("imageUrl")}
             placeholder="https://..."
@@ -187,27 +137,28 @@ export function BannerEditor({
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={values.background}
+              value={/^#[0-9a-fA-F]{6}$/.test(values.background) ? values.background : "#111111"}
               onChange={set("background")}
               className="size-11 shrink-0 cursor-pointer rounded-2xl border-0 bg-transparent"
             />
-            <Input value={values.background} onChange={set("background")} />
+            <Input name="background" value={values.background} onChange={set("background")} />
           </div>
         </Field>
         <Field label="Акцент">
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={values.accent}
+              value={/^#[0-9a-fA-F]{6}$/.test(values.accent) ? values.accent : "#F7F16A"}
               onChange={set("accent")}
               className="size-11 shrink-0 cursor-pointer rounded-2xl border-0 bg-transparent"
             />
-            <Input value={values.accent} onChange={set("accent")} />
+            <Input name="accent" value={values.accent} onChange={set("accent")} />
           </div>
         </Field>
         <Field label="Порядок">
           <Input
             type="number"
+            name="sortOrder"
             value={values.sortOrder}
             onChange={set("sortOrder")}
           />
@@ -216,6 +167,8 @@ export function BannerEditor({
           <label className="flex h-11 items-center gap-2 rounded-2xl glass-thin px-3.5 text-sm ring-1 ring-inset ring-white/12">
             <input
               type="checkbox"
+              name="isActive"
+              value="on"
               checked={values.isActive}
               onChange={set("isActive")}
               className="size-4 accent-[var(--acid)]"
@@ -224,70 +177,55 @@ export function BannerEditor({
           </label>
         </Field>
         <Field label="С" hint="Пусто — сразу">
-          <Input type="datetime-local" value={values.startsAt} onChange={set("startsAt")} />
+          <Input
+            type="datetime-local"
+            name="startsAt"
+            value={values.startsAt}
+            onChange={set("startsAt")}
+          />
         </Field>
         <Field label="По" hint="Пусто — бессрочно">
-          <Input type="datetime-local" value={values.endsAt} onChange={set("endsAt")} />
+          <Input
+            type="datetime-local"
+            name="endsAt"
+            value={values.endsAt}
+            onChange={set("endsAt")}
+          />
         </Field>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          onClick={save}
-          disabled={pending || !values.title.trim() || Boolean(hrefError || imageError)}
-        >
-          {pending ? <Loader2 className="animate-spin" /> : null}
-          {mode === "create" ? "Добавить баннер" : "Сохранить"}
-        </Button>
-        {mode === "edit" ? (
-          <>
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={pending}
-              onClick={() =>
-                run(
-                  () =>
-                    bannerRequest("PATCH", {
-                      id: values.id,
-                      isActive: !values.isActive,
-                    }),
-                  (result) => {
-                    if (result.ok && result.banner) setValues(result.banner);
-                  },
-                )
-              }
-            >
+        <div className="flex flex-wrap items-center gap-2 md:col-span-2">
+          <Button type="submit" disabled={pending || !values.title.trim()}>
+            {pending ? <Loader2 className="animate-spin" /> : null}
+            {mode === "create" ? "Добавить баннер" : "Сохранить"}
+          </Button>
+        </div>
+      </form>
+
+      {mode === "edit" && values.id ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <form action="/api/admin/banners" method="post">
+            <input type="hidden" name="_action" value="toggle" />
+            <input type="hidden" name="id" value={values.id} />
+            <Button type="submit" variant="secondary">
               {values.isActive ? "Скрыть" : "Показать"}
             </Button>
-            <Button
-              type="button"
-              variant="danger"
-              disabled={pending}
-              onClick={() => {
-                if (!window.confirm("Удалить этот баннер?")) return;
-                run(
-                  () => bannerRequest("DELETE", { id: values.id }),
-                  () => router.refresh(),
-                );
-              }}
-            >
+          </form>
+          <form
+            action="/api/admin/banners"
+            method="post"
+            onSubmit={(event) => {
+              if (!window.confirm("Удалить этот баннер?")) event.preventDefault();
+            }}
+          >
+            <input type="hidden" name="_action" value="delete" />
+            <input type="hidden" name="id" value={values.id} />
+            <Button type="submit" variant="danger">
               <Trash2 />
               Удалить
             </Button>
-          </>
-        ) : null}
-        {feedback ? (
-          <p
-            className={
-              feedback.ok ? "text-[12.5px] text-brand-300" : "text-[12.5px] text-hard"
-            }
-          >
-            {feedback.text}
-          </p>
-        ) : null}
-      </div>
+          </form>
+        </div>
+      ) : null}
     </Card>
   );
 }

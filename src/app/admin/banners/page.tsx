@@ -8,7 +8,11 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
-export default async function AdminBannersPage() {
+export default async function AdminBannersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string | string[]; title?: string | string[] }>;
+}) {
   const actor = await requireRole("MODERATOR");
   if (!hasRole(actor, "ADMIN")) {
     return (
@@ -18,6 +22,9 @@ export default async function AdminBannersPage() {
       />
     );
   }
+  const params = await searchParams;
+  const savedTitle = Array.isArray(params.title) ? params.title[0] : params.title;
+  const saved = (Array.isArray(params.saved) ? params.saved[0] : params.saved) === "1";
   const banners = await listAdminBanners();
 
   return (
@@ -26,15 +33,17 @@ export default async function AdminBannersPage() {
         <h1 className="text-[24px] leading-tight font-bold">Баннеры</h1>
         <p className="mt-1 text-[13px] leading-relaxed text-content-secondary">
           Карусель под аватаром. Слайд 1 виден сразу, остальные — свайпом
-          или через 5 секунд. Сохранение пишет в базу; главная подтягивает
-          новый текст сама, без перезапуска.
+          или через 5 секунд. Сохранение пишет в базу обычной формой —
+          без кэша и без Server Action.
         </p>
+        {saved ? (
+          <p className="mt-2 text-[13px] font-medium text-brand-300">
+            {savedTitle?.trim()
+              ? `Записано в базу: «${savedTitle}»`
+              : "Изменение записано в базу"}
+          </p>
+        ) : null}
       </div>
-
-      <section className="space-y-3">
-        <h2 className="text-[15px] font-semibold">Новый баннер</h2>
-        <BannerEditor mode="create" />
-      </section>
 
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 text-[15px] font-semibold">
@@ -59,6 +68,11 @@ export default async function AdminBannersPage() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-[15px] font-semibold">Новый баннер</h2>
+        <BannerEditor mode="create" />
       </section>
     </div>
   );

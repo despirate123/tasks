@@ -1,6 +1,6 @@
 import { connection } from "next/server";
 import { db } from "@/server/db";
-import { requireSanitizedUrl } from "@/lib/urls";
+import { sanitizeHttpUrl } from "@/lib/urls";
 
 export type PromoBannerInput = {
   title: string;
@@ -123,8 +123,8 @@ export async function upsertBanner(
   const data = {
     title,
     subtitle: clean(input.subtitle),
-    href: requireSanitizedUrl(input.href, "href"),
-    imageUrl: requireSanitizedUrl(input.imageUrl, "image"),
+    href: sanitizeHttpUrl(input.href),
+    imageUrl: sanitizeHttpUrl(input.imageUrl),
     background: input.background?.trim() || "#111111",
     accent: input.accent?.trim() || "#F7F16A",
     sortOrder: Number.isFinite(input.sortOrder) ? Number(input.sortOrder) : 0,
